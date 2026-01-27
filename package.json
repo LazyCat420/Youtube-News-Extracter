@@ -4,14 +4,20 @@
   "description": "Scrape YouTube transcripts for stock market news and save to database for Ollama processing",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "server": "node server.js"
   },
   "dependencies": {
-    "puppeteer": "^23.0.0",
-    "puppeteer-core": "^23.0.0",
-    "xml2js": "^0.6.0",
+    "axios": "^1.6.0",
     "dotenv": "^16.0.0",
+    "express": "^5.2.1",
+    "puppeteer": "^24.36.0",
+    "puppeteer-core": "^23.0.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
     "sqlite3": "^5.1.0",
-    "axios": "^1.6.0"
+    "xml2js": "^0.6.0",
+    "youtube-transcript": "^1.2.1",
+    "youtubei.js": "^16.0.1"
   }
 }

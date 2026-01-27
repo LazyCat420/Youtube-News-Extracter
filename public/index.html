@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Transcript Extractor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>YouTube Transcript Extractor</h1>
+            <p>Paste a YouTube link to extract the transcript instantly.</p>
+        </header>
+
+        <main>
+            <div class="input-group">
+                <input type="text" id="youtubeUrl" placeholder="https://www.youtube.com/watch?v=..." />
+                <button id="extractBtn">Extract Transcript</button>
+            </div>
+
+            <div id="loading" class="hidden">
+                <div class="spinner"></div>
+                <p>Extracting... this may take a few seconds.</p>
+            </div>
+
+            <div id="result" class="hidden">
+                <h2 id="videoTitle"></h2>
+                <div class="meta">
+                    <span id="videoDesc"></span>
+                </div>
+                <div class="transcript-container">
+                    <pre id="transcriptText"></pre>
+                    <button id="copyBtn" class="secondary-btn">Copy to Clipboard</button>
+                </div>
+            </div>
+
+            <div id="error" class="hidden">
+                <p id="errorMsg"></p>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
