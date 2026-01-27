@@ -3,6 +3,43 @@ const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 
 // puppeteer.use(StealthPlugin());
 
+async function handleAds(page) {
+    console.log('[Puppeteer] Checking for ads...');
+    try {
+        // Wait briefly for ad to potentially appear
+        const adElement = await page.waitForSelector('.ad-showing, .video-ads, .ytp-ad-module', { timeout: 5000 }).catch(() => null);
+
+        if (adElement) {
+            console.log('[Puppeteer] Ad detected!');
+
+            // Check for skip button loop
+            for (let i = 0; i < 10; i++) {
+                const skipBtn = await page.$('.ytp-ad-skip-button, .ytp-ad-skip-button-modern');
+                if (skipBtn) {
+                    console.log('[Puppeteer] Clicking "Skip Ad"...');
+                    await skipBtn.click();
+                    await new Promise(r => setTimeout(r, 1000));
+                    return; // Ad skipped
+                }
+
+                // Check if ad ended
+                const isAdShowing = await page.evaluate(() => !!document.querySelector('.ad-showing'));
+                if (!isAdShowing) {
+                    console.log('[Puppeteer] Ad finished naturally.');
+                    return;
+                }
+
+                console.log(`[Puppeteer] Waiting for ad... (${i + 1}/10)`);
+                await new Promise(r => setTimeout(r, 2000));
+            }
+        } else {
+            console.log('[Puppeteer] No initial ad detected.');
+        }
+    } catch (e) {
+        console.log('[Puppeteer] Error handling ads:', e.message);
+    }
+}
+
 const PuppeteerWrapper = {
     async searchYoutube(query) {
         console.log(`[Puppeteer] Searching YouTube for: ${query}`);
@@ -100,6 +137,9 @@ const PuppeteerWrapper = {
                 throw new Error('Video unavailable');
             }
 
+            // 0. Handle Ads
+            await handleAds(page);
+
             // Consent
             try {
                 const consentSelector = 'button[aria-label="Accept all"], button[aria-label="Reject all"]';
@@ -116,38 +156,65 @@ const PuppeteerWrapper = {
             const titlePromise = page.$eval('h1.ytd-video-primary-info-renderer', el => el.innerText)
                 .catch(() => page.title());
 
-            // 2. Expand Description
+            // 2. Expand Description (Robust)
             console.log('[Puppeteer] Expanding description...');
             let expanded = false;
-            try {
-                const validSelectors = [
-                    '#description-inline-expander #expand',
-                    'ytd-video-description-renderer #expand',
-                    '#expand',
-                    'tp-yt-paper-button#expand'
-                ];
 
-                for (const sel of validSelectors) {
+            // Helper to check if description is expanded
+            const isExpanded = async () => {
+                return await page.evaluate(() => {
+                    const expander = document.querySelector('#description-inline-expander');
+                    return expander && expander.hasAttribute('is-expanded');
+                });
+            };
+
+            // Strategy A: ID/Selector based clicks
+            const expandSelectors = [
+                '#description-inline-expander #expand',
+                '#expand',
+                'tp-yt-paper-button#expand',
+                '#more',
+                'button[aria-label="Show more"]'
+            ];
+
+            for (const sel of expandSelectors) {
+                if (await isExpanded()) { expanded = true; break; }
+                try {
                     if (await page.$(sel)) {
+                        console.log(`[Puppeteer] Clicking expand button: ${sel}`);
                         await page.click(sel);
-                        expanded = true;
-                        break;
+                        await new Promise(r => setTimeout(r, 1000));
                     }
-                }
+                } catch (e) { }
+            }
 
-                if (!expanded) {
-                    const jsClicked = await page.evaluate(() => {
-                        const btn = document.querySelector('#expand');
-                        if (btn) { btn.click(); return true; }
+            // Strategy B: Text-based (Recursive Finder) for "...more"
+            if (!expanded && !(await isExpanded())) {
+                console.log('[Puppeteer] Standard selectors failed. Trying text-based "more" finder...');
+
+                try {
+                    await page.evaluate(() => {
+                        const buttons = Array.from(document.querySelectorAll('button, tp-yt-paper-button, span'));
+                        const moreBtn = buttons.find(b => b.innerText.trim().includes('...more') || b.innerText.trim() === 'more');
+                        if (moreBtn) {
+                            moreBtn.click();
+                            return true;
+                        }
                         return false;
                     });
-                    if (jsClicked) expanded = true;
+                    await new Promise(r => setTimeout(r, 1500));
+                } catch (e) {
+                    console.log('[Puppeteer] Text-based click failed:', e.message);
                 }
+            }
 
-                if (expanded) await new Promise(r => setTimeout(r, 1000));
-
-            } catch (e) {
-                console.log('[Puppeteer] Error expanding description:', e.message);
+            // Final Verification
+            if (await isExpanded()) {
+                console.log('[Puppeteer] Description successfully expanded.');
+                expanded = true;
+            } else {
+                console.log('[Puppeteer] WARNING: Description did NOT expand. Transcript button might be hidden.');
+                await page.screenshot({ path: 'debug_expand_fail.png' });
             }
 
 
