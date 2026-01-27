@@ -1,0 +1,17 @@
+{
+  "name": "youtube-news-extracter",
+  "version": "1.0.0",
+  "description": "Scrape YouTube transcripts for stock market news and save to database for Ollama processing",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "puppeteer": "^23.0.0",
+    "puppeteer-core": "^23.0.0",
+    "xml2js": "^0.6.0",
+    "dotenv": "^16.0.0",
+    "sqlite3": "^5.1.0",
+    "axios": "^1.6.0"
+  }
+}
