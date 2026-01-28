@@ -6,36 +6,109 @@ const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 async function handleAds(page) {
     console.log('[Puppeteer] Checking for ads...');
     try {
-        // Wait briefly for ad to potentially appear
-        const adElement = await page.waitForSelector('.ad-showing, .video-ads, .ytp-ad-module', { timeout: 5000 }).catch(() => null);
+        // Wait briefly for ad to potentially appear - STRICTER CHECK
+        // .ytp-ad-module is always present, so we must NOT wait for it alone.
+        // .ad-showing is the class added to #movie_player when an ad is active.
+        const adElement = await page.waitForSelector('.ad-showing', { timeout: 5000 }).catch(() => null);
 
         if (adElement) {
             console.log('[Puppeteer] Ad detected!');
 
-            // Check for skip button loop
-            for (let i = 0; i < 10; i++) {
-                const skipBtn = await page.$('.ytp-ad-skip-button, .ytp-ad-skip-button-modern');
-                if (skipBtn) {
-                    console.log('[Puppeteer] Clicking "Skip Ad"...');
-                    await skipBtn.click();
-                    await new Promise(r => setTimeout(r, 1000));
-                    return; // Ad skipped
-                }
+            console.log('[Puppeteer] Ad detected! Entering event loop...');
+            const MAX_WAIT = 60000;
+            const start = Date.now();
 
-                // Check if ad ended
+            while (Date.now() - start < MAX_WAIT) {
+                // Double check state at top of loop
                 const isAdShowing = await page.evaluate(() => !!document.querySelector('.ad-showing'));
                 if (!isAdShowing) {
-                    console.log('[Puppeteer] Ad finished naturally.');
+                    console.log('[Puppeteer] Ad finished.');
                     return;
                 }
 
-                console.log(`[Puppeteer] Waiting for ad... (${i + 1}/10)`);
-                await new Promise(r => setTimeout(r, 2000));
+                console.log('[Puppeteer] Waiting for Skip button or Ad end...');
+                const timeLeft = MAX_WAIT - (Date.now() - start);
+                if (timeLeft <= 0) break;
+
+                // Create Race Promises
+                // 1. Wait for Skip Button (Standard ID/Class)
+                const skipCssPromise = page.waitForSelector('.ytp-ad-skip-button, .ytp-ad-skip-button-modern, .ytp-ad-skip-button-slot, button.ytp-ad-skip-button', { visible: true, timeout: timeLeft })
+                    .then(el => ({ type: 'skip', el }))
+                    .catch(e => ({ type: 'ignore', error: e }));
+
+                // 2. Wait for Skip Button (Text-Based XPath - Robust fallback)
+                const skipTextPromise = page.waitForSelector('xpath/.//button[contains(translate(., "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"), "skip")]', { visible: true, timeout: timeLeft })
+                    .then(el => ({ type: 'skip', el }))
+                    .catch(e => ({ type: 'ignore', error: e }));
+
+
+                // 3. Wait for Ad to vanish
+                const adEndPromise = page.waitForFunction(() => !document.querySelector('.ad-showing'), { timeout: timeLeft })
+                    .then(() => ({ type: 'end' }))
+                    .catch(e => ({ type: 'ignore', error: e }));
+
+                try {
+                    const result = await Promise.race([skipCssPromise, adEndPromise]);
+
+                    if (result.type === 'skip') {
+                        console.log('[Puppeteer] Skip button found!');
+
+                        // Debugging: What did we find?
+                        try {
+                            const btnHtml = await page.evaluate(el => el.outerHTML, result.el).catch(() => 'N/A');
+                            console.log(`[Puppeteer] Target HTML: ${btnHtml.substring(0, 150)}...`);
+                        } catch (err) { }
+
+                        try {
+                            console.log('[Puppeteer] Attempting NATIVE click...');
+                            await result.el.click({ delay: 50 }); // Add slight delay to mimic human push
+                        } catch (e) {
+                            console.log(`[Puppeteer] Native click failed: ${e.message}`);
+
+                            // Fallback 1: JS Click
+                            console.log('[Puppeteer] Trying JS click...');
+                            await page.evaluate(el => el.click(), result.el);
+
+                            // Fallback 2: Mouse Click at Coordinates (Forceful)
+                            try {
+                                console.log('[Puppeteer] Trying Mouse Coordinate click...');
+                                const box = await result.el.boundingBox();
+                                if (box) {
+                                    await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+                                }
+                            } catch (err) { console.log('[Puppeteer] Mouse click failed:', err.message); }
+                        }
+
+                        // Wait longer to see if it worked
+                        await new Promise(r => setTimeout(r, 2000));
+
+                    } else if (result.type === 'end') {
+                        console.log('[Puppeteer] Ad ended naturally.');
+                        return;
+                    } else {
+                        // Both likely timed out or ignored
+                        await new Promise(r => setTimeout(r, 1000));
+                    }
+                } catch (e) {
+                    console.log('[Puppeteer] Ad handling event error:', e.message);
+                    break;
+                }
             }
+            console.log('[Puppeteer] Ad handling loop finished or timed out.');
+
+            // STRICT FAIL CHECK
+            // If ad is still showing, we MUST NOT proceed to transcript, or we get FAILED_PRECONDITION
+            if (await page.evaluate(() => !!document.querySelector('.ad-showing'))) {
+                console.log('[Puppeteer] CRITICAL: Ad still showing after timeout. Aborting scrape.');
+                await page.screenshot({ path: 'debug_ad_timeout.png' });
+                throw new Error('Ad blocking video. Parsing Failed.');
+            }
+
         } else {
             console.log('[Puppeteer] No initial ad detected.');
         }
     } catch (e) {
+        if (e.message.includes('Ad blocking video')) throw e; // Propagate up
         console.log('[Puppeteer] Error handling ads:', e.message);
     }
 }
@@ -57,7 +130,7 @@ const PuppeteerWrapper = {
             });
 
             const page = await browser.newPage();
-            await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+            await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36');
 
             const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
             await page.goto(searchUrl, { waitUntil: 'networkidle2' });
@@ -234,9 +307,14 @@ const PuppeteerWrapper = {
                 const transcriptBtn = await page.waitForSelector('xpath/.//button[contains(., "Show transcript")]', { visible: true, timeout: 5000 }).catch(() => null);
 
                 if (transcriptBtn) {
-                    console.log('[Puppeteer] Found button (Manual). Hovering and waiting to ensure API context...');
+                    console.log('[Puppeteer] Found button (Manual). Ensuring player is ready...');
+
+                    // Ensure player is ready (often helps with session token readiness)
+                    await page.waitForSelector('#movie_player').catch(() => { });
+
+                    console.log('[Puppeteer] Hovering and waiting to ensure API context...');
                     await page.hover('xpath/.//button[contains(., "Show transcript")]');
-                    await new Promise(r => setTimeout(r, 1500 + Math.random() * 1000));
+                    await new Promise(r => setTimeout(r, 2500)); // Increased delay for session readiness
 
                     console.log('[Puppeteer] Clicking...');
                     // Create a Promise for the Network Interception
@@ -247,8 +325,22 @@ const PuppeteerWrapper = {
                                 console.log(`[Puppeteer] Intercepted transcript endpoint: ${url}`);
                                 try {
                                     const json = await response.json();
-                                    console.log('[Puppeteer] Parsing intercepted JSON...');
-                                    require('fs').writeFileSync('debug_transcript.json', JSON.stringify(json, null, 2));
+                                    console.log(`[Puppeteer] Parsing intercepted JSON from ${url}`);
+
+                                    // Extract Video ID
+                                    const pageUrl = page.url();
+                                    const videoIdMatch = pageUrl.match(/v=([^&]+)/);
+                                    const vId = videoIdMatch ? videoIdMatch[1] : 'unknown_' + Date.now();
+
+                                    // Parse keys
+                                    const keys = Object.keys(json);
+                                    console.log(`[Puppeteer] Top-level keys: ${keys.join(', ')}`);
+
+                                    // Check for API Error
+                                    if (json.error) {
+                                        console.log(`[Puppeteer] API RETURNED ERROR: ${JSON.stringify(json.error)}`);
+                                        require('fs').writeFileSync(`debug_transcript_ERROR_${vId}.json`, JSON.stringify(json, null, 2));
+                                    }
 
                                     // Recursive finder
                                     const findSegments = (obj) => {
@@ -291,7 +383,11 @@ const PuppeteerWrapper = {
                                             console.log(`[Puppeteer] Intercepted short text (${text.length} chars). Likely an Ad. Ignoring...`);
                                         }
                                     } else {
-                                        console.log('[Puppeteer] Network recursive search found 0 segments keys.');
+                                        console.log('[Puppeteer] Network recursive search found 0 segments. Checking for error...');
+                                        if (!json.error) {
+                                            console.log('[Puppeteer] JSON OK but no segments found. Saving debug file.');
+                                            require('fs').writeFileSync(`debug_transcript_BAD_${vId}_${Date.now()}.json`, JSON.stringify(json, null, 2));
+                                        }
                                     }
                                 } catch (e) { console.log('[Puppeteer] Network parsing failed:', e.message); }
                             }
@@ -300,8 +396,10 @@ const PuppeteerWrapper = {
                         setTimeout(() => resolve(null), 15000);
                     });
 
-                    // Trigger the network request by clicking
-                    await page.evaluate(el => el.click(), transcriptBtn);
+                    // Trigger the network request by clicking - USE TRUSTED NATIVE CLICK
+                    console.log('[Puppeteer] Clicking (Native trusted click)...');
+                    await transcriptBtn.click();
+
                     console.log('[Puppeteer] Clicked. Racing Network vs DOM...');
 
                     // DOM Promise

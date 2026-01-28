@@ -1,0 +1,371 @@
+{
+  "playerClasses": "html5-video-player ytp-transparent ytp-exp-bottom-control-flexbox ytp-modern-caption ytp-exp-ppp-update ytp-livebadge-color ytp-grid-scrollable ytp-delhi-modern-compact-controls ad-created ad-showing ad-interrupting ytp-delhi-modern ytp-delhi-modern-icons ytp-delhi-horizontal-volume-controls ytp-fit-cover-video ytp-fine-scrubbing-exp ytp-cards-teaser-dismissible ytp-large-width-mode ytp-disable-bottom-gradient playing-mode",
+  "adModuleHTML": "<div class=\"video-ads ytp-ad-module\" data-layer=\"4\"><div class=\"ytp-ad-player-overlay-layout\" id=\"player-overlay-layout:0\" style=\"\"><div class=\"ytp-ad-player-overlay-layout__player-card-container\"><div class=\"ytp-ad-avatar-lockup-card ytp-ad-component--clickable\" id=\"ad-avatar-lockup-card:3\" style=\"\"><img class=\"ytp-ad-avatar ytp-ad-avatar--size-m ytp-ad-avatar--circular\" id=\"ad-avatar:4\" src=\"https://yt3.ggpht.com/proxy/d3C_GpaY8bxmWcmqF0w_QnrOs9zpO2mfyd5V60pPtY3HCXe-Sutsm6XqWS1IZvD2H8Yzst_q4QnhmqCvLrQSlRpQLOGhbUyR2mr3AOftc60YASV6HwEJKv7LYzEXZiHRh6Qt25R4OZ2Dmy1v-nb9RHVCU75HzFv_O2MG6hBxaJ9SP3Mf-VolKenZ00L7Mo_jYa5U5S6A6V2T_rU7E7nADU_1GoWwpeBF1XgiRqAHK5pVfw2KnircHCONDDZY0NpUF8BcCQk=w1120-h1120-nd\" style=\"\"><div class=\"ytp-ad-avatar-lockup-card__avatar_and_text_container\"><div class=\"ytp-ad-avatar-lockup-card__text_container\"><div class=\"ad-simple-attributed-string ytp-ad-avatar-lockup-card__headline\" id=\"ad-simple-attributed-string:5\" aria-label=\"Find A TurboTax® Expert Office\" style=\"\">Find A TurboTax® Expert Office</div><div class=\"ad-simple-attributed-string ytp-ad-avatar-lockup-card__description ytp-ad-avatar-lockup-card__description--hidden--in--small--player\" id=\"ad-simple-attributed-string:6\" aria-label=\"turbotax.intuit.com\" style=\"\">turbotax.intuit.com</div></div></div><button class=\"ytp-ad-button-vm ytp-ad-component--clickable ytp-ad-button-vm--style-mono-filled ytp-ad-button-vm--size-default\" id=\"ad-button:7\" aria-label=\"Learn more This link opens in new tab\" role=\"link\" style=\"\"><span class=\"ytp-ad-button-vm__text\">Learn more</span></button></div></div><div class=\"ytp-ad-player-overlay-layout__ad-info-container\"><span class=\"ytp-ad-badge--clean-player ytp-ad-badge--stark-clean-player\" id=\"ad-badge:8\" style=\"\"><div class=\"ad-simple-attributed-string ytp-ad-badge__text--clean-player\" id=\"ad-simple-attributed-string:9\" aria-label=\"Sponsored\" style=\"\">Sponsored</div></span><span class=\"ytp-ad-hover-text-button ytp-ad-info-hover-text-button\" id=\"ad-info-hover-text-button:c\" style=\"\"><button class=\"ytp-ad-button ytp-ad-button-link ytp-ad-clickable ytp-ad-hover-text-button--clean-player\" id=\"button:d\" aria-label=\"My Ad Center\" style=\"\"><span class=\"ytp-ad-button-icon\"><svg fill=\"#fff\" height=\"12px\" viewBox=\"0 -960 960 960\" width=\"12px\" style=\"padding-top: 8px;\"><path d=\"M430.09-270.8h101.34V-528H430.09v257.2Zm49.52-338.03q20.94 0 35.34-14.01 14.4-14.01 14.4-34.95 0-20.94-14.01-35.34-14.01-14.39-34.95-14.39-20.94 0-35.34 14.01-14.4 14.01-14.4 34.95 0 20.94 14.01 35.34 14.01 14.39 34.95 14.39Zm.67 548.18q-86.64 0-163.19-32.66-76.56-32.66-133.84-89.94t-89.94-133.8q-32.66-76.51-32.66-163.41 0-87.15 32.72-163.31t90.14-133.61q57.42-57.44 133.79-89.7 76.38-32.27 163.16-32.27 87.14 0 163.31 32.26 76.16 32.26 133.61 89.71 57.45 57.45 89.71 133.86 32.26 76.42 32.26 163.33 0 86.91-32.27 163.08-32.26 76.18-89.7 133.6-57.45 57.42-133.83 90.14-76.39 32.72-163.27 32.72Zm-.33-105.18q131.13 0 222.68-91.49 91.54-91.49 91.54-222.63 0-131.13-91.49-222.68-91.49-91.54-222.63-91.54-131.13 0-222.68 91.49-91.54 91.49-91.54 222.63 0 131.13 91.49 222.68 91.49 91.54 222.63 91.54ZM480-480Z\"></path></svg></span></button><div class=\"ytp-ad-hover-text-container ytp-ad-info-hover-text-short\">My Ad Center<div class=\"ytp-ad-hover-text-callout\"></div></div></span><span class=\"ytp-ad-pod-index ytp-ad-pod-index--autohide ytp-ad-pod-index--stark\" id=\"ad-pod-index:a\" style=\"\"><div class=\"ad-simple-attributed-string\" id=\"ad-simple-attributed-string:b\" aria-label=\"1 of 2\" style=\"\">1 of 2</div></span><div class=\"ytp-visit-advertiser-link ytp-ad-component--clickable\" id=\"visit-advertiser-link:e\" aria-label=\"turbotax.intuit.com This link opens in new tab\" role=\"link\" tabindex=\"0\" style=\"\"><span class=\"ytp-visit-advertiser-link__text\">turbotax.intuit.com</span></div></div><div class=\"ytp-ad-player-overlay-layout__skip-or-preview-container\"><div class=\"ytp-skip-ad\" id=\"skip-ad:1\" style=\"\"><button class=\"ytp-skip-ad-button ytp-ad-component--clickable\" id=\"skip-button:2\" style=\"display: none;\"><div class=\"ytp-skip-ad-button__text\">Skip</div><span class=\"ytp-skip-ad-button__icon\"><svg fill=\"none\" height=\"24\" viewBox=\"0 0 24 24\" width=\"24\"><path d=\"M20 20C20.26 20 20.51 19.89 20.70 19.70C20.89 19.51 21 19.26 21 19V5C21 4.73 20.89 4.48 20.70 4.29C20.51 4.10 20.26 4 20 4C19.73 4 19.48 4.10 19.29 4.29C19.10 4.48 19 4.73 19 5V19C19 19.26 19.10 19.51 19.29 19.70C19.48 19.89 19.73 20 20 20ZM5.04 19.77L18 12L5.04 4.22C4.84 4.10 4.60 4.03 4.36 4.03C4.12 4.03 3.89 4.09 3.68 4.21C3.47 4.32 3.30 4.49 3.18 4.70C3.06 4.91 2.99 5.14 3 5.38V18.61C2.99 18.85 3.06 19.08 3.18 19.29C3.30 19.50 3.47 19.67 3.68 19.79C3.89 19.90 4.12 19.96 4.36 19.96C4.60 19.96 4.84 19.89 5.04 19.77Z\" fill=\"white\"></path></svg></span></button></div></div><div class=\"ytp-ad-player-overlay-layout__ad-disclosure-banner-container\"></div></div></div>",
+  "allButtons": [
+    {
+      "text": "Tap to unmute",
+      "class": "ytp-unmute ytp-popup ytp-button ytp-unmute-animated ytp-unmute-shrink",
+      "id": ""
+    },
+    {
+      "text": "",
+      "class": "ytp-gated-actions-overlay-miniplayer-close-button ytp-button",
+      "id": ""
+    },
+    {
+      "text": "",
+      "class": "ytp-suggested-action-badge-dismiss-button-icon ytp-button",
+      "id": ""
+    },
+    {
+      "text": "",
+      "class": "ytp-featured-product-overflow-icon ytp-button",
+      "id": ""
+    },
+    {
+      "text": "Learn more",
+      "class": "ytp-ad-button-vm ytp-ad-component--clickable ytp-ad-button-vm--style-mono-filled ytp-ad-button-vm--size-default",
+      "id": "ad-button:7"
+    },
+    {
+      "text": "",
+      "class": "ytp-ad-button ytp-ad-button-link ytp-ad-clickable ytp-ad-hover-text-button--clean-player",
+      "id": "button:d"
+    },
+    {
+      "text": "Skip",
+      "class": "ytp-skip-ad-button ytp-ad-component--clickable",
+      "id": "skip-button:2"
+    },
+    {
+      "text": "",
+      "class": "ytp-large-play-button ytp-button",
+      "id": ""
+    },
+    {
+      "text": "Search",
+      "class": "ytp-button ytp-search-button ytp-show-search-title",
+      "id": ""
+    },
+    {
+      "text": "Copy link",
+      "class": "ytp-button ytp-copylink-button",
+      "id": ""
+    },
+    {
+      "text": "InfoShopping",
+      "class": "ytp-button ytp-cards-button",
+      "id": ""
+    },
+    {
+      "text": "",
+      "class": "ytp-cards-teaser-info-icon",
+      "id": ""
+    },
+    {
+      "text": "",
+      "class": "ytp-cards-teaser-close-button",
+      "id": ""
+    },
+    {
+      "text": "",
+      "class": "ytp-button ytp-overflow-button",
+      "id": ""
+    },
+    {
+      "text": "",
+      "class": "ytp-playlist-menu-button ytp-button",
+      "id": ""
+    },
+    {
+      "text": "",
+      "class": "ytp-button ytp-suggested-action-badge ytp-suggested-action-badge-with-controls",
+      "id": ""
+    },
+    {
+      "text": "",
+      "class": "ytp-suggested-action-badge-dismiss-button-icon ytp-button",
+      "id": ""
+    },
+    {
+      "text": "",
+      "class": "ytp-button ytp-suggested-action-badge ytp-suggested-action-badge-with-controls ytp-suggested-action-badge-expanded",
+      "id": ""
+    },
+    {
+      "text": "",
+      "class": "ytp-suggested-action-badge-dismiss-button-icon ytp-button",
+      "id": ""
+    },
+    {
+      "text": "",
+      "class": "ytp-suggested-action-badge-dismiss-button-icon ytp-button",
+      "id": ""
+    },
+    {
+      "text": "",
+      "class": "ytp-featured-product-overflow-icon ytp-button",
+      "id": ""
+    },
+    {
+      "text": "Cancel",
+      "class": "ytp-button ytp-mdx-privacy-popup-cancel",
+      "id": ""
+    },
+    {
+      "text": "Confirm",
+      "class": "ytp-button ytp-mdx-privacy-popup-confirm",
+      "id": ""
+    },
+    {
+      "text": "",
+      "class": "ytp-playlist-menu-close ytp-button",
+      "id": ""
+    },
+    {
+      "text": "",
+      "class": "ytp-share-panel-close ytp-button",
+      "id": ""
+    },
+    {
+      "text": "",
+      "class": "ytp-overflow-panel-close ytp-button",
+      "id": ""
+    },
+    {
+      "text": "",
+      "class": "ytp-play-button ytp-button",
+      "id": ""
+    },
+    {
+      "text": "",
+      "class": "ytp-volume-icon ytp-button",
+      "id": ""
+    },
+    {
+      "text": "Live",
+      "class": "ytp-live-badge ytp-button",
+      "id": ""
+    },
+    {
+      "text": "•",
+      "class": "ytp-chapter-title ytp-button ytp-chapter-container-disabled",
+      "id": ""
+    },
+    {
+      "text": "•",
+      "class": "ytp-chapter-title ytp-button ytp-chapter-container-disabled",
+      "id": ""
+    },
+    {
+      "text": "",
+      "class": "ytp-expand-right-bottom-section-button ytp-button",
+      "id": ""
+    },
+    {
+      "text": "",
+      "class": "ytp-button ytp-autonav-toggle delhi-fast-follow-autonav-toggle",
+      "id": ""
+    },
+    {
+      "text": "",
+      "class": "ytp-subtitles-button ytp-button",
+      "id": ""
+    },
+    {
+      "text": "",
+      "class": "ytp-button ytp-settings-button",
+      "id": ""
+    },
+    {
+      "text": "",
+      "class": "ytp-size-button ytp-button",
+      "id": ""
+    },
+    {
+      "text": "",
+      "class": "ytp-remote-button ytp-button",
+      "id": ""
+    },
+    {
+      "text": "",
+      "class": "ytp-fullscreen-button ytp-button",
+      "id": ""
+    },
+    {
+      "text": "",
+      "class": "ytp-pip-button ytp-button",
+      "id": ""
+    },
+    {
+      "text": "",
+      "class": "ytp-fullscreen-grid-expand-button ytp-button",
+      "id": ""
+    },
+    {
+      "text": "\n      \n      \n    ",
+      "class": "style-scope yt-icon-button",
+      "id": "button"
+    },
+    {
+      "text": "",
+      "class": "style-scope yt-icon-button",
+      "id": "button"
+    },
+    {
+      "text": "",
+      "class": "ytSearchboxComponentSearchButton ytSearchboxComponentSearchButtonDark",
+      "id": ""
+    },
+    {
+      "text": "\n      \n      \n      \n        Search\n      \n    ",
+      "class": "style-scope yt-icon-button",
+      "id": "button"
+    },
+    {
+      "text": "",
+      "class": "style-scope yt-icon-button",
+      "id": "button"
+    },
+    {
+      "text": "Subscribe",
+      "class": "yt-spec-button-shape-next yt-spec-button-shape-next--filled yt-spec-button-shape-next--mono yt-spec-button-shape-next--size-m yt-spec-button-shape-next--enable-backdrop-filter-experiment yt-spec-button-shape-next--enable-drop-shadow-experiment",
+      "id": ""
+    },
+    {
+      "text": "",
+      "class": "yt-spec-button-shape-next yt-spec-button-shape-next--tonal yt-spec-button-shape-next--mono yt-spec-button-shape-next--size-m yt-spec-button-shape-next--icon-leading-trailing yt-spec-button-shape-next--enable-backdrop-filter-experiment yt-spec-button-shape-next--enable-drop-shadow-experiment",
+      "id": ""
+    },
+    {
+      "text": "38",
+      "class": "yt-spec-button-shape-next yt-spec-button-shape-next--tonal yt-spec-button-shape-next--mono yt-spec-button-shape-next--size-m yt-spec-button-shape-next--icon-leading yt-spec-button-shape-next--segmented-start yt-spec-button-shape-next--enable-backdrop-filter-experiment yt-spec-button-shape-next--enable-drop-shadow-experiment",
+      "id": ""
+    },
+    {
+      "text": "",
+      "class": "yt-spec-button-shape-next yt-spec-button-shape-next--tonal yt-spec-button-shape-next--mono yt-spec-button-shape-next--size-m yt-spec-button-shape-next--icon-button yt-spec-button-shape-next--segmented-end yt-spec-button-shape-next--enable-backdrop-filter-experiment yt-spec-button-shape-next--enable-drop-shadow-experiment",
+      "id": ""
+    },
+    {
+      "text": "Share",
+      "class": "yt-spec-button-shape-next yt-spec-button-shape-next--tonal yt-spec-button-shape-next--mono yt-spec-button-shape-next--size-m yt-spec-button-shape-next--icon-leading yt-spec-button-shape-next--enable-backdrop-filter-experiment yt-spec-button-shape-next--enable-drop-shadow-experiment",
+      "id": ""
+    },
+    {
+      "text": "Save",
+      "class": "yt-spec-button-shape-next yt-spec-button-shape-next--tonal yt-spec-button-shape-next--mono yt-spec-button-shape-next--size-m yt-spec-button-shape-next--icon-leading yt-spec-button-shape-next--enable-backdrop-filter-experiment yt-spec-button-shape-next--enable-drop-shadow-experiment",
+      "id": ""
+    },
+    {
+      "text": "Download",
+      "class": "yt-spec-button-shape-next yt-spec-button-shape-next--tonal yt-spec-button-shape-next--mono yt-spec-button-shape-next--size-m yt-spec-button-shape-next--icon-leading yt-spec-button-shape-next--enable-backdrop-filter-experiment yt-spec-button-shape-next--enable-drop-shadow-experiment",
+      "id": ""
+    },
+    {
+      "text": "",
+      "class": "style-scope yt-icon-button",
+      "id": "button"
+    },
+    {
+      "text": "",
+      "class": "yt-spec-button-shape-next yt-spec-button-shape-next--tonal yt-spec-button-shape-next--mono yt-spec-button-shape-next--size-m yt-spec-button-shape-next--icon-button yt-spec-button-shape-next--enable-backdrop-filter-experiment yt-spec-button-shape-next--enable-drop-shadow-experiment",
+      "id": ""
+    },
+    {
+      "text": "Show transcript",
+      "class": "yt-spec-button-shape-next yt-spec-button-shape-next--outline yt-spec-button-shape-next--call-to-action yt-spec-button-shape-next--size-m yt-spec-button-shape-next--enable-backdrop-filter-experiment yt-spec-button-shape-next--enable-drop-shadow-experiment",
+      "id": ""
+    },
+    {
+      "text": "38",
+      "class": "yt-spec-button-shape-next yt-spec-button-shape-next--tonal yt-spec-button-shape-next--mono yt-spec-button-shape-next--size-m yt-spec-button-shape-next--icon-leading yt-spec-button-shape-next--segmented-start yt-spec-button-shape-next--enable-backdrop-filter-experiment yt-spec-button-shape-next--enable-drop-shadow-experiment",
+      "id": ""
+    },
+    {
+      "text": "",
+      "class": "yt-spec-button-shape-next yt-spec-button-shape-next--tonal yt-spec-button-shape-next--mono yt-spec-button-shape-next--size-m yt-spec-button-shape-next--icon-button yt-spec-button-shape-next--segmented-end yt-spec-button-shape-next--enable-backdrop-filter-experiment yt-spec-button-shape-next--enable-drop-shadow-experiment",
+      "id": ""
+    },
+    {
+      "text": "Share",
+      "class": "yt-spec-button-shape-next yt-spec-button-shape-next--tonal yt-spec-button-shape-next--mono yt-spec-button-shape-next--size-m yt-spec-button-shape-next--icon-leading yt-spec-button-shape-next--enable-backdrop-filter-experiment yt-spec-button-shape-next--enable-drop-shadow-experiment",
+      "id": ""
+    },
+    {
+      "text": "Save",
+      "class": "yt-spec-button-shape-next yt-spec-button-shape-next--tonal yt-spec-button-shape-next--mono yt-spec-button-shape-next--size-m yt-spec-button-shape-next--icon-leading yt-spec-button-shape-next--enable-backdrop-filter-experiment yt-spec-button-shape-next--enable-drop-shadow-experiment",
+      "id": ""
+    },
+    {
+      "text": "Download",
+      "class": "yt-spec-button-shape-next yt-spec-button-shape-next--tonal yt-spec-button-shape-next--mono yt-spec-button-shape-next--size-m yt-spec-button-shape-next--icon-leading yt-spec-button-shape-next--enable-backdrop-filter-experiment yt-spec-button-shape-next--enable-drop-shadow-experiment",
+      "id": ""
+    },
+    {
+      "text": "",
+      "class": "style-scope yt-icon-button",
+      "id": "button"
+    },
+    {
+      "text": "",
+      "class": "yt-spec-button-shape-next yt-spec-button-shape-next--tonal yt-spec-button-shape-next--mono yt-spec-button-shape-next--size-m yt-spec-button-shape-next--icon-button yt-spec-button-shape-next--enable-backdrop-filter-experiment yt-spec-button-shape-next--enable-drop-shadow-experiment",
+      "id": ""
+    },
+    {
+      "text": "",
+      "class": "style-scope yt-icon-button",
+      "id": "button"
+    },
+    {
+      "text": "",
+      "class": "yt-spec-button-shape-next yt-spec-button-shape-next--text yt-spec-button-shape-next--mono yt-spec-button-shape-next--size-m yt-spec-button-shape-next--icon-only-default yt-spec-button-shape-next--enable-backdrop-filter-experiment yt-spec-button-shape-next--enable-drop-shadow-experiment",
+      "id": ""
+    },
+    {
+      "text": "",
+      "class": "yt-spec-button-shape-next yt-spec-button-shape-next--filled yt-spec-button-shape-next--mono yt-spec-button-shape-next--size-s yt-spec-button-shape-next--icon-button yt-spec-button-shape-next--override-small-size-icon yt-spec-button-shape-next--enable-backdrop-filter-experiment yt-spec-button-shape-next--enable-drop-shadow-experiment",
+      "id": ""
+    },
+    {
+      "text": "",
+      "class": "yt-spec-button-shape-next yt-spec-button-shape-next--text yt-spec-button-shape-next--mono yt-spec-button-shape-next--size-m yt-spec-button-shape-next--icon-only-default yt-spec-button-shape-next--enable-backdrop-filter-experiment yt-spec-button-shape-next--enable-drop-shadow-experiment",
+      "id": ""
+    },
+    {
+      "text": "Transcript",
+      "class": "ytChipShapeButtonReset",
+      "id": ""
+    },
+    {
+      "text": "",
+      "class": "yt-spec-button-shape-next yt-spec-button-shape-next--filled yt-spec-button-shape-next--mono yt-spec-button-shape-next--size-s yt-spec-button-shape-next--icon-button yt-spec-button-shape-next--override-small-size-icon yt-spec-button-shape-next--enable-backdrop-filter-experiment yt-spec-button-shape-next--enable-drop-shadow-experiment",
+      "id": ""
+    },
+    {
+      "text": "",
+      "class": "yt-spec-button-shape-next yt-spec-button-shape-next--text yt-spec-button-shape-next--mono yt-spec-button-shape-next--size-m yt-spec-button-shape-next--icon-only-default yt-spec-button-shape-next--enable-backdrop-filter-experiment yt-spec-button-shape-next--enable-drop-shadow-experiment",
+      "id": ""
+    },
+    {
+      "text": "Show transcript",
+      "class": "yt-spec-button-shape-next yt-spec-button-shape-next--outline yt-spec-button-shape-next--call-to-action yt-spec-button-shape-next--size-m yt-spec-button-shape-next--enable-backdrop-filter-experiment yt-spec-button-shape-next--enable-drop-shadow-experiment",
+      "id": ""
+    },
+    {
+      "text": "",
+      "class": "style-scope yt-icon-button",
+      "id": "button"
+    },
+    {
+      "text": "",
+      "class": "yt-spec-button-shape-next yt-spec-button-shape-next--text yt-spec-button-shape-next--mono yt-spec-button-shape-next--size-m yt-spec-button-shape-next--icon-only-default yt-spec-button-shape-next--enable-backdrop-filter-experiment yt-spec-button-shape-next--enable-drop-shadow-experiment",
+      "id": ""
+    },
+    {
+      "text": "",
+      "class": "yt-spec-button-shape-next yt-spec-button-shape-next--text yt-spec-button-shape-next--mono yt-spec-button-shape-next--size-m yt-spec-button-shape-next--icon-button yt-spec-button-shape-next--enable-backdrop-filter-experiment yt-spec-button-shape-next--enable-drop-shadow-experiment",
+      "id": ""
+    }
+  ]
+}
