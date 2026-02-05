@@ -30,8 +30,8 @@ const Database = {
         return new Promise((resolve, reject) => {
             const sql = `INSERT OR IGNORE INTO videos (video_id, title, url, description, transcript) VALUES (?, ?, ?, ?, ?)`;
             const videoId = videoData.url.split('v=')[1]?.split('&')[0] || 'unknown';
-            
-            db.run(sql, [videoId, videoData.title, videoData.url, videoData.description, videoData.transcript], function(err) {
+
+            db.run(sql, [videoId, videoData.title, videoData.url, videoData.description, videoData.transcript], function (err) {
                 if (err) {
                     console.error('Error saving video:', err.message);
                     reject(err);
@@ -55,7 +55,37 @@ const Database = {
     markProcessed(id) {
         db.run(`UPDATE videos SET processed_by_ollama = 1 WHERE id = ?`, [id]);
     },
-    
+
+    getAllVideos() {
+        return new Promise((resolve, reject) => {
+            db.all(`SELECT id, video_id, title, url, scraped_at, 
+                    SUBSTR(transcript, 1, 200) as transcript_preview,
+                    LENGTH(transcript) as transcript_length
+                    FROM videos ORDER BY scraped_at DESC`, [], (err, rows) => {
+                if (err) reject(err);
+                else resolve(rows);
+            });
+        });
+    },
+
+    getVideoById(id) {
+        return new Promise((resolve, reject) => {
+            db.get(`SELECT * FROM videos WHERE id = ?`, [id], (err, row) => {
+                if (err) reject(err);
+                else resolve(row);
+            });
+        });
+    },
+
+    deleteVideo(id) {
+        return new Promise((resolve, reject) => {
+            db.run(`DELETE FROM videos WHERE id = ?`, [id], function (err) {
+                if (err) reject(err);
+                else resolve({ deleted: this.changes > 0 });
+            });
+        });
+    },
+
     close() {
         db.close();
     }

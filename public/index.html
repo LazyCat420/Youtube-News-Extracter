@@ -13,35 +13,119 @@
     <div class="container">
         <header>
             <h1>YouTube Transcript Extractor</h1>
-            <p>Paste a YouTube link to extract the transcript instantly.</p>
+            <p>Extract and save video transcripts to your database</p>
         </header>
 
+        <!-- Tab Navigation -->
+        <nav class="tabs">
+            <button class="tab-btn active" data-tab="extract">📥 Extract</button>
+            <button class="tab-btn" data-tab="database">📂 Database</button>
+        </nav>
+
         <main>
-            <div class="input-group">
-                <input type="text" id="youtubeUrl" placeholder="https://www.youtube.com/watch?v=..." />
-                <button id="extractBtn">Extract Transcript</button>
-            </div>
-
-            <div id="loading" class="hidden">
-                <div class="spinner"></div>
-                <p>Extracting... this may take a few seconds.</p>
-            </div>
-
-            <div id="result" class="hidden">
-                <h2 id="videoTitle"></h2>
-                <div class="meta">
-                    <span id="videoDesc"></span>
+            <!-- Extract Tab -->
+            <section id="extract-tab" class="tab-content active">
+                <div class="input-group">
+                    <input type="text" id="youtubeUrl" placeholder="https://www.youtube.com/watch?v=..." />
+                    <button id="extractBtn">Extract</button>
                 </div>
-                <div class="transcript-container">
-                    <pre id="transcriptText"></pre>
-                    <button id="copyBtn" class="secondary-btn">Copy to Clipboard</button>
-                </div>
-            </div>
 
-            <div id="error" class="hidden">
-                <p id="errorMsg"></p>
-            </div>
+                <div id="loading" class="hidden">
+                    <div class="spinner"></div>
+                    <p>Extracting... this may take up to 60 seconds.</p>
+                </div>
+
+                <div id="preview" class="hidden">
+                    <div class="preview-card">
+                        <div class="preview-header">
+                            <span class="badge">Preview</span>
+                            <h2 id="previewTitle"></h2>
+                        </div>
+                        <div class="meta">
+                            <span id="previewDesc"></span>
+                        </div>
+                        <div class="transcript-container">
+                            <pre id="previewTranscript"></pre>
+                        </div>
+                        <div class="action-buttons">
+                            <button id="copyBtn" class="secondary-btn">📋 Copy to Clipboard</button>
+                            <button id="saveBtn" class="primary-btn">💾 Save to Database</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="success" class="hidden">
+                    <div class="success-message">
+                        <span>✅</span>
+                        <p id="successMsg"></p>
+                    </div>
+                </div>
+
+                <div id="error" class="hidden">
+                    <p id="errorMsg"></p>
+                </div>
+            </section>
+
+            <!-- Database Tab -->
+            <section id="database-tab" class="tab-content">
+                <div class="db-header">
+                    <div class="search-group">
+                        <input type="text" id="searchInput" placeholder="🔍 Search videos..." />
+                    </div>
+                    <span id="videoCount" class="video-count">0 videos</span>
+                </div>
+
+                <div id="dbLoading" class="hidden">
+                    <div class="spinner"></div>
+                    <p>Loading videos...</p>
+                </div>
+
+                <div id="videoList" class="video-list"></div>
+
+                <div id="emptyState" class="empty-state hidden">
+                    <p>📭 No videos saved yet.</p>
+                    <p class="subtext">Extract a transcript and save it to see it here.</p>
+                </div>
+            </section>
         </main>
+    </div>
+
+    <!-- Modal for viewing full transcript -->
+    <div id="modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle"></h2>
+                <button id="closeModal" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-meta">
+                <span id="modalDate"></span>
+                <span id="modalLength"></span>
+            </div>
+            <div class="modal-body">
+                <pre id="modalTranscript"></pre>
+            </div>
+            <div class="modal-footer">
+                <button id="modalCopyBtn" class="secondary-btn">📋 Copy to Clipboard</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal hidden">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>Delete Video?</h2>
+                <button class="close-btn close-delete-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete "<span id="deleteVideoTitle"></span>"?</p>
+                <p class="subtext">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="secondary-btn close-delete-modal">Cancel</button>
+                <button id="confirmDeleteBtn" class="danger-btn">🗑️ Delete</button>
+            </div>
+        </div>
     </div>
 
     <script src="app.js"></script>
