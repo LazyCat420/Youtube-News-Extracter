@@ -1,6 +1,6 @@
 require('dotenv/config');
-const PuppeteerWrapper = require('./src/puppeteerWrapper');
-const Database = require('./src/database');
+const PuppeteerWrapper = require('./src/services/puppeteerWrapper');
+const Database = require('./src/services/database');
 
 const SEARCH_QUERY = process.env.SEARCH_QUERY || 'Stock Market News Today';
 const MAX_VIDEOS = 3;

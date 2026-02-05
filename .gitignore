@@ -13,14 +13,20 @@
 # Database
 *.db
 *.sqlite
+/data/*.db
+/data/*.sqlite
 
 # Debugging & Logs
-logs/
+/logs/
 *.log
 debug_*
 debug_*.png
 debug_*.txt
 debug_*.json
+diagnose_*
+
+# Test Outputs
+test_output*.txt
 
 # OS Generated
 .DS_Store

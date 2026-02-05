@@ -1,7 +1,7 @@
 const express = require('express');
 const path = require('path');
-const PuppeteerWrapper = require('./src/puppeteerWrapper');
-const Database = require('./src/database');
+const PuppeteerWrapper = require('./src/services/puppeteerWrapper');
+const Database = require('./src/services/database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
