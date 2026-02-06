@@ -378,9 +378,45 @@ document.addEventListener('DOMContentLoaded', () => {
     const playlistHistory = document.getElementById('playlistHistory');
     const generatePlaylistBtn = document.getElementById('generatePlaylistBtn');
     const channelsList = document.getElementById('channelsList');
+    const authStatus = document.getElementById('authStatus');
+    const authActions = document.getElementById('authActions');
 
     // Store channels data in memory
     let channelsData = [];
+    let isLoggedIn = false;
+    let authConfigured = false;
+
+    // Check YouTube auth status on page load
+    async function checkAuthStatus() {
+        try {
+            const response = await fetch('/api/auth/status');
+            const data = await response.json();
+
+            authConfigured = data.configured;
+            isLoggedIn = data.loggedIn;
+
+            if (!data.configured) {
+                authStatus.innerHTML = '<span class="auth-not-configured">⚠️ YouTube API not configured</span>';
+                authActions.innerHTML = '<a href="/.env.example" target="_blank" class="secondary-btn">Setup Guide</a>';
+            } else if (data.loggedIn && data.user) {
+                authStatus.innerHTML = `
+                    ${data.user.picture ? `<img src="${data.user.picture}" alt="Profile">` : ''}
+                    <span class="user-name">Logged in as ${data.user.name || data.user.email}</span>
+                `;
+                authActions.innerHTML = '<a href="/auth/logout" class="logout-btn">Logout</a>';
+            } else {
+                authStatus.innerHTML = '<span>Login to save playlists to YouTube</span>';
+                authActions.innerHTML = '<a href="/auth/google" class="google-login-btn">🔐 Login with Google</a>';
+            }
+
+            // Re-render playlists to show/hide save buttons
+            loadPlaylists();
+        } catch (error) {
+            console.error('Auth status check failed:', error);
+            authStatus.innerHTML = '<span class="auth-not-configured">Auth check failed</span>';
+        }
+    }
+
 
     async function loadPlaylists() {
         try {
@@ -452,48 +488,108 @@ document.addEventListener('DOMContentLoaded', () => {
         return div.innerHTML;
     }
 
+    const categoryEmojis = {
+        finance: '🏦',
+        sports: '🏈',
+        cooking: '🍳',
+        tech: '💻',
+        news: '📰',
+        other: '📦'
+    };
+
     function renderPlaylists(playlists) {
         const VIDEOS_PER_PLAYLIST = 50;
 
-        playlistHistory.innerHTML = playlists.map(p => {
+        playlistHistory.innerHTML = playlists.map((p, playlistIndex) => {
             const date = new Date(p.createdAt).toLocaleString();
             const videos = Array.isArray(p.data) ? p.data : [];
             const count = videos.length;
 
-            // Split videos into chunks of 50
+            // Group videos by category
+            const categories = {};
+            videos.forEach(v => {
+                const cat = v.category || 'other';
+                if (!categories[cat]) categories[cat] = [];
+                categories[cat].push(v);
+            });
+
+            // Split videos into chunks of 50 for play buttons
             const chunks = [];
             for (let i = 0; i < videos.length; i += VIDEOS_PER_PLAYLIST) {
                 chunks.push(videos.slice(i, i + VIDEOS_PER_PLAYLIST));
             }
 
-            // Generate play buttons for each chunk
+            // Generate play buttons
             const playButtons = chunks.map((chunk, index) => {
                 const videoIds = chunk.map(v => v.id).join(',');
                 const playlistUrl = `https://www.youtube.com/watch_videos?video_ids=${videoIds}`;
-                const label = chunks.length > 1 ? `▶️ Part ${index + 1}` : '▶️ Play All';
+                const label = chunks.length > 1 ? `▶️ Part ${index + 1}` : '▶️ Play';
                 return `<a href="${playlistUrl}" target="_blank" class="secondary-btn">${label}</a>`;
             }).join('');
 
+            // Save to YouTube button
+            const allVideoIds = videos.map(v => v.id);
+            const saveButton = isLoggedIn
+                ? `<button class="save-youtube-btn" data-title="Playlist ${date}" data-videos='${JSON.stringify(allVideoIds)}'>💾 YouTube</button>`
+                : '';
+
+            // Generate category sections with video cards
+            const categorySections = Object.entries(categories).map(([cat, catVideos]) => `
+                <div class="category-section">
+                    <div class="category-header">
+                        <span class="category-emoji">${categoryEmojis[cat] || '📺'}</span>
+                        <span>${cat.charAt(0).toUpperCase() + cat.slice(1)}</span>
+                        <span class="category-count">(${catVideos.length})</span>
+                    </div>
+                    <div class="video-grid">
+                        ${catVideos.map(v => `
+                            <div class="video-card" data-video-id="${v.id}">
+                                <img class="video-thumbnail" src="${v.thumbnail || `https://i.ytimg.com/vi/${v.id}/mqdefault.jpg`}" alt="" onerror="this.src='https://via.placeholder.com/120x68?text=No+Thumb'">
+                                <div class="video-info">
+                                    <a href="https://youtube.com/watch?v=${v.id}" target="_blank" class="video-title" title="${escapeHtml(v.title)}">${escapeHtml(v.title)}</a>
+                                    <div class="video-channel">${escapeHtml(v.channelName || 'Unknown')}</div>
+                                </div>
+                                <div class="video-actions">
+                                    <button class="video-delete-btn" data-filename="${p.filename}" data-video-id="${v.id}" title="Remove">✕</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+
             return `
-                <li class="history-item">
-                    <div class="history-meta">
-                        <strong>${date}</strong>
-                        <span>${count} videos${chunks.length > 1 ? ` (${chunks.length} parts)` : ''}</span>
+                <div class="playlist-card" data-filename="${p.filename}">
+                    <div class="playlist-card-header" onclick="this.parentElement.classList.toggle('expanded')">
+                        <div class="playlist-meta">
+                            <span class="playlist-date">${date}</span>
+                            <span class="playlist-count">${count} videos • ${Object.keys(categories).length} categories</span>
+                        </div>
+                        <div class="playlist-actions" onclick="event.stopPropagation()">
+                            ${playButtons}
+                            ${saveButton}
+                            <button class="extract-btn" data-filename="${p.filename}">📜 Extract</button>
+                            <button class="expand-btn">📂 View</button>
+                            <button class="icon-btn delete-playlist-btn" data-filename="${p.filename}">🗑️</button>
+                        </div>
                     </div>
-                    <div class="history-actions">
-                        ${playButtons}
-                        <a href="/auto-yt-playlist/output/${p.filename.replace('.json', '.md')}" target="_blank" class="secondary-btn">📄 Markdown</a>
-                        <button class="icon-btn delete-playlist-btn" data-filename="${p.filename}">🗑️</button>
+                    <div class="collapsed-content">
+                        ${categorySections}
                     </div>
-                </li>
+                </div>
             `;
         }).join('');
 
-        // Attach listeners
-        document.querySelectorAll('.delete-playlist-btn').forEach(btn => {
-            btn.addEventListener('click', async () => {
-                if (!confirm('Are you sure you want to delete this playlist?')) return;
+        // Attach event listeners
+        attachPlaylistListeners();
+    }
 
+    function attachPlaylistListeners() {
+        // Delete playlist
+        document.querySelectorAll('.delete-playlist-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                if (!confirm('Delete this entire playlist?')) return;
                 const filename = btn.dataset.filename;
                 try {
                     const response = await fetch(`/api/playlist/${filename}`, { method: 'DELETE' });
@@ -505,9 +601,117 @@ document.addEventListener('DOMContentLoaded', () => {
                         showError('Failed to delete playlist.');
                     }
                 } catch (error) {
-                    console.error('Delete playlist error:', error);
+                    console.error('Delete error:', error);
                     showError('Server error.');
                 }
+            });
+        });
+
+        // Delete single video
+        document.querySelectorAll('.video-delete-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const filename = btn.dataset.filename;
+                const videoId = btn.dataset.videoId;
+                const card = btn.closest('.video-card');
+
+                try {
+                    const response = await fetch(`/api/playlist/${filename}/video/${videoId}`, { method: 'DELETE' });
+                    const data = await response.json();
+                    if (data.success) {
+                        card.style.opacity = '0';
+                        setTimeout(() => {
+                            card.remove();
+                            showSuccess('Video removed.');
+                        }, 200);
+                    } else {
+                        showError(data.error || 'Failed to remove video.');
+                    }
+                } catch (error) {
+                    console.error('Delete video error:', error);
+                    showError('Server error.');
+                }
+            });
+        });
+
+        // Extract transcripts
+        document.querySelectorAll('.extract-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                if (!confirm('Extract transcripts for all videos? This may take several minutes.')) return;
+
+                const filename = btn.dataset.filename;
+                btn.disabled = true;
+                btn.textContent = '⏳ Extracting...';
+
+                try {
+                    const response = await fetch(`/api/playlist/${filename}/extract-transcripts`, { method: 'POST' });
+                    const data = await response.json();
+
+                    if (data.success) {
+                        btn.textContent = `✅ ${data.extracted}/${data.total}`;
+                        showSuccess(`Extracted ${data.extracted} of ${data.total} transcripts!`);
+                    } else {
+                        throw new Error(data.error || 'Extraction failed');
+                    }
+                } catch (error) {
+                    console.error('Extract error:', error);
+                    btn.textContent = '❌ Failed';
+                    showError(error.message || 'Extraction failed.');
+                }
+
+                setTimeout(() => {
+                    btn.textContent = '📜 Extract';
+                    btn.disabled = false;
+                }, 3000);
+            });
+        });
+
+        // Save to YouTube
+        document.querySelectorAll('.save-youtube-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const title = btn.dataset.title;
+                const videoIds = JSON.parse(btn.dataset.videos);
+
+                btn.disabled = true;
+                btn.textContent = '⏳...';
+
+                try {
+                    const response = await fetch('/api/playlist/save-to-youtube', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ title, videoIds, privacy: 'private' })
+                    });
+                    const data = await response.json();
+
+                    if (data.success) {
+                        btn.textContent = '✅ Saved!';
+                        showSuccess(`Saved to YouTube! ${data.videosAdded}/${data.totalVideos} videos.`);
+                        if (data.playlistUrl) window.open(data.playlistUrl, '_blank');
+                    } else {
+                        throw new Error(data.error || 'Failed to save');
+                    }
+                } catch (error) {
+                    console.error('Save to YouTube error:', error);
+                    btn.textContent = '❌';
+                    showError(error.message || 'Failed to save to YouTube');
+                }
+
+                setTimeout(() => {
+                    btn.textContent = '💾 YouTube';
+                    btn.disabled = false;
+                }, 2000);
+            });
+        });
+
+        // Expand button
+        document.querySelectorAll('.expand-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const card = btn.closest('.playlist-card');
+                card.classList.toggle('expanded');
+                btn.textContent = card.classList.contains('expanded') ? '📁 Hide' : '📂 View';
             });
         });
     }
@@ -612,6 +816,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Load channels on page load
     loadChannels();
+
+    // Check YouTube auth status on page load
+    checkAuthStatus();
 
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {

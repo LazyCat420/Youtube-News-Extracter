@@ -93,6 +93,16 @@
 
             <!-- Auto Playlist Tab -->
             <section id="playlist-tab" class="tab-content">
+                <!-- YouTube Auth Status Bar -->
+                <div id="authBar" class="auth-bar">
+                    <div id="authStatus" class="auth-status">
+                        <span class="auth-loading">Checking login status...</span>
+                    </div>
+                    <div id="authActions">
+                        <!-- Login/Logout buttons will be injected here -->
+                    </div>
+                </div>
+
                 <div class="playlist-header">
                     <h2>Daily Auto-Playlist</h2>
                     <button id="generatePlaylistBtn" class="primary-btn">⚡ Generate Now</button>
@@ -109,9 +119,9 @@
 
                 <div class="playlist-section">
                     <h3>Recent Playlists</h3>
-                    <ul id="playlistHistory" class="history-list">
-                        <!-- History items -->
-                    </ul>
+                    <div id="playlistHistory" class="playlist-dashboard">
+                        <!-- Playlists with video cards will be rendered here -->
+                    </div>
                 </div>
 
                 <div class="playlist-section">

@@ -1,14 +1,41 @@
+require('dotenv').config();
 const express = require('express');
 const path = require('path');
+const session = require('express-session');
 const PuppeteerWrapper = require('./src/services/puppeteerWrapper');
 const Database = require('./src/services/database');
+const YouTubeAPIService = require('./services/youtube-api');
 
 const app = express();
 const PORT = process.env.PORT || 3010;
 
+// Initialize YouTube API service (only if credentials are configured)
+let youtubeService = null;
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+    youtubeService = new YouTubeAPIService(
+        process.env.GOOGLE_CLIENT_ID,
+        process.env.GOOGLE_CLIENT_SECRET,
+        `http://localhost:${PORT}/auth/google/callback`
+    );
+    console.log('✅ YouTube API service initialized');
+} else {
+    console.log('⚠️  YouTube API not configured - add credentials to .env file');
+}
+
 // Middleware
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
+
+// Session middleware for OAuth
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'dev-secret-change-this',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        secure: false, // Set to true in production with HTTPS
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 1 week
+    }
+}));
 
 // Routes - Extract transcript (preview only, doesn't save)
 app.post('/api/extract', async (req, res) => {
@@ -173,6 +200,136 @@ app.delete('/api/playlist/:filename', async (req, res) => {
     }
 });
 
+// Delete single video from playlist
+app.delete('/api/playlist/:filename/video/:videoId', async (req, res) => {
+    try {
+        const { filename, videoId } = req.params;
+
+        if (!filename || filename.includes('..') || !filename.endsWith('.json')) {
+            return res.status(400).json({ error: 'Invalid filename' });
+        }
+
+        const jsonPath = path.join(OUTPUT_DIR, filename);
+        const mdPath = jsonPath.replace('.json', '.md');
+
+        if (!fs.existsSync(jsonPath)) {
+            return res.status(404).json({ error: 'Playlist not found' });
+        }
+
+        // Read, filter, and save
+        let videos = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+        const originalCount = videos.length;
+        videos = videos.filter(v => v.id !== videoId);
+
+        if (videos.length === originalCount) {
+            return res.status(404).json({ error: 'Video not found in playlist' });
+        }
+
+        fs.writeFileSync(jsonPath, JSON.stringify(videos, null, 2));
+
+        // Regenerate markdown
+        const mdContent = generateMarkdownFromVideos(videos);
+        fs.writeFileSync(mdPath, mdContent);
+
+        res.json({ success: true, message: 'Video removed', remainingCount: videos.length });
+    } catch (error) {
+        console.error('Delete video error:', error);
+        res.status(500).json({ error: 'Failed to delete video.' });
+    }
+});
+
+// Helper to regenerate markdown
+function generateMarkdownFromVideos(videos) {
+    const lines = ['# Daily YouTube Playlist', '', `Generated: ${new Date().toISOString()}`, '', `Total videos: ${videos.length}`, ''];
+
+    // Group by category
+    const categories = {};
+    videos.forEach(v => {
+        const cat = v.category || 'other';
+        if (!categories[cat]) categories[cat] = [];
+        categories[cat].push(v);
+    });
+
+    const categoryEmojis = {
+        finance: '🏦',
+        sports: '🏈',
+        cooking: '🍳',
+        tech: '💻',
+        news: '📰',
+        other: '📦'
+    };
+
+    for (const [cat, catVideos] of Object.entries(categories)) {
+        lines.push(`## ${categoryEmojis[cat] || '📺'} ${cat.charAt(0).toUpperCase() + cat.slice(1)}`, '');
+        catVideos.forEach((v, i) => {
+            lines.push(`${i + 1}. **${v.title}** - ${v.channelName}`);
+            lines.push(`   - https://youtube.com/watch?v=${v.id}`);
+        });
+        lines.push('');
+    }
+
+    return lines.join('\n');
+}
+
+// Batch extract transcripts from playlist
+app.post('/api/playlist/:filename/extract-transcripts', async (req, res) => {
+    try {
+        const { filename } = req.params;
+
+        if (!filename || filename.includes('..') || !filename.endsWith('.json')) {
+            return res.status(400).json({ error: 'Invalid filename' });
+        }
+
+        const jsonPath = path.join(OUTPUT_DIR, filename);
+
+        if (!fs.existsSync(jsonPath)) {
+            return res.status(404).json({ error: 'Playlist not found' });
+        }
+
+        const videos = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+        const results = [];
+
+        console.log(`Starting batch extraction for ${videos.length} videos...`);
+
+        for (const video of videos) {
+            try {
+                const url = `https://youtube.com/watch?v=${video.id}`;
+                console.log(`Extracting: ${video.title}`);
+
+                const result = await PuppeteerWrapper.scrapeURL(url);
+
+                if (result && result.transcript) {
+                    // Save to database
+                    Database.saveVideo({
+                        title: video.title,
+                        url: url,
+                        description: result.description || '',
+                        transcript: result.transcript
+                    });
+
+                    results.push({ id: video.id, success: true, title: video.title });
+                } else {
+                    results.push({ id: video.id, success: false, title: video.title, error: 'No transcript' });
+                }
+            } catch (err) {
+                console.error(`Error extracting ${video.id}:`, err.message);
+                results.push({ id: video.id, success: false, title: video.title, error: err.message });
+            }
+        }
+
+        const successCount = results.filter(r => r.success).length;
+        res.json({
+            success: true,
+            extracted: successCount,
+            total: videos.length,
+            results
+        });
+    } catch (error) {
+        console.error('Batch extraction error:', error);
+        res.status(500).json({ error: 'Failed to extract transcripts.' });
+    }
+});
+
 // Get Channels
 app.get('/api/playlist/channels', async (req, res) => {
     try {
@@ -200,6 +357,117 @@ app.post('/api/playlist/channels', async (req, res) => {
     } catch (error) {
         console.error('Channels update error:', error);
         res.status(500).json({ error: 'Failed to update channels.' });
+    }
+});
+
+// ============ YouTube OAuth Routes ============
+
+// Check auth status
+app.get('/api/auth/status', (req, res) => {
+    if (!youtubeService) {
+        return res.json({ configured: false, loggedIn: false });
+    }
+
+    if (req.session && req.session.tokens) {
+        res.json({
+            configured: true,
+            loggedIn: true,
+            user: req.session.user || null
+        });
+    } else {
+        res.json({ configured: true, loggedIn: false });
+    }
+});
+
+// Initiate Google OAuth
+app.get('/auth/google', (req, res) => {
+    if (!youtubeService) {
+        return res.status(503).send('YouTube API not configured. Add credentials to .env file.');
+    }
+
+    const authUrl = youtubeService.getAuthUrl();
+    res.redirect(authUrl);
+});
+
+// OAuth callback
+app.get('/auth/google/callback', async (req, res) => {
+    const { code, error } = req.query;
+
+    if (error) {
+        console.error('OAuth error:', error);
+        return res.redirect('/?auth=error');
+    }
+
+    if (!code) {
+        return res.redirect('/?auth=error');
+    }
+
+    try {
+        const tokens = await youtubeService.getTokens(code);
+        req.session.tokens = tokens;
+
+        // Store tokens in service for this session
+        youtubeService.setCredentials(tokens);
+
+        // Get user info
+        const userInfo = await youtubeService.getUserInfo();
+        req.session.user = {
+            email: userInfo.email,
+            name: userInfo.name,
+            picture: userInfo.picture
+        };
+
+        console.log(`✅ User logged in: ${userInfo.email}`);
+        res.redirect('/?auth=success');
+    } catch (err) {
+        console.error('OAuth callback error:', err);
+        res.redirect('/?auth=error');
+    }
+});
+
+// Logout
+app.get('/auth/logout', (req, res) => {
+    req.session.destroy();
+    res.redirect('/?auth=logout');
+});
+
+// Save playlist to YouTube
+app.post('/api/playlist/save-to-youtube', async (req, res) => {
+    if (!youtubeService) {
+        return res.status(503).json({ error: 'YouTube API not configured' });
+    }
+
+    if (!req.session || !req.session.tokens) {
+        return res.status(401).json({ error: 'Not logged in. Please login with Google first.' });
+    }
+
+    const { title, videoIds, privacy = 'private' } = req.body;
+
+    if (!title || !videoIds || !Array.isArray(videoIds)) {
+        return res.status(400).json({ error: 'Title and videoIds array required' });
+    }
+
+    try {
+        // Set credentials for this request
+        youtubeService.setCredentials(req.session.tokens);
+
+        const result = await youtubeService.createPlaylistWithVideos(
+            title,
+            videoIds,
+            `Auto-generated playlist from YouTube News Extracter on ${new Date().toLocaleDateString()}`,
+            privacy
+        );
+
+        res.json({
+            success: true,
+            playlistId: result.playlist.id,
+            playlistUrl: `https://www.youtube.com/playlist?list=${result.playlist.id}`,
+            videosAdded: result.videosAdded,
+            totalVideos: result.totalVideos
+        });
+    } catch (error) {
+        console.error('Save to YouTube error:', error);
+        res.status(500).json({ error: 'Failed to save playlist to YouTube: ' + error.message });
     }
 });
 

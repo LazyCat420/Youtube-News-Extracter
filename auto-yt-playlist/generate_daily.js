@@ -99,16 +99,24 @@ async function fetchVideosViaRSS(channelId, channelName) {
             return [];
         }
 
-        const videos = json.feed.entry.map(entry => ({
-            id: entry['yt:videoId'][0],
-            title: entry.title[0],
-            published: entry.published[0],
-            channelName: channelName,
-            // Convert published date to YYYYMMDD format for compatibility
-            upload_date: entry.published[0].substring(0, 10).replace(/-/g, ''),
-            // No duration in RSS, set to null (will need yt-dlp for accurate shorts filtering)
-            duration: null
-        }));
+        const videos = json.feed.entry.map(entry => {
+            const videoId = entry['yt:videoId'][0];
+            const title = entry.title[0];
+            return {
+                id: videoId,
+                title: title,
+                published: entry.published[0],
+                channelName: channelName,
+                // Convert published date to YYYYMMDD format for compatibility
+                upload_date: entry.published[0].substring(0, 10).replace(/-/g, ''),
+                // No duration in RSS, set to null (will need yt-dlp for accurate shorts filtering)
+                duration: null,
+                // YouTube thumbnail URL
+                thumbnail: `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`,
+                // Categorize by title keywords
+                category: categorizeVideo(title)
+            };
+        });
 
         console.log(`  [RSS] Fetched ${videos.length} videos`);
         return videos;
@@ -116,6 +124,35 @@ async function fetchVideosViaRSS(channelId, channelName) {
         console.error(`  [RSS ERROR] ${error.message}`);
         return [];
     }
+}
+
+/**
+ * Categorize video based on title keywords
+ */
+function categorizeVideo(title) {
+    const titleLower = title.toLowerCase();
+
+    // Finance keywords
+    const financeKeywords = ['stock', 'market', 'invest', 'trading', 'crypto', 'bitcoin', 'economy', 'fed', 'inflation', 'earnings', 'dividend', 'finance', 'money', 'banking', 'treasury', 'bonds', 'etf', 'nasdaq', 's&p', 'dow', 'forex', 'portfolio', 'valuation', 'hedge', 'yield'];
+    if (financeKeywords.some(kw => titleLower.includes(kw))) return 'finance';
+
+    // Sports keywords
+    const sportsKeywords = ['game', 'score', 'nfl', 'nba', 'mlb', 'nhl', 'soccer', 'football', 'basketball', 'baseball', 'hockey', 'tennis', 'golf', 'olympics', 'playoff', 'championship', 'super bowl', 'world cup', 'athlete', 'espn'];
+    if (sportsKeywords.some(kw => titleLower.includes(kw))) return 'sports';
+
+    // Cooking keywords
+    const cookingKeywords = ['recipe', 'cook', 'bake', 'food', 'kitchen', 'meal', 'dinner', 'lunch', 'breakfast', 'chef', 'ingredient', 'cuisine', 'grill', 'roast', 'fry'];
+    if (cookingKeywords.some(kw => titleLower.includes(kw))) return 'cooking';
+
+    // Tech keywords
+    const techKeywords = ['tech', 'software', 'ai', 'artificial intelligence', 'machine learning', 'coding', 'programming', 'gadget', 'smartphone', 'computer', 'apple', 'google', 'microsoft', 'startup', 'app', 'developer'];
+    if (techKeywords.some(kw => titleLower.includes(kw))) return 'tech';
+
+    // News keywords
+    const newsKeywords = ['breaking', 'news', 'politics', 'election', 'president', 'congress', 'senate', 'government', 'policy', 'law', 'court', 'supreme', 'ukraine', 'china', 'war', 'crisis'];
+    if (newsKeywords.some(kw => titleLower.includes(kw))) return 'news';
+
+    return 'other';
 }
 
 /**

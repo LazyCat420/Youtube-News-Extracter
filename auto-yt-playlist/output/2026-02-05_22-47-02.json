@@ -1,11 +1,33 @@
 [
   {
+    "id": "ahqSfLb4YuQ",
+    "title": "Trump Won’t Rip Down Kennedy Center for $200 Million Renovation",
+    "published": "2026-02-06T05:00:03+00:00",
+    "channelName": "Bloomberg",
+    "upload_date": "20260206",
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/ahqSfLb4YuQ/mqdefault.jpg",
+    "category": "finance"
+  },
+  {
+    "id": "LxJqsEkym8E",
+    "title": "Asian stocks fall as tech, bitcoin rout extends | The Asia Trade 2/6/2026",
+    "published": "2026-02-06T03:34:10+00:00",
+    "channelName": "Bloomberg",
+    "upload_date": "20260206",
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/LxJqsEkym8E/mqdefault.jpg",
+    "category": "finance"
+  },
+  {
     "id": "2bnUa8-FiaA",
     "title": "Will Thailand Recriminalize Cannabis?",
     "published": "2026-02-06T02:00:03+00:00",
     "channelName": "Bloomberg",
     "upload_date": "20260206",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/2bnUa8-FiaA/mqdefault.jpg",
+    "category": "tech"
   },
   {
     "id": "ybKcTbDGmz0",
@@ -13,7 +35,9 @@
     "published": "2026-02-06T01:53:46+00:00",
     "channelName": "Bloomberg",
     "upload_date": "20260206",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/ybKcTbDGmz0/mqdefault.jpg",
+    "category": "other"
   },
   {
     "id": "iFJJLHdDv6U",
@@ -21,7 +45,9 @@
     "published": "2026-02-06T01:49:27+00:00",
     "channelName": "Bloomberg",
     "upload_date": "20260206",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/iFJJLHdDv6U/mqdefault.jpg",
+    "category": "news"
   },
   {
     "id": "-BTAS5rJNVo",
@@ -29,7 +55,9 @@
     "published": "2026-02-06T01:26:26+00:00",
     "channelName": "Bloomberg",
     "upload_date": "20260206",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/-BTAS5rJNVo/mqdefault.jpg",
+    "category": "finance"
   },
   {
     "id": "_MRIQSnbs6M",
@@ -37,7 +65,19 @@
     "published": "2026-02-06T00:17:41+00:00",
     "channelName": "Bloomberg",
     "upload_date": "20260206",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/_MRIQSnbs6M/mqdefault.jpg",
+    "category": "finance"
+  },
+  {
+    "id": "erVGpg0dNYo",
+    "title": "Rep. Alexandria Ocasio-Cortez on Negotiating ICE Reforms",
+    "published": "2026-02-06T02:41:47+00:00",
+    "channelName": "CSPAN",
+    "upload_date": "20260206",
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/erVGpg0dNYo/mqdefault.jpg",
+    "category": "other"
   },
   {
     "id": "g-u9NWfu50U",
@@ -45,7 +85,9 @@
     "published": "2026-02-06T01:15:55+00:00",
     "channelName": "CSPAN",
     "upload_date": "20260206",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/g-u9NWfu50U/mqdefault.jpg",
+    "category": "news"
   },
   {
     "id": "i39LAFpEpdI",
@@ -53,7 +95,9 @@
     "published": "2026-02-06T00:26:20+00:00",
     "channelName": "CNBC television",
     "upload_date": "20260206",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/i39LAFpEpdI/mqdefault.jpg",
+    "category": "other"
   },
   {
     "id": "tDlffK3fZho",
@@ -61,7 +105,9 @@
     "published": "2026-02-06T00:26:13+00:00",
     "channelName": "CNBC television",
     "upload_date": "20260206",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/tDlffK3fZho/mqdefault.jpg",
+    "category": "tech"
   },
   {
     "id": "TokdXeCPsHg",
@@ -69,7 +115,9 @@
     "published": "2026-02-06T00:25:01+00:00",
     "channelName": "CNBC television",
     "upload_date": "20260206",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/TokdXeCPsHg/mqdefault.jpg",
+    "category": "tech"
   },
   {
     "id": "QtOj5vVXSis",
@@ -77,7 +125,9 @@
     "published": "2026-02-06T00:23:46+00:00",
     "channelName": "CNBC television",
     "upload_date": "20260206",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/QtOj5vVXSis/mqdefault.jpg",
+    "category": "news"
   },
   {
     "id": "0i6Znp7KIqE",
@@ -85,7 +135,9 @@
     "published": "2026-02-05T21:10:40+00:00",
     "channelName": "Townsends",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/0i6Znp7KIqE/mqdefault.jpg",
+    "category": "other"
   },
   {
     "id": "Z4RxUSSBq5U",
@@ -93,7 +145,9 @@
     "published": "2026-02-05T19:50:55+00:00",
     "channelName": "Big A",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/Z4RxUSSBq5U/mqdefault.jpg",
+    "category": "finance"
   },
   {
     "id": "y3eDpDqT0ME",
@@ -101,7 +155,9 @@
     "published": "2026-02-05T05:44:46+00:00",
     "channelName": "Big A",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/y3eDpDqT0ME/mqdefault.jpg",
+    "category": "other"
   },
   {
     "id": "NwzpiLC-L4Y",
@@ -109,7 +165,9 @@
     "published": "2026-02-05T03:52:06+00:00",
     "channelName": "Big A",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/NwzpiLC-L4Y/mqdefault.jpg",
+    "category": "other"
   },
   {
     "id": "U9L7gYpFMIg",
@@ -117,7 +175,9 @@
     "published": "2026-02-05T22:34:52+00:00",
     "channelName": "Bloomberg",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/U9L7gYpFMIg/mqdefault.jpg",
+    "category": "finance"
   },
   {
     "id": "EbYaU0Yde5Q",
@@ -125,7 +185,9 @@
     "published": "2026-02-05T22:26:07+00:00",
     "channelName": "Bloomberg",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/EbYaU0Yde5Q/mqdefault.jpg",
+    "category": "finance"
   },
   {
     "id": "_5hWEQxyRrE",
@@ -133,7 +195,9 @@
     "published": "2026-02-05T22:08:37+00:00",
     "channelName": "Bloomberg",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/_5hWEQxyRrE/mqdefault.jpg",
+    "category": "tech"
   },
   {
     "id": "fc24c79ie0s",
@@ -141,7 +205,9 @@
     "published": "2026-02-05T21:49:21+00:00",
     "channelName": "Bloomberg",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/fc24c79ie0s/mqdefault.jpg",
+    "category": "news"
   },
   {
     "id": "WNU10p0Gc_M",
@@ -149,7 +215,9 @@
     "published": "2026-02-05T21:35:45+00:00",
     "channelName": "Bloomberg",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/WNU10p0Gc_M/mqdefault.jpg",
+    "category": "tech"
   },
   {
     "id": "v1c9fSscRGQ",
@@ -157,7 +225,9 @@
     "published": "2026-02-05T21:11:19+00:00",
     "channelName": "Bloomberg",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/v1c9fSscRGQ/mqdefault.jpg",
+    "category": "finance"
   },
   {
     "id": "SuAAXw5BKiA",
@@ -165,23 +235,9 @@
     "published": "2026-02-05T21:10:17+00:00",
     "channelName": "Bloomberg",
     "upload_date": "20260205",
-    "duration": null
-  },
-  {
-    "id": "Z6CPoqhrIrQ",
-    "title": "Senator Warren, Secretary Bessent Clash on Suing Warsh Over Rates #politics",
-    "published": "2026-02-05T21:01:55+00:00",
-    "channelName": "Bloomberg",
-    "upload_date": "20260205",
-    "duration": null
-  },
-  {
-    "id": "jztbcLhGqUc",
-    "title": "Is Data Center Demand Overhyped? One analyst thinks so",
-    "published": "2026-02-05T20:47:05+00:00",
-    "channelName": "Bloomberg",
-    "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/SuAAXw5BKiA/mqdefault.jpg",
+    "category": "other"
   },
   {
     "id": "kVDF5ZQ0QEs",
@@ -189,7 +245,9 @@
     "published": "2026-02-05T19:00:54+00:00",
     "channelName": "CNBC",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/kVDF5ZQ0QEs/mqdefault.jpg",
+    "category": "finance"
   },
   {
     "id": "CMIzdj9QNmg",
@@ -197,7 +255,9 @@
     "published": "2026-02-05T17:00:16+00:00",
     "channelName": "CNBC",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/CMIzdj9QNmg/mqdefault.jpg",
+    "category": "other"
   },
   {
     "id": "9LY2T_OLlvA",
@@ -205,7 +265,9 @@
     "published": "2026-02-05T15:00:16+00:00",
     "channelName": "CNBC",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/9LY2T_OLlvA/mqdefault.jpg",
+    "category": "other"
   },
   {
     "id": "7jZ3aneBb8k",
@@ -213,7 +275,9 @@
     "published": "2026-02-05T18:00:17+00:00",
     "channelName": "RealEismanPlaybook",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/7jZ3aneBb8k/mqdefault.jpg",
+    "category": "finance"
   },
   {
     "id": "8xY4qcrrGPI",
@@ -221,7 +285,9 @@
     "published": "2026-02-05T16:29:08+00:00",
     "channelName": "The Compound News",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/8xY4qcrrGPI/mqdefault.jpg",
+    "category": "other"
   },
   {
     "id": "r06tnztEOys",
@@ -229,7 +295,9 @@
     "published": "2026-02-05T09:51:33+00:00",
     "channelName": "Aswath Damodaranon Valuation",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/r06tnztEOys/mqdefault.jpg",
+    "category": "other"
   },
   {
     "id": "aOWcPmu1Z2w",
@@ -237,7 +305,9 @@
     "published": "2026-02-05T17:20:30+00:00",
     "channelName": "Adam Taggart | Thoughtful Money",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/aOWcPmu1Z2w/mqdefault.jpg",
+    "category": "finance"
   },
   {
     "id": "LgHodCHq9-0",
@@ -245,7 +315,9 @@
     "published": "2026-02-05T16:00:08+00:00",
     "channelName": "Adam Taggart | Thoughtful Money",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/LgHodCHq9-0/mqdefault.jpg",
+    "category": "finance"
   },
   {
     "id": "impYCtd3QKo",
@@ -253,7 +325,9 @@
     "published": "2026-02-05T23:56:01+00:00",
     "channelName": "CSPAN",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/impYCtd3QKo/mqdefault.jpg",
+    "category": "cooking"
   },
   {
     "id": "RIGCgP6l77Q",
@@ -261,7 +335,9 @@
     "published": "2026-02-05T21:13:14+00:00",
     "channelName": "CSPAN",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/RIGCgP6l77Q/mqdefault.jpg",
+    "category": "news"
   },
   {
     "id": "Z0XgAtj6tuA",
@@ -269,7 +345,9 @@
     "published": "2026-02-05T20:12:34+00:00",
     "channelName": "CSPAN",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/Z0XgAtj6tuA/mqdefault.jpg",
+    "category": "other"
   },
   {
     "id": "6Lyf-iGpxow",
@@ -277,7 +355,9 @@
     "published": "2026-02-05T19:17:21+00:00",
     "channelName": "CSPAN",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/6Lyf-iGpxow/mqdefault.jpg",
+    "category": "other"
   },
   {
     "id": "OoDcCkFNvCc",
@@ -285,7 +365,9 @@
     "published": "2026-02-05T19:15:48+00:00",
     "channelName": "CSPAN",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/OoDcCkFNvCc/mqdefault.jpg",
+    "category": "other"
   },
   {
     "id": "TBqoyXDQvEc",
@@ -293,7 +375,9 @@
     "published": "2026-02-05T18:40:48+00:00",
     "channelName": "CSPAN",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/TBqoyXDQvEc/mqdefault.jpg",
+    "category": "finance"
   },
   {
     "id": "Jciet4Touvo",
@@ -301,7 +385,9 @@
     "published": "2026-02-05T18:38:13+00:00",
     "channelName": "CSPAN",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/Jciet4Touvo/mqdefault.jpg",
+    "category": "other"
   },
   {
     "id": "lZ-d_QVWNhA",
@@ -309,7 +395,9 @@
     "published": "2026-02-05T17:40:02+00:00",
     "channelName": "CSPAN",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/lZ-d_QVWNhA/mqdefault.jpg",
+    "category": "other"
   },
   {
     "id": "MntYF0R1HjU",
@@ -317,7 +405,9 @@
     "published": "2026-02-05T17:14:26+00:00",
     "channelName": "CSPAN",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/MntYF0R1HjU/mqdefault.jpg",
+    "category": "other"
   },
   {
     "id": "w61kfu5Oscc",
@@ -325,7 +415,9 @@
     "published": "2026-02-05T16:31:10+00:00",
     "channelName": "CSPAN",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/w61kfu5Oscc/mqdefault.jpg",
+    "category": "finance"
   },
   {
     "id": "Ne0XkbkTygw",
@@ -333,7 +425,9 @@
     "published": "2026-02-05T16:24:30+00:00",
     "channelName": "CSPAN",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/Ne0XkbkTygw/mqdefault.jpg",
+    "category": "other"
   },
   {
     "id": "vvKN22e_u7M",
@@ -341,7 +435,9 @@
     "published": "2026-02-05T15:06:52+00:00",
     "channelName": "CSPAN",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/vvKN22e_u7M/mqdefault.jpg",
+    "category": "cooking"
   },
   {
     "id": "TQNpgszKvGs",
@@ -349,7 +445,9 @@
     "published": "2026-02-05T09:00:42+00:00",
     "channelName": "CSPAN",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/TQNpgszKvGs/mqdefault.jpg",
+    "category": "sports"
   },
   {
     "id": "H8SFO9FjPXI",
@@ -357,7 +455,9 @@
     "published": "2026-02-05T23:48:17+00:00",
     "channelName": "CNBC television",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/H8SFO9FjPXI/mqdefault.jpg",
+    "category": "other"
   },
   {
     "id": "yBomGLveBBo",
@@ -365,7 +465,9 @@
     "published": "2026-02-05T23:30:17+00:00",
     "channelName": "CNBC television",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/yBomGLveBBo/mqdefault.jpg",
+    "category": "other"
   },
   {
     "id": "5oX-N80nc4Y",
@@ -373,7 +475,9 @@
     "published": "2026-02-05T23:15:01+00:00",
     "channelName": "CNBC television",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/5oX-N80nc4Y/mqdefault.jpg",
+    "category": "tech"
   },
   {
     "id": "CCZn2YBp4xY",
@@ -381,7 +485,9 @@
     "published": "2026-02-05T23:00:14+00:00",
     "channelName": "CNBC television",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/CCZn2YBp4xY/mqdefault.jpg",
+    "category": "other"
   },
   {
     "id": "E2TMcX2I6oM",
@@ -389,7 +495,9 @@
     "published": "2026-02-05T22:45:03+00:00",
     "channelName": "CNBC television",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/E2TMcX2I6oM/mqdefault.jpg",
+    "category": "tech"
   },
   {
     "id": "m6iALJUeF74",
@@ -397,7 +505,9 @@
     "published": "2026-02-05T22:30:13+00:00",
     "channelName": "CNBC television",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/m6iALJUeF74/mqdefault.jpg",
+    "category": "other"
   },
   {
     "id": "6UldH0KwPU8",
@@ -405,7 +515,9 @@
     "published": "2026-02-05T22:15:00+00:00",
     "channelName": "CNBC television",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/6UldH0KwPU8/mqdefault.jpg",
+    "category": "tech"
   },
   {
     "id": "znVOw3R0lZ0",
@@ -413,7 +525,9 @@
     "published": "2026-02-05T22:01:09+00:00",
     "channelName": "CNBC television",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/znVOw3R0lZ0/mqdefault.jpg",
+    "category": "tech"
   },
   {
     "id": "mbta0vFKVbc",
@@ -421,7 +535,9 @@
     "published": "2026-02-05T21:45:04+00:00",
     "channelName": "CNBC television",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/mbta0vFKVbc/mqdefault.jpg",
+    "category": "other"
   },
   {
     "id": "1p-YYr5Jm_I",
@@ -429,7 +545,9 @@
     "published": "2026-02-05T21:37:06+00:00",
     "channelName": "CNBC television",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/1p-YYr5Jm_I/mqdefault.jpg",
+    "category": "finance"
   },
   {
     "id": "OxW3B8uJtik",
@@ -437,7 +555,9 @@
     "published": "2026-02-05T21:30:02+00:00",
     "channelName": "CNBC television",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/OxW3B8uJtik/mqdefault.jpg",
+    "category": "other"
   },
   {
     "id": "GnoK6-Bk1Vo",
@@ -445,15 +565,19 @@
     "published": "2026-02-05T12:31:50+00:00",
     "channelName": "Defi Dads",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/GnoK6-Bk1Vo/mqdefault.jpg",
+    "category": "other"
   },
   {
     "id": "AbaouZO2a5w",
-    "title": "AI Stock Bubble Is Bursting (Here's When)",
+    "title": "AI Stock Bubble Is Bursting (What You Must Know)",
     "published": "2026-02-05T23:36:45+00:00",
     "channelName": "Deadnsyde",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/AbaouZO2a5w/mqdefault.jpg",
+    "category": "finance"
   },
   {
     "id": "9fPp4-PeyXo",
@@ -461,7 +585,9 @@
     "published": "2026-02-05T14:00:26+00:00",
     "channelName": "Coin Bureau",
     "upload_date": "20260205",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/9fPp4-PeyXo/mqdefault.jpg",
+    "category": "finance"
   },
   {
     "id": "Jf9wY7goyzI",
@@ -469,7 +595,9 @@
     "published": "2026-02-04T18:42:40+00:00",
     "channelName": "TechCrunch",
     "upload_date": "20260204",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/Jf9wY7goyzI/mqdefault.jpg",
+    "category": "tech"
   },
   {
     "id": "hSDlgCKBx6w",
@@ -477,7 +605,9 @@
     "published": "2026-02-04T18:25:33+00:00",
     "channelName": "Y Combinator",
     "upload_date": "20260204",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/hSDlgCKBx6w/mqdefault.jpg",
+    "category": "tech"
   },
   {
     "id": "O5lQXYCkYAo",
@@ -485,7 +615,9 @@
     "published": "2026-02-04T02:18:51+00:00",
     "channelName": "Big A",
     "upload_date": "20260204",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/O5lQXYCkYAo/mqdefault.jpg",
+    "category": "finance"
   },
   {
     "id": "CO5aBQoWvMA",
@@ -493,7 +625,9 @@
     "published": "2026-02-04T20:00:08+00:00",
     "channelName": "CNBC",
     "upload_date": "20260204",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/CO5aBQoWvMA/mqdefault.jpg",
+    "category": "finance"
   },
   {
     "id": "TnKQZRrkMoI",
@@ -501,7 +635,9 @@
     "published": "2026-02-04T17:01:01+00:00",
     "channelName": "CNBC",
     "upload_date": "20260204",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/TnKQZRrkMoI/mqdefault.jpg",
+    "category": "finance"
   },
   {
     "id": "HkgqRdZNQx4",
@@ -509,7 +645,9 @@
     "published": "2026-02-04T15:00:35+00:00",
     "channelName": "CNBC",
     "upload_date": "20260204",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/HkgqRdZNQx4/mqdefault.jpg",
+    "category": "sports"
   },
   {
     "id": "qKJmFiiXYlQ",
@@ -517,7 +655,9 @@
     "published": "2026-02-04T18:01:04+00:00",
     "channelName": "RealEismanPlaybook",
     "upload_date": "20260204",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/qKJmFiiXYlQ/mqdefault.jpg",
+    "category": "tech"
   },
   {
     "id": "e1kLbEOkZgI",
@@ -525,7 +665,9 @@
     "published": "2026-02-04T18:57:31+00:00",
     "channelName": "The Compound News",
     "upload_date": "20260204",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/e1kLbEOkZgI/mqdefault.jpg",
+    "category": "finance"
   },
   {
     "id": "QX7JuBdoufs",
@@ -533,7 +675,9 @@
     "published": "2026-02-04T17:59:47+00:00",
     "channelName": "The Compound News",
     "upload_date": "20260204",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/QX7JuBdoufs/mqdefault.jpg",
+    "category": "other"
   },
   {
     "id": "Sraw0G9zSog",
@@ -541,7 +685,9 @@
     "published": "2026-02-04T14:00:52+00:00",
     "channelName": "The Compound News",
     "upload_date": "20260204",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/Sraw0G9zSog/mqdefault.jpg",
+    "category": "other"
   },
   {
     "id": "9uXwP2qLPQ8",
@@ -549,15 +695,9 @@
     "published": "2026-02-04T16:00:06+00:00",
     "channelName": "Adam Taggart | Thoughtful Money",
     "upload_date": "20260204",
-    "duration": null
-  },
-  {
-    "id": "Wz_EOO_0YyY",
-    "title": "Washington Today (2-4-26):  Border Czar Homan says 700 federal agents will leave Minneapolis",
-    "published": "2026-02-04T23:49:22+00:00",
-    "channelName": "CSPAN",
-    "upload_date": "20260204",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/9uXwP2qLPQ8/mqdefault.jpg",
+    "category": "finance"
   },
   {
     "id": "CCKyII0cX9A",
@@ -565,7 +705,9 @@
     "published": "2026-02-04T23:03:26+00:00",
     "channelName": "Funstrat",
     "upload_date": "20260204",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/CCKyII0cX9A/mqdefault.jpg",
+    "category": "finance"
   },
   {
     "id": "GoxJ6fFNIAE",
@@ -573,7 +715,9 @@
     "published": "2026-02-04T16:14:04+00:00",
     "channelName": "Funstrat",
     "upload_date": "20260204",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/GoxJ6fFNIAE/mqdefault.jpg",
+    "category": "tech"
   },
   {
     "id": "k9ubOfpCu9E",
@@ -581,7 +725,9 @@
     "published": "2026-02-04T23:07:23+00:00",
     "channelName": "Defi Dads",
     "upload_date": "20260204",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/k9ubOfpCu9E/mqdefault.jpg",
+    "category": "other"
   },
   {
     "id": "iwjNk_ZJSxk",
@@ -589,7 +735,9 @@
     "published": "2026-02-04T20:42:25+00:00",
     "channelName": "Defi Dads",
     "upload_date": "20260204",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/iwjNk_ZJSxk/mqdefault.jpg",
+    "category": "finance"
   },
   {
     "id": "i9acUMisaVs",
@@ -597,7 +745,9 @@
     "published": "2026-02-04T17:14:52+00:00",
     "channelName": "Defi Dads",
     "upload_date": "20260204",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/i9acUMisaVs/mqdefault.jpg",
+    "category": "news"
   },
   {
     "id": "mHH6JltXICs",
@@ -605,7 +755,9 @@
     "published": "2026-02-04T03:48:26+00:00",
     "channelName": "Deadnsyde",
     "upload_date": "20260204",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/mHH6JltXICs/mqdefault.jpg",
+    "category": "finance"
   },
   {
     "id": "IxpuU1MZbHg",
@@ -613,7 +765,9 @@
     "published": "2026-02-04T14:00:29+00:00",
     "channelName": "Coin Bureau",
     "upload_date": "20260204",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/IxpuU1MZbHg/mqdefault.jpg",
+    "category": "finance"
   },
   {
     "id": "pOZi4PKW54M",
@@ -621,7 +775,9 @@
     "published": "2026-02-03T22:11:38+00:00",
     "channelName": "Y Combinator",
     "upload_date": "20260203",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/pOZi4PKW54M/mqdefault.jpg",
+    "category": "tech"
   },
   {
     "id": "iDca3yN7KQk",
@@ -629,7 +785,9 @@
     "published": "2026-02-03T03:47:56+00:00",
     "channelName": "Big A",
     "upload_date": "20260203",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/iDca3yN7KQk/mqdefault.jpg",
+    "category": "other"
   },
   {
     "id": "6ZksvoWtkUk",
@@ -637,7 +795,9 @@
     "published": "2026-02-03T02:50:49+00:00",
     "channelName": "Big A",
     "upload_date": "20260203",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/6ZksvoWtkUk/mqdefault.jpg",
+    "category": "other"
   },
   {
     "id": "pyIvjR12NjQ",
@@ -645,7 +805,9 @@
     "published": "2026-02-03T16:01:13+00:00",
     "channelName": "CNBC",
     "upload_date": "20260203",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/pyIvjR12NjQ/mqdefault.jpg",
+    "category": "other"
   },
   {
     "id": "liqXbehp3jU",
@@ -653,7 +815,9 @@
     "published": "2026-02-03T15:01:31+00:00",
     "channelName": "CNBC",
     "upload_date": "20260203",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/liqXbehp3jU/mqdefault.jpg",
+    "category": "other"
   },
   {
     "id": "Pa9NUaLHuBs",
@@ -661,7 +825,9 @@
     "published": "2026-02-03T18:00:33+00:00",
     "channelName": "RealEismanPlaybook",
     "upload_date": "20260203",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/Pa9NUaLHuBs/mqdefault.jpg",
+    "category": "other"
   },
   {
     "id": "vFKu1basg4c",
@@ -669,7 +835,9 @@
     "published": "2026-02-03T23:39:55+00:00",
     "channelName": "The Compound News",
     "upload_date": "20260203",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/vFKu1basg4c/mqdefault.jpg",
+    "category": "finance"
   },
   {
     "id": "D5mvSVsb1l0",
@@ -677,7 +845,9 @@
     "published": "2026-02-03T14:57:21+00:00",
     "channelName": "The Compound News",
     "upload_date": "20260203",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/D5mvSVsb1l0/mqdefault.jpg",
+    "category": "finance"
   },
   {
     "id": "cS9S5KituzU",
@@ -685,7 +855,9 @@
     "published": "2026-02-03T21:24:42+00:00",
     "channelName": "Clear Value Tax",
     "upload_date": "20260203",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/cS9S5KituzU/mqdefault.jpg",
+    "category": "finance"
   },
   {
     "id": "TuJtakVdI-o",
@@ -693,7 +865,9 @@
     "published": "2026-02-03T16:00:06+00:00",
     "channelName": "Adam Taggart | Thoughtful Money",
     "upload_date": "20260203",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/TuJtakVdI-o/mqdefault.jpg",
+    "category": "finance"
   },
   {
     "id": "ELf1qyBxC4Y",
@@ -701,7 +875,9 @@
     "published": "2026-02-03T20:50:38+00:00",
     "channelName": "Funstrat",
     "upload_date": "20260203",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/ELf1qyBxC4Y/mqdefault.jpg",
+    "category": "finance"
   },
   {
     "id": "wzkU5pELBTM",
@@ -709,7 +885,9 @@
     "published": "2026-02-03T19:04:21+00:00",
     "channelName": "Funstrat",
     "upload_date": "20260203",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/wzkU5pELBTM/mqdefault.jpg",
+    "category": "finance"
   },
   {
     "id": "rXm2PkjG53w",
@@ -717,7 +895,9 @@
     "published": "2026-02-03T23:06:18+00:00",
     "channelName": "Defi Dads",
     "upload_date": "20260203",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/rXm2PkjG53w/mqdefault.jpg",
+    "category": "finance"
   },
   {
     "id": "exAp555URRw",
@@ -725,7 +905,9 @@
     "published": "2026-02-03T20:08:14+00:00",
     "channelName": "Defi Dads",
     "upload_date": "20260203",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/exAp555URRw/mqdefault.jpg",
+    "category": "finance"
   },
   {
     "id": "w641rDS9dbg",
@@ -733,7 +915,9 @@
     "published": "2026-02-03T06:37:54+00:00",
     "channelName": "Defi Dads",
     "upload_date": "20260203",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/w641rDS9dbg/mqdefault.jpg",
+    "category": "finance"
   },
   {
     "id": "R0DMRHH4PcY",
@@ -741,6 +925,8 @@
     "published": "2026-02-03T14:00:41+00:00",
     "channelName": "Coin Bureau",
     "upload_date": "20260203",
-    "duration": null
+    "duration": null,
+    "thumbnail": "https://i.ytimg.com/vi/R0DMRHH4PcY/mqdefault.jpg",
+    "category": "sports"
   }
 ]
