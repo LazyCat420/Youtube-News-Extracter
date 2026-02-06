@@ -453,20 +453,35 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderPlaylists(playlists) {
+        const VIDEOS_PER_PLAYLIST = 50;
+
         playlistHistory.innerHTML = playlists.map(p => {
             const date = new Date(p.createdAt).toLocaleString();
-            const count = Array.isArray(p.data) ? p.data.length : 0;
-            const videoIds = Array.isArray(p.data) ? p.data.map(v => v.id).join(',') : '';
-            const playlistUrl = `https://www.youtube.com/watch_videos?video_ids=${videoIds}`;
+            const videos = Array.isArray(p.data) ? p.data : [];
+            const count = videos.length;
+
+            // Split videos into chunks of 50
+            const chunks = [];
+            for (let i = 0; i < videos.length; i += VIDEOS_PER_PLAYLIST) {
+                chunks.push(videos.slice(i, i + VIDEOS_PER_PLAYLIST));
+            }
+
+            // Generate play buttons for each chunk
+            const playButtons = chunks.map((chunk, index) => {
+                const videoIds = chunk.map(v => v.id).join(',');
+                const playlistUrl = `https://www.youtube.com/watch_videos?video_ids=${videoIds}`;
+                const label = chunks.length > 1 ? `▶️ Part ${index + 1}` : '▶️ Play All';
+                return `<a href="${playlistUrl}" target="_blank" class="secondary-btn">${label}</a>`;
+            }).join('');
 
             return `
                 <li class="history-item">
                     <div class="history-meta">
                         <strong>${date}</strong>
-                        <span>${count} videos</span>
+                        <span>${count} videos${chunks.length > 1 ? ` (${chunks.length} parts)` : ''}</span>
                     </div>
                     <div class="history-actions">
-                        <a href="${playlistUrl}" target="_blank" class="secondary-btn">▶️ Play All</a>
+                        ${playButtons}
                         <a href="/auto-yt-playlist/output/${p.filename.replace('.json', '.md')}" target="_blank" class="secondary-btn">📄 Markdown</a>
                         <button class="icon-btn delete-playlist-btn" data-filename="${p.filename}">🗑️</button>
                     </div>
