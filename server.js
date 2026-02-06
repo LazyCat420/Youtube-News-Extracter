@@ -156,8 +156,10 @@ app.get('/api/playlist/history', async (req, res) => {
         }
 
         const files = fs.readdirSync(OUTPUT_DIR).filter(f => f.endsWith('.json'));
-        // Sort by modification time desc
-        const playlists = files.map(file => {
+        // Sort by filename desc (filenames are timestamp-based like 2026-02-05_22-47-02.json)
+        const sortedFiles = files.sort((a, b) => b.localeCompare(a));
+
+        const playlists = sortedFiles.map(file => {
             const filePath = path.join(OUTPUT_DIR, file);
             const stats = fs.statSync(filePath);
             return {
@@ -165,7 +167,7 @@ app.get('/api/playlist/history', async (req, res) => {
                 createdAt: stats.birthtime,
                 data: JSON.parse(fs.readFileSync(filePath, 'utf-8'))
             };
-        }).sort((a, b) => b.createdAt - a.createdAt);
+        });
 
         res.json({ success: true, playlists });
     } catch (error) {
@@ -271,7 +273,108 @@ function generateMarkdownFromVideos(videos) {
     return lines.join('\n');
 }
 
-// Batch extract transcripts from playlist
+// Batch extract transcripts from playlist with SSE progress
+app.get('/api/playlist/:filename/extract-transcripts-stream', async (req, res) => {
+    const { filename } = req.params;
+
+    if (!filename || filename.includes('..') || !filename.endsWith('.json')) {
+        return res.status(400).json({ error: 'Invalid filename' });
+    }
+
+    const jsonPath = path.join(OUTPUT_DIR, filename);
+
+    if (!fs.existsSync(jsonPath)) {
+        return res.status(404).json({ error: 'Playlist not found' });
+    }
+
+    // Set up SSE headers
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders();
+
+    const videos = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+    const total = videos.length;
+    let successCount = 0;
+    let failCount = 0;
+
+    console.log(`Starting batch extraction for ${total} videos...`);
+
+    // Send initial event
+    res.write(`data: ${JSON.stringify({ type: 'start', total })}\n\n`);
+
+    for (let i = 0; i < videos.length; i++) {
+        const video = videos[i];
+        try {
+            const url = `https://youtube.com/watch?v=${video.id}`;
+
+            // Send progress event before processing
+            res.write(`data: ${JSON.stringify({
+                type: 'progress',
+                current: i + 1,
+                total,
+                title: video.title,
+                status: 'extracting'
+            })}\n\n`);
+
+            console.log(`[${i + 1}/${total}] Extracting: ${video.title}`);
+
+            const result = await PuppeteerWrapper.scrapeURL(url);
+
+            if (result && result.transcript) {
+                // Save to database
+                Database.saveVideo({
+                    title: video.title,
+                    url: url,
+                    description: result.description || '',
+                    transcript: result.transcript
+                });
+
+                successCount++;
+                res.write(`data: ${JSON.stringify({
+                    type: 'progress',
+                    current: i + 1,
+                    total,
+                    title: video.title,
+                    status: 'success'
+                })}\n\n`);
+            } else {
+                failCount++;
+                res.write(`data: ${JSON.stringify({
+                    type: 'progress',
+                    current: i + 1,
+                    total,
+                    title: video.title,
+                    status: 'failed',
+                    error: 'No transcript available'
+                })}\n\n`);
+            }
+        } catch (err) {
+            console.error(`Error extracting ${video.id}:`, err.message);
+            failCount++;
+            res.write(`data: ${JSON.stringify({
+                type: 'progress',
+                current: i + 1,
+                total,
+                title: video.title,
+                status: 'failed',
+                error: err.message
+            })}\n\n`);
+        }
+    }
+
+    // Send completion event
+    res.write(`data: ${JSON.stringify({
+        type: 'complete',
+        success: successCount,
+        failed: failCount,
+        total
+    })}\n\n`);
+
+    res.end();
+});
+
+// Keep the original POST endpoint for backwards compatibility
 app.post('/api/playlist/:filename/extract-transcripts', async (req, res) => {
     try {
         const { filename } = req.params;

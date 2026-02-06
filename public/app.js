@@ -534,12 +534,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 : '';
 
             // Generate category sections with video cards
-            const categorySections = Object.entries(categories).map(([cat, catVideos]) => `
+            // Fixed category order to prevent reordering when videos are deleted
+            const categoryOrder = ['finance', 'news', 'tech', 'sports', 'cooking', 'other'];
+            const sortedCategories = Object.entries(categories).sort((a, b) => {
+                const orderA = categoryOrder.indexOf(a[0]);
+                const orderB = categoryOrder.indexOf(b[0]);
+                return (orderA === -1 ? 999 : orderA) - (orderB === -1 ? 999 : orderB);
+            });
+
+            const categorySections = sortedCategories.map(([cat, catVideos]) => {
+                const categoryVideoIds = catVideos.map(v => v.id).join(',');
+                const categoryPlayUrl = `https://www.youtube.com/watch_videos?video_ids=${categoryVideoIds}`;
+
+                return `
                 <div class="category-section">
                     <div class="category-header">
                         <span class="category-emoji">${categoryEmojis[cat] || '📺'}</span>
                         <span>${cat.charAt(0).toUpperCase() + cat.slice(1)}</span>
                         <span class="category-count">(${catVideos.length})</span>
+                        <a href="${categoryPlayUrl}" target="_blank" class="category-play-btn">▶️ Play ${cat.charAt(0).toUpperCase() + cat.slice(1)}</a>
                     </div>
                     <div class="video-grid">
                         ${catVideos.map(v => `
@@ -556,7 +569,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         `).join('')}
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
+
 
             return `
                 <div class="playlist-card" data-filename="${p.filename}">
@@ -585,27 +599,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function attachPlaylistListeners() {
-        // Delete playlist
-        document.querySelectorAll('.delete-playlist-btn').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                e.stopPropagation();
-                if (!confirm('Delete this entire playlist?')) return;
-                const filename = btn.dataset.filename;
-                try {
-                    const response = await fetch(`/api/playlist/${filename}`, { method: 'DELETE' });
-                    const data = await response.json();
-                    if (data.success) {
-                        showSuccess('Playlist deleted.');
-                        loadPlaylists();
-                    } else {
-                        showError('Failed to delete playlist.');
-                    }
-                } catch (error) {
-                    console.error('Delete error:', error);
-                    showError('Server error.');
-                }
-            });
-        });
+        // Delete playlist - handled via document event delegation below
 
         // Delete single video
         document.querySelectorAll('.video-delete-btn').forEach(btn => {
@@ -613,17 +607,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 e.stopPropagation();
                 const filename = btn.dataset.filename;
                 const videoId = btn.dataset.videoId;
-                const card = btn.closest('.video-card');
 
                 try {
                     const response = await fetch(`/api/playlist/${filename}/video/${videoId}`, { method: 'DELETE' });
                     const data = await response.json();
                     if (data.success) {
-                        card.style.opacity = '0';
-                        setTimeout(() => {
-                            card.remove();
-                            showSuccess('Video removed.');
-                        }, 200);
+                        showSuccess('Video removed.');
+                        // Reload playlists but keep this one expanded
+                        await loadPlaylists();
+                        // Re-expand the playlist we were editing
+                        const playlistCard = document.querySelector(`.playlist-card[data-filename="${filename}"]`);
+                        if (playlistCard) {
+                            playlistCard.classList.add('expanded');
+                            const expandBtn = playlistCard.querySelector('.expand-btn');
+                            if (expandBtn) expandBtn.textContent = '📁 Hide';
+                        }
                     } else {
                         showError(data.error || 'Failed to remove video.');
                     }
@@ -632,23 +630,45 @@ document.addEventListener('DOMContentLoaded', () => {
                     showError('Server error.');
                 }
             });
+
         });
 
-        // Extract transcripts
+
+        // Extract transcripts with streaming progress
         document.querySelectorAll('.extract-btn').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 e.stopPropagation();
                 if (!confirm('Extract transcripts for all videos? This may take several minutes.')) return;
 
                 const filename = btn.dataset.filename;
+                const playlistCard = btn.closest('.playlist-card');
+
+                // Disable button and show progress
                 btn.disabled = true;
+                const originalText = btn.textContent;
                 btn.textContent = '⏳ Extracting...';
+                btn.style.minWidth = '140px';
+
+                // Create simple status display
+                let statusDiv = playlistCard.querySelector('.extraction-status-display');
+                if (!statusDiv) {
+                    statusDiv = document.createElement('div');
+                    statusDiv.className = 'extraction-status-display';
+                    statusDiv.style.cssText = 'padding: 0.75rem 1rem; background: rgba(59,130,246,0.1); border-left: 3px solid #3b82f6; margin: 0.5rem 1rem; font-size: 0.85rem; color: #60a5fa;';
+                    const header = playlistCard.querySelector('.playlist-card-header');
+                    header.after(statusDiv);
+                }
+                statusDiv.textContent = '📥 Extracting transcripts... Please wait.';
 
                 try {
                     const response = await fetch(`/api/playlist/${filename}/extract-transcripts`, { method: 'POST' });
                     const data = await response.json();
 
                     if (data.success) {
+                        statusDiv.style.borderColor = '#10b981';
+                        statusDiv.style.background = 'rgba(16,185,129,0.1)';
+                        statusDiv.style.color = '#34d399';
+                        statusDiv.textContent = `✅ Done! Extracted ${data.extracted} of ${data.total} transcripts.`;
                         btn.textContent = `✅ ${data.extracted}/${data.total}`;
                         showSuccess(`Extracted ${data.extracted} of ${data.total} transcripts!`);
                     } else {
@@ -656,16 +676,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 } catch (error) {
                     console.error('Extract error:', error);
+                    statusDiv.style.borderColor = '#ef4444';
+                    statusDiv.style.background = 'rgba(239,68,68,0.1)';
+                    statusDiv.style.color = '#f87171';
+                    statusDiv.textContent = `❌ Error: ${error.message}`;
                     btn.textContent = '❌ Failed';
                     showError(error.message || 'Extraction failed.');
                 }
 
+                // Reset button after delay
                 setTimeout(() => {
-                    btn.textContent = '📜 Extract';
+                    btn.textContent = originalText;
                     btn.disabled = false;
-                }, 3000);
+                }, 5000);
             });
         });
+
 
         // Save to YouTube
         document.querySelectorAll('.save-youtube-btn').forEach(btn => {
@@ -828,4 +854,68 @@ document.addEventListener('DOMContentLoaded', () => {
             deleteTargetId = null;
         }
     });
+    // ========================================
+    // DELETE PLAYLIST - Document-level event delegation
+    // This catches clicks on .delete-playlist-btn regardless of when they were rendered
+    // ========================================
+    // IMPORTANT: Use capture phase (true) because .playlist-actions has onclick="event.stopPropagation()"
+    // which blocks bubbling. Capture fires top-down BEFORE that stopPropagation runs.
+    document.addEventListener('click', async (e) => {
+        const btn = e.target.closest('.delete-playlist-btn');
+        if (!btn) return;
+
+        e.stopPropagation();
+        e.preventDefault();
+
+        const filename = btn.dataset.filename;
+        console.log('[DELETE PLAYLIST] Button clicked for:', filename);
+
+        // First click = prime, second click = delete
+        if (btn.dataset.primed !== 'true') {
+            btn.dataset.primed = 'true';
+            btn.innerHTML = '⚠️ Sure?';
+            btn.style.background = 'rgba(239, 68, 68, 0.3)';
+            btn.style.borderColor = '#ef4444';
+            btn.style.width = 'auto';
+            btn.style.minWidth = '70px';
+            console.log('[DELETE PLAYLIST] Primed - click again to confirm');
+
+            setTimeout(() => {
+                if (btn.dataset.primed === 'true') {
+                    btn.dataset.primed = '';
+                    btn.innerHTML = '🗑️';
+                    btn.style.cssText = '';
+                }
+            }, 3000);
+            return;
+        }
+
+        // Second click - do the delete
+        btn.dataset.primed = '';
+        btn.innerHTML = '⏳';
+        btn.disabled = true;
+        console.log('[DELETE PLAYLIST] Confirmed - sending DELETE request for:', filename);
+
+        try {
+            const response = await fetch(`/api/playlist/${filename}`, { method: 'DELETE' });
+            const data = await response.json();
+            console.log('[DELETE PLAYLIST] Response:', response.status, data);
+
+            if (data.success) {
+                showSuccess('Playlist deleted!');
+                loadPlaylists();
+            } else {
+                showError('Failed: ' + (data.error || 'Unknown'));
+                btn.innerHTML = '🗑️';
+                btn.style.cssText = '';
+                btn.disabled = false;
+            }
+        } catch (error) {
+            console.error('[DELETE PLAYLIST] Error:', error);
+            showError('Server error: ' + error.message);
+            btn.innerHTML = '🗑️';
+            btn.style.cssText = '';
+            btn.disabled = false;
+        }
+    }, true); // true = capture phase, fires BEFORE stopPropagation on parent div
 });

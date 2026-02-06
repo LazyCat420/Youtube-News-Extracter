@@ -62,7 +62,8 @@
   {
     "name": "Yahoo Finance",
     "url": "https://www.youtube.com/@YahooFinance",
-    "include_shorts": false
+    "include_shorts": false,
+    "channel_id": "UCEAZeUIeJs0IjQiqTCdVSIg"
   },
   {
     "name": "Adam Taggart | Thoughtful Money",
