@@ -4,11 +4,12 @@
   "description": "Scrape YouTube transcripts for stock market news and save to database for Ollama processing",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "server": "node server.js"
+    "start": "node server.js",
+    "scrape": "node index.js"
   },
   "dependencies": {
     "axios": "^1.6.0",
+    "date-fns": "^4.1.0",
     "dotenv": "^16.0.0",
     "express": "^5.2.1",
     "puppeteer": "^24.36.0",

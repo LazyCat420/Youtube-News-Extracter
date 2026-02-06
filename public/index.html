@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <div class="container">
         <header>
@@ -20,6 +22,7 @@
         <nav class="tabs">
             <button class="tab-btn active" data-tab="extract">📥 Extract</button>
             <button class="tab-btn" data-tab="database">📂 Database</button>
+            <button class="tab-btn" data-tab="playlist">▶️ Auto Playlist</button>
         </nav>
 
         <main>
@@ -87,6 +90,47 @@
                     <p class="subtext">Extract a transcript and save it to see it here.</p>
                 </div>
             </section>
+
+            <!-- Auto Playlist Tab -->
+            <section id="playlist-tab" class="tab-content">
+                <div class="playlist-header">
+                    <h2>Daily Auto-Playlist</h2>
+                    <button id="generatePlaylistBtn" class="primary-btn">⚡ Generate Now</button>
+                </div>
+
+                <div id="playlistLoading" class="hidden">
+                    <div class="spinner"></div>
+                    <p>Scanning channels... this can take a minute.</p>
+                </div>
+
+                <div id="playlistResult" class="hidden">
+                    <!-- Result will be injected here -->
+                </div>
+
+                <div class="playlist-section">
+                    <h3>Recent Playlists</h3>
+                    <ul id="playlistHistory" class="history-list">
+                        <!-- History items -->
+                    </ul>
+                </div>
+
+                <div class="playlist-section">
+                    <h3>Manage Channels</h3>
+
+                    <div class="add-channel-form">
+                        <input type="text" id="newChannelName" placeholder="Channel Name (e.g. TechCrunch)" />
+                        <input type="text" id="newChannelUrl"
+                            placeholder="Channel URL (e.g. https://www.youtube.com/@TechCrunch/videos)" />
+                        <button id="addChannelBtn" class="primary-btn">➕ Add Channel</button>
+                    </div>
+
+                    <p class="subtext">Edit the JSON object below to update channel list.</p>
+                    <textarea id="channelsEditor" rows="10" class="code-editor"></textarea>
+                    <div class="action-buttons">
+                        <button id="saveChannelsBtn" class="secondary-btn">💾 Save Channels</button>
+                    </div>
+                </div>
+            </section>
         </main>
     </div>
 
@@ -130,4 +174,5 @@
 
     <script src="app.js"></script>
 </body>
+
 </html>

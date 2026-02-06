@@ -62,6 +62,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // Load database videos when switching to database tab
             if (tabName === 'database') {
                 loadVideos();
+            } else if (tabName === 'playlist') {
+                loadPlaylists();
+                loadChannels();
             }
         });
     });
@@ -368,6 +371,202 @@ document.addEventListener('DOMContentLoaded', () => {
         div.textContent = str;
         return div.innerHTML;
     }
+
+    // ============ Playlist Tab ============
+    const playlistLoading = document.getElementById('playlistLoading');
+    const playlistResult = document.getElementById('playlistResult');
+    const playlistHistory = document.getElementById('playlistHistory');
+    const channelsEditor = document.getElementById('channelsEditor');
+    const generatePlaylistBtn = document.getElementById('generatePlaylistBtn');
+    const saveChannelsBtn = document.getElementById('saveChannelsBtn');
+
+    async function loadPlaylists() {
+        try {
+            const response = await fetch('/api/playlist/history');
+            const data = await response.json();
+            if (data.success) {
+                renderPlaylists(data.playlists);
+            }
+        } catch (error) {
+            console.error('Error loading playlists:', error);
+        }
+    }
+
+    async function loadChannels() {
+        try {
+            const response = await fetch('/api/playlist/channels');
+            const data = await response.json();
+            if (data.success) {
+                channelsEditor.value = JSON.stringify(data.channels, null, 4);
+            }
+        } catch (error) {
+            console.error('Error loading channels:', error);
+            channelsEditor.value = 'Error loading channels.';
+        }
+    }
+
+    function renderPlaylists(playlists) {
+        playlistHistory.innerHTML = playlists.map(p => {
+            const date = new Date(p.createdAt).toLocaleString();
+            // Defensive check: ensure p.data is an array
+            const count = Array.isArray(p.data) ? p.data.length : 0;
+            const videoIds = Array.isArray(p.data) ? p.data.map(v => v.id).join(',') : '';
+            const playlistUrl = `https://www.youtube.com/watch_videos?video_ids=${videoIds}`;
+
+            return `
+                <li class="history-item">
+                    <div class="history-meta">
+                        <strong>${date}</strong>
+                        <span>${count} videos</span>
+                    </div>
+                    <div class="history-actions">
+                        <a href="${playlistUrl}" target="_blank" class="secondary-btn">▶️ Play All</a>
+                        <a href="/auto-yt-playlist/output/${p.filename.replace('.json', '.md')}" target="_blank" class="secondary-btn">📄 Markdown</a>
+                        <button class="icon-btn delete-playlist-btn" data-filename="${p.filename}">🗑️</button>
+                    </div>
+                </li>
+            `;
+        }).join('');
+
+        // Attach listeners
+        document.querySelectorAll('.delete-playlist-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                if (!confirm('Are you sure you want to delete this playlist?')) return;
+
+                const filename = btn.dataset.filename;
+                try {
+                    const response = await fetch(`/api/playlist/${filename}`, { method: 'DELETE' });
+                    const data = await response.json();
+                    if (data.success) {
+                        showSuccess('Playlist deleted.');
+                        loadPlaylists();
+                    } else {
+                        showError('Failed to delete playlist.');
+                    }
+                } catch (error) {
+                    console.error('Delete playlist error:', error);
+                    showError('Server error.');
+                }
+            });
+        });
+    }
+
+    generatePlaylistBtn.addEventListener('click', async () => {
+        generatePlaylistBtn.disabled = true;
+        playlistLoading.classList.remove('hidden');
+        playlistResult.classList.add('hidden');
+
+        try {
+            const response = await fetch('/api/playlist/generate', { method: 'POST' });
+            const data = await response.json();
+
+            if (data.success) {
+                showSuccess(`Playlist generated! found ${data.videoCount !== undefined ? data.videoCount : 'new'} videos.`);
+                loadPlaylists(); // Refresh history
+            } else {
+                showError(data.message || 'Failed to generate playlist.');
+            }
+        } catch (error) {
+            console.error('Generation error:', error);
+            showError('Failed to trigger generation.');
+        } finally {
+            generatePlaylistBtn.disabled = false;
+            playlistLoading.classList.add('hidden');
+        }
+    });
+
+    async function saveChannels() {
+        saveChannelsBtn.disabled = true;
+        try {
+            // Validate JSON first
+            let channels;
+            try {
+                channels = JSON.parse(channelsEditor.value);
+            } catch (e) {
+                showError('Invalid JSON in editor. Fix syntax before saving.');
+                return false;
+            }
+
+            const response = await fetch('/api/playlist/channels', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ channels })
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                showSuccess('Channels saved successfully!');
+                return true;
+            } else {
+                showError('Failed to save channels.');
+                return false;
+            }
+        } catch (error) {
+            console.error('Save channels error:', error);
+            showError('Server error while saving.');
+            return false;
+        } finally {
+            saveChannelsBtn.disabled = false;
+        }
+    }
+
+    saveChannelsBtn.addEventListener('click', saveChannels);
+
+    // Add Channel Functionality
+    const newChannelName = document.getElementById('newChannelName');
+    const newChannelUrl = document.getElementById('newChannelUrl');
+    const addChannelBtn = document.getElementById('addChannelBtn');
+
+    addChannelBtn.addEventListener('click', async () => {
+        const name = newChannelName.value.trim();
+        const url = newChannelUrl.value.trim();
+
+        if (!name || !url) {
+            showError('Please enter both name and URL.');
+            return;
+        }
+
+        try {
+            // Get current channels
+            let channels = [];
+            try {
+                channels = JSON.parse(channelsEditor.value);
+            } catch (e) {
+                // If invalid, try to reload or just fail
+                channels = [];
+                showError('Current JSON is invalid. Resetting or fix errors first.');
+                return;
+            }
+
+            // check for duplicate URL
+            if (channels.some(c => c.url === url)) {
+                showError('Channel with this URL already exists.');
+                return;
+            }
+
+            // Add new channel
+            channels.push({
+                name: name,
+                url: url,
+                include_shorts: false
+            });
+
+            // Update editor
+            channelsEditor.value = JSON.stringify(channels, null, 4);
+
+            // Save
+            const saved = await saveChannels();
+            if (saved) {
+                newChannelName.value = '';
+                newChannelUrl.value = '';
+                showSuccess(`Added channel: ${name}`);
+            }
+
+        } catch (error) {
+            console.error('Add channel error:', error);
+            showError('Failed to add channel.');
+        }
+    });
 
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {

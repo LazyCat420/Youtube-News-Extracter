@@ -39,6 +39,81 @@ async function handleAds(page) {
     console.log('[Puppeteer] Ad handling completed (timeout or skipped).');
 }
 
+// Helper: Expand description/Show more
+async function expandDescription(page) {
+    console.log('[Puppeteer] Expanding description to reveal transcript button...');
+    let expanded = false;
+
+    // Helper to check if description is expanded
+    const isExpanded = async () => {
+        return await page.evaluate(() => {
+            const expander = document.querySelector('#description-inline-expander');
+            return expander && expander.hasAttribute('is-expanded');
+        });
+    };
+
+    // Strategy A: ID/Selector based clicks
+    const expandSelectors = [
+        '#description-inline-expander #expand',
+        '#expand',
+        'tp-yt-paper-button#expand',
+        '#more',
+        'button[aria-label="Show more"]',
+        '#meta-contents #expand',
+        'ytd-text-inline-expander #expand'
+    ];
+
+    for (const sel of expandSelectors) {
+        if (await isExpanded()) { expanded = true; break; }
+        try {
+            const btn = await page.$(sel);
+            if (btn) {
+                console.log(`[Puppeteer] Clicking expand button: ${sel}`);
+                // Scroll to button first
+                await btn.scrollIntoViewIfNeeded();
+                await new Promise(r => setTimeout(r, 500));
+                await btn.click();
+                await new Promise(r => setTimeout(r, 1000));
+            }
+        } catch (e) { }
+    }
+
+    // Strategy B: Text-based (Recursive Finder) for "...more"
+    if (!expanded && !(await isExpanded())) {
+        console.log('[Puppeteer] Standard selectors failed. Trying text-based "more" finder...');
+
+        try {
+            await page.evaluate(() => {
+                const buttons = Array.from(document.querySelectorAll('button, tp-yt-paper-button, span, #description'));
+                const moreBtn = buttons.find(b => {
+                    const text = b.innerText?.trim() || '';
+                    return text.includes('...more') || text === 'more' || text === 'Show more';
+                });
+                if (moreBtn) {
+                    moreBtn.click();
+                    return true;
+                }
+                return false;
+            });
+            await new Promise(r => setTimeout(r, 1500));
+        } catch (e) {
+            console.log('[Puppeteer] Text-based click failed:', e.message);
+        }
+    }
+
+    // Final Verification
+    if (await isExpanded()) {
+        console.log('[Puppeteer] Description successfully expanded.');
+        expanded = true;
+    } else {
+        console.log('[Puppeteer] Description expansion may have failed (will continue anyway).');
+    }
+
+    // Scroll down to make transcript button visible
+    await page.evaluate(() => window.scrollBy(0, 300));
+    await new Promise(r => setTimeout(r, 800));
+}
+
 const PuppeteerWrapper = {
     async searchYoutube(query) {
         console.log(`[Puppeteer] Searching YouTube for: ${query}`);
@@ -159,181 +234,99 @@ const PuppeteerWrapper = {
             const titlePromise = page.$eval('h1.ytd-video-primary-info-renderer', el => el.innerText)
                 .catch(() => page.title());
 
-            // 2. Always try to expand description first (transcript button is usually hidden)
-            console.log('[Puppeteer] Expanding description to reveal transcript button...');
-            let transcriptBtn = null; // Will be assigned later
-
-            {
-                // Scoped block for expansion logic
-                let expanded = false;
-
-                // Helper to check if description is expanded
-                const isExpanded = async () => {
-                    return await page.evaluate(() => {
-                        const expander = document.querySelector('#description-inline-expander');
-                        return expander && expander.hasAttribute('is-expanded');
-                    });
-                };
-
-                // Strategy A: ID/Selector based clicks
-                const expandSelectors = [
-                    '#description-inline-expander #expand',
-                    '#expand',
-                    'tp-yt-paper-button#expand',
-                    '#more',
-                    'button[aria-label="Show more"]',
-                    '#meta-contents #expand',
-                    'ytd-text-inline-expander #expand'
-                ];
-
-                for (const sel of expandSelectors) {
-                    if (await isExpanded()) { expanded = true; break; }
-                    try {
-                        const btn = await page.$(sel);
-                        if (btn) {
-                            console.log(`[Puppeteer] Clicking expand button: ${sel}`);
-                            // Scroll to button first
-                            await btn.scrollIntoViewIfNeeded();
-                            await new Promise(r => setTimeout(r, 500));
-                            await btn.click();
-                            await new Promise(r => setTimeout(r, 1000));
-                        }
-                    } catch (e) { }
-                }
-
-                // Strategy B: Text-based (Recursive Finder) for "...more"
-                if (!expanded && !(await isExpanded())) {
-                    console.log('[Puppeteer] Standard selectors failed. Trying text-based "more" finder...');
-
-                    try {
-                        await page.evaluate(() => {
-                            const buttons = Array.from(document.querySelectorAll('button, tp-yt-paper-button, span, #description'));
-                            const moreBtn = buttons.find(b => {
-                                const text = b.innerText?.trim() || '';
-                                return text.includes('...more') || text === 'more' || text === 'Show more';
-                            });
-                            if (moreBtn) {
-                                moreBtn.click();
-                                return true;
-                            }
-                            return false;
-                        });
-                        await new Promise(r => setTimeout(r, 1500));
-                    } catch (e) {
-                        console.log('[Puppeteer] Text-based click failed:', e.message);
-                    }
-                }
-
-                // Final Verification
-                if (await isExpanded()) {
-                    console.log('[Puppeteer] Description successfully expanded.');
-                    expanded = true;
-                } else {
-                    console.log('[Puppeteer] Description expansion may have failed (will continue anyway).');
-                }
-
-                // Scroll down to make transcript button visible
-                await page.evaluate(() => window.scrollBy(0, 300));
-                await new Promise(r => setTimeout(r, 800));
-            }
-
-
+            // ---------------------------------------------------------
+            // NETWORK INTERCEPTION STRATEGY (Most Robust with Reload)
+            // ---------------------------------------------------------
 
             let transcript = libraryTranscript || '';
 
-            // ---------------------------------------------------------
-            // NETWORK INTERCEPTION STRATEGY (Most Robust)
-            // ---------------------------------------------------------
-
             if (!transcript) {
-                // 3. Click "Show transcript"
-                console.log('[Puppeteer] Searching for "Show transcript"...');
+                const MAX_TRANSCRIPT_RETRIES = 3;
+                let transcriptResult = null;
 
-                // Use button found earlier, or search again after expansion
-                if (!transcriptBtn) {
-                    transcriptBtn = await page.waitForSelector('xpath/.//button[contains(., "Show transcript")]', { visible: true, timeout: 5000 }).catch(() => null);
-                }
+                for (let attempt = 1; attempt <= MAX_TRANSCRIPT_RETRIES && !transcriptResult; attempt++) {
+                    console.log(`[Puppeteer] Transcript attempt ${attempt}/${MAX_TRANSCRIPT_RETRIES}...`);
 
-                if (transcriptBtn) {
-                    console.log('[Puppeteer] Found button (Manual). Ensuring player is ready...');
+                    // RECOVERY STRATEGY: From Attempt 2 onwards, try RELOADING the page
+                    // This fixes FAILED_PRECONDITION (400) errors caused by stale session/player state
+                    if (attempt > 1) {
+                        console.log('⚠️ [Puppeteer] Previous attempt failed. Reloading page to reset API state...');
+                        try {
+                            // Reload and wait for network idle
+                            await page.reload({ waitUntil: 'networkidle2', timeout: 60000 });
 
-                    // Ensure player is ready (often helps with session token readiness)
-                    await page.waitForSelector('#movie_player').catch(() => { });
+                            // Re-run setup sequence
+                            await handleAds(page);
+                            await page.evaluate(() => window.scrollBy(0, 500));
 
-                    // CRITICAL: Handle any ads before proceeding
-                    await handleAds(page);
+                            // Re-expand description
+                            await expandDescription(page);
 
-                    // CRITICAL: YouTube's API context is initialized by the player
-                    // We need to ensure the video has started playing (even briefly)
-                    console.log('[Puppeteer] Ensuring video player has initialized...');
-                    try {
-                        // Click play button if paused
-                        const playState = await page.evaluate(() => {
-                            const player = document.querySelector('#movie_player');
-                            if (player && player.classList.contains('paused-mode')) {
-                                const playBtn = document.querySelector('.ytp-play-button');
-                                if (playBtn) playBtn.click();
-                                return 'clicked_play';
-                            }
-                            return player ? 'playing' : 'no_player';
-                        });
-                        console.log(`[Puppeteer] Player state: ${playState}`);
-
-                        // Wait for player to be in a ready state
-                        await new Promise(r => setTimeout(r, 3000));
-
-                        // Pause the video so we can read transcript
-                        await page.evaluate(() => {
-                            const player = document.querySelector('#movie_player');
-                            if (player && !player.classList.contains('paused-mode')) {
-                                const playBtn = document.querySelector('.ytp-play-button');
-                                if (playBtn) playBtn.click();
-                            }
-                        });
-                    } catch (e) {
-                        console.log('[Puppeteer] Player init error (non-fatal):', e.message);
+                        } catch (reloadError) {
+                            console.error('[Puppeteer] Reload failed:', reloadError.message);
+                        }
+                    } else {
+                        // First attempt: Just run expansion
+                        await expandDescription(page);
                     }
 
-                    // RETRY MECHANISM for intermittent FAILED_PRECONDITION errors
-                    const MAX_TRANSCRIPT_RETRIES = 3;
-                    let transcriptResult = null;
+                    // 3. Click "Show transcript"
+                    console.log('[Puppeteer] Searching for "Show transcript"...');
 
-                    for (let attempt = 1; attempt <= MAX_TRANSCRIPT_RETRIES && !transcriptResult; attempt++) {
-                        console.log(`[Puppeteer] Transcript attempt ${attempt}/${MAX_TRANSCRIPT_RETRIES}...`);
+                    // Search for button
+                    let transcriptBtn = await page.waitForSelector('xpath/.//button[contains(., "Show transcript")]', { visible: true, timeout: 5000 }).catch(() => null);
 
-                        // Find the transcript button again (it might have changed)
-                        const currentBtn = await page.$('xpath/.//button[contains(., "Show transcript")]');
-                        if (!currentBtn) {
-                            console.log('[Puppeteer] Transcript button disappeared. Checking if already open...');
-                            // Check if transcript panel is already open
-                            const panelOpen = await page.evaluate(() => {
-                                return document.querySelector('.segment-text, ytd-transcript-segment-renderer') !== null;
-                            });
-                            if (panelOpen) {
-                                console.log('[Puppeteer] Transcript panel already open, extracting...');
-                            } else {
-                                break;
-                            }
-                        }
+                    if (transcriptBtn) {
+                        console.log('[Puppeteer] Found button (Manual). Ensuring player is ready...');
 
-                        if (attempt > 1) {
-                            // Close any open transcript panel before retry
-                            try {
-                                const closeBtn = await page.$('button[aria-label="Close transcript"]');
-                                if (closeBtn) {
-                                    await closeBtn.click();
-                                    await new Promise(r => setTimeout(r, 1000));
+                        // Ensure player is ready (often helps with session token readiness)
+                        await page.waitForSelector('#movie_player').catch(() => { });
+
+                        // CRITICAL: Handle any ads before proceeding
+                        await handleAds(page);
+
+                        console.log('[Puppeteer] Ensuring video player has initialized...');
+                        try {
+                            // Click play button if paused
+                            const playState = await page.evaluate(() => {
+                                const player = document.querySelector('#movie_player');
+                                if (player && player.classList.contains('paused-mode')) {
+                                    const playBtn = document.querySelector('.ytp-play-button');
+                                    if (playBtn) playBtn.click();
+                                    return 'clicked_play';
                                 }
-                            } catch (e) { }
+                                return player ? 'playing' : 'no_player';
+                            });
+                            console.log(`[Puppeteer] Player state: ${playState}`);
 
-                            // Extra delay before retry to let API context stabilize
-                            console.log(`[Puppeteer] Waiting extra ${attempt * 2}s for API context...`);
-                            await new Promise(r => setTimeout(r, attempt * 2000));
+                            // Wait for player
+                            await new Promise(r => setTimeout(r, 2000));
+
+                            // Pause the video so we can read transcript
+                            await page.evaluate(() => {
+                                const player = document.querySelector('#movie_player');
+                                if (player && !player.classList.contains('paused-mode')) {
+                                    const playBtn = document.querySelector('.ytp-play-button');
+                                    if (playBtn) playBtn.click();
+                                }
+                            });
+                        } catch (e) {
+                            console.log('[Puppeteer] Player init error (non-fatal):', e.message);
                         }
+
+                        // Close any open transcript panel before clicking (if existing)
+                        try {
+                            const closeBtn = await page.$('button[aria-label="Close transcript"]');
+                            if (closeBtn) {
+                                await closeBtn.click();
+                                await new Promise(r => setTimeout(r, 1000));
+                            }
+                        } catch (e) { }
+
 
                         console.log('[Puppeteer] Hovering and waiting to ensure API context...');
                         await page.hover('xpath/.//button[contains(., "Show transcript")]');
-                        await new Promise(r => setTimeout(r, 3000 + (attempt * 1000))); // Progressively longer delays
+                        await new Promise(r => setTimeout(r, 1000));
 
                         console.log('[Puppeteer] Clicking...');
 
@@ -350,23 +343,11 @@ const PuppeteerWrapper = {
                                     console.log(`[Puppeteer] Intercepted transcript endpoint #${responseCount}: ${url}`);
                                     try {
                                         const json = await response.json();
-                                        console.log(`[Puppeteer] Parsing intercepted JSON from ${url}`);
-
-                                        // Extract Video ID
-                                        const pageUrl = page.url();
-                                        const videoIdMatch = pageUrl.match(/v=([^&]+)/);
-                                        const vId = videoIdMatch ? videoIdMatch[1] : 'unknown_' + Date.now();
-
-                                        // Parse keys
-                                        const keys = Object.keys(json);
-                                        console.log(`[Puppeteer] Top-level keys: ${keys.join(', ')}`);
 
                                         // Check for API Error
-                                        if (json.error) {
-                                            console.log(`[Puppeteer] API RETURNED ERROR: ${JSON.stringify(json.error)}`);
-                                            require('fs').writeFileSync(`debug_transcript_ERROR_${vId}.json`, JSON.stringify(json, null, 2));
+                                        if (json.error || json.status === 'FAILED_PRECONDITION') {
+                                            console.log(`[Puppeteer] API RETURNED ERROR: ${JSON.stringify(json.error || json)}`);
                                             gotError = true;
-                                            // Resolve with special error marker to trigger retry
                                             resolve({ error: true });
                                             return;
                                         }
@@ -379,7 +360,6 @@ const PuppeteerWrapper = {
                                             if (obj.transcriptSegmentRenderer) {
                                                 results.push(obj.transcriptSegmentRenderer);
                                             }
-                                            // Handle "timedtext" / "events" legacy format
                                             if (obj.segs && Array.isArray(obj.segs)) {
                                                 obj.segs.forEach(s => {
                                                     if (s.utf8) results.push({ snippet: { runs: [{ text: s.utf8 }] } });
@@ -396,9 +376,6 @@ const PuppeteerWrapper = {
 
                                         const segments = findSegments(json);
                                         if (segments && segments.length > 0) {
-                                            // Save successful response for debugging
-                                            require('fs').writeFileSync(`debug_transcript_${vId}.json`, JSON.stringify(json, null, 2));
-
                                             const text = segments.map(s => {
                                                 if (s.snippet && s.snippet.runs) {
                                                     return s.snippet.runs.map(r => r.text).join('');
@@ -410,11 +387,7 @@ const PuppeteerWrapper = {
                                                 console.log(`[Puppeteer] Intercepted ${text.length} chars via Network! Resolution triggered.`);
                                                 page.off('response', responseHandler);
                                                 resolve({ text });
-                                            } else {
-                                                console.log(`[Puppeteer] Intercepted short text (${text.length} chars). Likely an Ad.`);
                                             }
-                                        } else {
-                                            console.log('[Puppeteer] Network recursive search found 0 segments.');
                                         }
                                     } catch (e) { console.log('[Puppeteer] Network parsing failed:', e.message); }
                                 }
@@ -422,7 +395,7 @@ const PuppeteerWrapper = {
 
                             page.on('response', responseHandler);
 
-                            // Timeout - shorter per attempt since we'll retry
+                            // Timeout
                             setTimeout(() => {
                                 page.off('response', responseHandler);
                                 console.log(`[Puppeteer] Network timeout (attempt ${attempt}).`);
@@ -431,9 +404,12 @@ const PuppeteerWrapper = {
                         });
 
                         // Trigger the network request by clicking
-                        console.log('[Puppeteer] Clicking (Native trusted click)...');
-                        if (currentBtn) {
-                            await currentBtn.click();
+                        // Re-find button to avoid stale element handle
+                        const freshBtn = await page.$('xpath/.//button[contains(., "Show transcript")]');
+                        if (freshBtn) {
+                            await freshBtn.click();
+                        } else {
+                            console.log('[Puppeteer] Transcript button lost before click');
                         }
 
                         console.log('[Puppeteer] Clicked. Racing Network vs DOM...');
@@ -477,17 +453,17 @@ const PuppeteerWrapper = {
                         } else {
                             console.log(`[Puppeteer] No result on attempt ${attempt}.`);
                         }
-                    }
 
-                    if (transcriptResult) {
-                        transcript = transcriptResult;
                     } else {
-                        console.log('[Puppeteer] All transcript extraction attempts failed.');
+                        console.log('[Puppeteer] "Show transcript" button NOT found.');
+                        await page.screenshot({ path: 'debug_no_transcript_btn.png' });
                     }
+                } // End Retry Loop
 
+                if (transcriptResult) {
+                    transcript = transcriptResult;
                 } else {
-                    console.log('[Puppeteer] "Show transcript" button NOT found.');
-                    await page.screenshot({ path: 'debug_no_transcript_btn.png' });
+                    console.log('[Puppeteer] All transcript extraction attempts failed.');
                 }
             }
 
