@@ -374,17 +374,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ============ Playlist Tab ============
     const playlistLoading = document.getElementById('playlistLoading');
-    const playlistResult = document.getElementById('playlistResult');
     const playlistHistory = document.getElementById('playlistHistory');
     const generatePlaylistBtn = document.getElementById('generatePlaylistBtn');
     const channelsList = document.getElementById('channelsList');
     const authStatus = document.getElementById('authStatus');
     const authActions = document.getElementById('authActions');
 
-    // Store channels data in memory
+    // V2 Workspace elements
+    const syncFeedback = document.getElementById('syncFeedback');
+    const pendingVideos = document.getElementById('pendingVideos');
+    const approvedVideos = document.getElementById('approvedVideos');
+    const extractedVideos = document.getElementById('extractedVideos');
+    const ignoredVideos = document.getElementById('ignoredVideos');
+    const pendingCount = document.getElementById('pendingCount');
+    const approvedCount = document.getElementById('approvedCount');
+    const extractedCount = document.getElementById('extractedCount');
+    const ignoredCount = document.getElementById('ignoredCount');
+    // V3 elements
+    const discoverBtn = document.getElementById('discoverBtn');
+    const shortsReelGroup = document.getElementById('shortsReelGroup');
+    const shortsReel = document.getElementById('shortsReel');
+    const shortsCount = document.getElementById('shortsCount');
+
+    // Store state
     let channelsData = [];
     let isLoggedIn = false;
     let authConfigured = false;
+    let currentDailyFile = null; // The filename of today's daily file
+    let currentDailyVideos = []; // All videos from today's file
+
+    const categoryEmojis = {
+        finance: '🏦',
+        sports: '🏈',
+        cooking: '🍳',
+        tech: '💻',
+        news: '📰',
+        other: '📦'
+    };
 
     // Check YouTube auth status on page load
     async function checkAuthStatus() {
@@ -408,16 +434,490 @@ document.addEventListener('DOMContentLoaded', () => {
                 authStatus.innerHTML = '<span>Login to save playlists to YouTube</span>';
                 authActions.innerHTML = '<a href="/auth/google" class="google-login-btn">🔐 Login with Google</a>';
             }
-
-            // Re-render playlists to show/hide save buttons
-            loadPlaylists();
         } catch (error) {
             console.error('Auth status check failed:', error);
             authStatus.innerHTML = '<span class="auth-not-configured">Auth check failed</span>';
         }
     }
 
+    // ============ Workspace: Load Today's Daily File ============
+    async function loadDailyWorkspace() {
+        try {
+            const response = await fetch('/api/playlist/history');
+            const data = await response.json();
+            if (!data.success || !data.playlists || data.playlists.length === 0) {
+                renderWorkspaceEmpty();
+                renderPlaylists([]);
+                return;
+            }
 
+            // The first playlist is the most recent (today's)
+            const todayPlaylist = data.playlists[0];
+            currentDailyFile = todayPlaylist.filename;
+            currentDailyVideos = Array.isArray(todayPlaylist.data) ? todayPlaylist.data : [];
+
+            renderWorkspace(currentDailyVideos);
+            renderPlaylists(data.playlists);
+        } catch (error) {
+            console.error('Error loading workspace:', error);
+            renderWorkspaceEmpty();
+        }
+    }
+
+    function renderWorkspaceEmpty() {
+        pendingVideos.innerHTML = '<p class="group-empty">No videos yet. Click "Sync Daily Feed" to start!</p>';
+        approvedVideos.innerHTML = '';
+        extractedVideos.innerHTML = '';
+        ignoredVideos.innerHTML = '';
+        pendingCount.textContent = '0';
+        approvedCount.textContent = '0';
+        extractedCount.textContent = '0';
+        ignoredCount.textContent = '0';
+    }
+
+    // ============ Workspace: Render Grouped Videos ============
+    function renderWorkspace(videos) {
+        // V3: Separate shorts from long-form
+        const shorts = videos.filter(v => v.is_short === true);
+        const longForm = videos.filter(v => v.is_short !== true);
+
+        const groups = {
+            pending: longForm.filter(v => (v.status || 'pending') === 'pending'),
+            approved: longForm.filter(v => v.status === 'approved'),
+            extracted: longForm.filter(v => v.status === 'extracted'),
+            ignored: longForm.filter(v => v.status === 'ignored')
+        };
+
+        // Update counts
+        pendingCount.textContent = groups.pending.length;
+        approvedCount.textContent = groups.approved.length;
+        extractedCount.textContent = groups.extracted.length;
+        ignoredCount.textContent = groups.ignored.length;
+
+        // Render each group
+        pendingVideos.innerHTML = groups.pending.length > 0
+            ? groups.pending.map(v => renderVideoCard(v, 'pending')).join('')
+            : '<p class="group-empty">All caught up! No pending videos.</p>';
+
+        approvedVideos.innerHTML = groups.approved.length > 0
+            ? groups.approved.map(v => renderVideoCard(v, 'approved')).join('')
+            : '<p class="group-empty">Approve videos from the pending list above.</p>';
+
+        extractedVideos.innerHTML = groups.extracted.length > 0
+            ? groups.extracted.map(v => renderVideoCard(v, 'extracted')).join('')
+            : '';
+
+        ignoredVideos.innerHTML = groups.ignored.length > 0
+            ? groups.ignored.map(v => renderVideoCard(v, 'ignored')).join('')
+            : '';
+
+        // Show/hide empty groups
+        document.getElementById('extractedGroup').style.display = groups.extracted.length > 0 ? 'block' : 'none';
+        document.getElementById('ignoredGroup').style.display = groups.ignored.length > 0 ? 'block' : 'none';
+
+        // V3: Render shorts reel
+        if (shorts.length > 0) {
+            shortsReelGroup.style.display = 'block';
+            shortsCount.textContent = shorts.length;
+            shortsReel.innerHTML = shorts.map(v => renderShortsCard(v)).join('');
+        } else {
+            shortsReelGroup.style.display = 'none';
+        }
+
+        // Attach workspace event listeners
+        attachWorkspaceListeners();
+    }
+
+    function renderVideoCard(video, groupType) {
+        const title = escapeHtml(video.title || 'Untitled');
+        const channel = escapeHtml(video.channelName || 'Unknown');
+        const category = video.category || 'other';
+        const emoji = categoryEmojis[category] || '📺';
+        const thumb = video.thumbnail || `https://i.ytimg.com/vi/${video.id}/mqdefault.jpg`;
+        const filterInfo = video.filter_reason && video.filter_reason !== 'neutral'
+            ? `<span class="filter-badge" title="${escapeHtml(video.filter_reason)}">🔍 ${video.filter_score > 0 ? '+' : ''}${(video.filter_score || 0).toFixed(1)}</span>`
+            : '';
+        // V3: Discovery badge
+        const discoveryBadge = video.source === 'discovery'
+            ? '<span class="discovery-badge" title="Found via Discovery Engine">✨ Suggested</span>'
+            : '';
+        // V3: Context tier indicator
+        const tierBadge = video.context_tier === 'A'
+            ? '<span class="tier-badge tier-a" title="Deep Dive (>5 min)">📚</span>'
+            : video.context_tier === 'C'
+                ? '<span class="tier-badge tier-c" title="Short (<1 min)">⚡</span>'
+                : '';
+
+        // Different action buttons based on group
+        let actions = '';
+        if (groupType === 'pending') {
+            actions = `
+                <button class="ws-btn ws-approve" data-id="${video.id}" data-status="approved" title="Approve for extraction">✅</button>
+                <button class="ws-btn ws-ignore" data-id="${video.id}" data-status="ignored" title="Ignore this video">🚫</button>
+            `;
+        } else if (groupType === 'approved') {
+            actions = `
+                <button class="ws-btn ws-extract-single" data-id="${video.id}" title="Extract transcript">📝</button>
+                <button class="ws-btn ws-revert" data-id="${video.id}" data-status="pending" title="Move back to pending">⏪</button>
+            `;
+        } else if (groupType === 'extracted') {
+            actions = `<span class="status-badge status-extracted">✅ Done</span>`;
+        } else if (groupType === 'ignored') {
+            actions = `
+                <button class="ws-btn ws-restore" data-id="${video.id}" data-status="pending" title="Restore to pending">↩️</button>
+                <button class="ws-btn ws-block" data-id="${video.id}" data-title="${title}" title="Add to block list">🚫+</button>
+            `;
+        }
+
+        return `
+            <div class="ws-video-card ${groupType}" data-video-id="${video.id}">
+                <img class="ws-thumb" src="${thumb}" alt="" onerror="this.src='https://via.placeholder.com/120x68?text=No+Thumb'" loading="lazy">
+                <div class="ws-video-info">
+                    <a href="https://youtube.com/watch?v=${video.id}" target="_blank" class="ws-title" title="${title}">${title}</a>
+                    <div class="ws-meta">
+                        <span class="ws-channel">${channel}</span>
+                        <span class="ws-category">${emoji} ${category}</span>
+                        ${tierBadge}
+                        ${filterInfo}
+                        ${discoveryBadge}
+                    </div>
+                </div>
+                <div class="ws-actions">${actions}</div>
+            </div>
+        `;
+    }
+
+    // V3: Render a compact card for the shorts reel
+    function renderShortsCard(video) {
+        const title = escapeHtml(video.title || 'Untitled');
+        const channel = escapeHtml(video.channelName || 'Unknown');
+        const thumb = video.thumbnail || `https://i.ytimg.com/vi/${video.id}/mqdefault.jpg`;
+        const discoveryTag = video.source === 'discovery'
+            ? '<span class="discovery-badge-sm">✨</span>'
+            : '';
+
+        return `
+            <a href="https://youtube.com/watch?v=${video.id}" target="_blank" class="shorts-card" title="${title}">
+                <img class="shorts-thumb" src="${thumb}" alt="" onerror="this.src='https://via.placeholder.com/160x90?text=No+Thumb'" loading="lazy">
+                <div class="shorts-info">
+                    <span class="shorts-title">${title}</span>
+                    <span class="shorts-channel">${channel} ${discoveryTag}</span>
+                </div>
+                <div class="shorts-actions">
+                    <button class="ws-btn ws-approve" data-id="${video.id}" data-status="approved" title="Approve" onclick="event.preventDefault(); event.stopPropagation();">✅</button>
+                    <button class="ws-btn ws-ignore" data-id="${video.id}" data-status="ignored" title="Ignore" onclick="event.preventDefault(); event.stopPropagation();">🚫</button>
+                </div>
+            </a>
+        `;
+    }
+
+    // ============ Workspace: Event Listeners ============
+    function attachWorkspaceListeners() {
+        // Status change buttons (approve, ignore, revert, restore)
+        document.querySelectorAll('.ws-btn[data-status]').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const videoId = btn.dataset.id;
+                const newStatus = btn.dataset.status;
+                await updateVideoStatus(videoId, newStatus);
+            });
+        });
+
+        // Extract single video
+        document.querySelectorAll('.ws-extract-single').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const videoId = btn.dataset.id;
+                btn.disabled = true;
+                btn.textContent = '⏳';
+
+                try {
+                    const video = currentDailyVideos.find(v => v.id === videoId);
+                    if (!video) throw new Error('Video not found');
+
+                    const response = await fetch('/api/extract', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url: `https://www.youtube.com/watch?v=${videoId}` })
+                    });
+                    const data = await response.json();
+
+                    if (data.success && data.transcript) {
+                        // Save to database
+                        await fetch('/api/videos/save', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(data)
+                        });
+
+                        // Update status to extracted
+                        await updateVideoStatus(videoId, 'extracted');
+                        showSuccess(`Extracted: ${video.title}`);
+                    } else {
+                        throw new Error(data.error || 'Extraction failed');
+                    }
+                } catch (error) {
+                    console.error('Extract error:', error);
+                    btn.textContent = '❌';
+                    showError(error.message);
+                    setTimeout(() => { btn.textContent = '📝'; btn.disabled = false; }, 2000);
+                }
+            });
+        });
+
+        // Block button (add to block list from ignored videos)
+        document.querySelectorAll('.ws-block').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const title = btn.dataset.title;
+                // Let user pick a keyword from the title to block
+                const keyword = prompt(`Block a keyword from: "${title}"\n\nEnter the word or phrase to add to the block list:`);
+                if (keyword && keyword.trim()) {
+                    addFilterTerm(keyword.trim(), 'block_list');
+                }
+            });
+        });
+    }
+
+    // ============ Video Status Update ============
+    async function updateVideoStatus(videoId, newStatus) {
+        if (!currentDailyFile) return;
+
+        try {
+            const response = await fetch(`/api/playlist/${currentDailyFile}/video/${videoId}/status`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: newStatus })
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                // Update local state
+                const video = currentDailyVideos.find(v => v.id === videoId);
+                if (video) video.status = newStatus;
+                renderWorkspace(currentDailyVideos);
+            } else {
+                showError(data.error || 'Failed to update status');
+            }
+        } catch (error) {
+            console.error('Status update error:', error);
+            showError('Failed to update video status');
+        }
+    }
+
+    // Bulk status updates
+    document.querySelector('.approve-all-btn')?.addEventListener('click', async () => {
+        const pendingIds = currentDailyVideos
+            .filter(v => (v.status || 'pending') === 'pending')
+            .map(v => v.id);
+
+        if (pendingIds.length === 0) return;
+        if (!confirm(`Approve all ${pendingIds.length} pending videos?`)) return;
+
+        await bulkUpdateStatus(pendingIds, 'approved');
+    });
+
+    document.querySelector('.dismiss-all-btn')?.addEventListener('click', async () => {
+        const pendingIds = currentDailyVideos
+            .filter(v => (v.status || 'pending') === 'pending')
+            .map(v => v.id);
+
+        if (pendingIds.length === 0) return;
+        if (!confirm(`Dismiss all ${pendingIds.length} pending videos?`)) return;
+
+        await bulkUpdateStatus(pendingIds, 'ignored');
+    });
+
+    document.querySelector('.extract-all-btn')?.addEventListener('click', async () => {
+        const approvedIds = currentDailyVideos
+            .filter(v => v.status === 'approved')
+            .map(v => v.id);
+
+        if (approvedIds.length === 0) return;
+        if (!confirm(`Extract transcripts for all ${approvedIds.length} approved videos? This may take several minutes.`)) return;
+
+        const btn = document.querySelector('.extract-all-btn');
+        btn.disabled = true;
+        btn.textContent = '⏳ Extracting...';
+
+        // Extract one by one
+        let extracted = 0;
+        for (const videoId of approvedIds) {
+            try {
+                const response = await fetch('/api/extract', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: `https://www.youtube.com/watch?v=${videoId}` })
+                });
+                const data = await response.json();
+
+                if (data.success && data.transcript) {
+                    await fetch('/api/videos/save', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    await updateVideoStatus(videoId, 'extracted');
+                    extracted++;
+                    btn.textContent = `⏳ ${extracted}/${approvedIds.length}`;
+                }
+            } catch (err) {
+                console.error(`Extract failed for ${videoId}:`, err);
+            }
+        }
+
+        btn.textContent = `✅ ${extracted}/${approvedIds.length}`;
+        showSuccess(`Extracted ${extracted} of ${approvedIds.length} transcripts!`);
+        setTimeout(() => { btn.textContent = '📝 Extract All'; btn.disabled = false; }, 3000);
+    });
+
+    async function bulkUpdateStatus(videoIds, status) {
+        if (!currentDailyFile) return;
+
+        try {
+            const response = await fetch(`/api/playlist/${currentDailyFile}/bulk-status`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ videoIds, status })
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                videoIds.forEach(id => {
+                    const video = currentDailyVideos.find(v => v.id === id);
+                    if (video) video.status = status;
+                });
+                renderWorkspace(currentDailyVideos);
+                showSuccess(`Updated ${data.updated} videos to "${status}"`);
+            }
+        } catch (error) {
+            console.error('Bulk update error:', error);
+            showError('Failed to bulk update');
+        }
+    }
+
+    // ============ Collapsible Sections ============
+    document.querySelectorAll('[data-toggle]').forEach(header => {
+        header.addEventListener('click', () => {
+            const targetId = header.dataset.toggle;
+            const target = document.getElementById(targetId);
+            if (!target) return;
+
+            target.classList.toggle('hidden');
+            const arrow = header.querySelector('.toggle-arrow');
+            if (arrow) arrow.textContent = target.classList.contains('hidden') ? '▶' : '▼';
+        });
+    });
+
+    // ============ Filter Management ============
+    let currentFilters = { block_list: [], allow_list: [], category_rules: {} };
+
+    async function loadFilters() {
+        try {
+            const response = await fetch('/api/playlist/filters');
+            const data = await response.json();
+            if (data.success) {
+                currentFilters = data.filters;
+                renderFilters();
+            }
+        } catch (error) {
+            console.error('Load filters error:', error);
+        }
+    }
+
+    function renderFilters() {
+        const blockItems = document.getElementById('blockListItems');
+        const allowItems = document.getElementById('allowListItems');
+        const blockCount = document.getElementById('blockCount');
+        const allowCount = document.getElementById('allowCount');
+
+        blockCount.textContent = currentFilters.block_list.length;
+        allowCount.textContent = currentFilters.allow_list.length;
+
+        blockItems.innerHTML = currentFilters.block_list.map(term =>
+            `<div class="filter-item">
+                <span>${escapeHtml(term)}</span>
+                <button class="filter-remove-btn" data-term="${escapeHtml(term)}" data-list="block_list">✕</button>
+            </div>`
+        ).join('') || '<p class="filter-empty">No blocked terms</p>';
+
+        allowItems.innerHTML = currentFilters.allow_list.map(term =>
+            `<div class="filter-item">
+                <span>${escapeHtml(term)}</span>
+                <button class="filter-remove-btn" data-term="${escapeHtml(term)}" data-list="allow_list">✕</button>
+            </div>`
+        ).join('') || '<p class="filter-empty">No allowed terms</p>';
+
+        // Attach remove listeners
+        document.querySelectorAll('.filter-remove-btn').forEach(btn => {
+            btn.addEventListener('click', () => removeFilterTerm(btn.dataset.term, btn.dataset.list));
+        });
+    }
+
+    async function addFilterTerm(term, list) {
+        try {
+            const response = await fetch('/api/playlist/filters/add-term', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ term, list })
+            });
+            const data = await response.json();
+            if (data.success) {
+                currentFilters = data.filters;
+                renderFilters();
+                showSuccess(`Added "${term}" to ${list.replace('_', ' ')}`);
+            }
+        } catch (error) {
+            console.error('Add term error:', error);
+            showError('Failed to add filter term');
+        }
+    }
+
+    async function removeFilterTerm(term, list) {
+        try {
+            const response = await fetch('/api/playlist/filters/remove-term', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ term, list })
+            });
+            const data = await response.json();
+            if (data.success) {
+                currentFilters = data.filters;
+                renderFilters();
+                showSuccess(`Removed "${term}" from ${list.replace('_', ' ')}`);
+            }
+        } catch (error) {
+            console.error('Remove term error:', error);
+            showError('Failed to remove filter term');
+        }
+    }
+
+    // Filter add buttons
+    document.getElementById('addBlockTermBtn')?.addEventListener('click', () => {
+        const input = document.getElementById('newBlockTerm');
+        if (input.value.trim()) {
+            addFilterTerm(input.value.trim(), 'block_list');
+            input.value = '';
+        }
+    });
+
+    document.getElementById('addAllowTermBtn')?.addEventListener('click', () => {
+        const input = document.getElementById('newAllowTerm');
+        if (input.value.trim()) {
+            addFilterTerm(input.value.trim(), 'allow_list');
+            input.value = '';
+        }
+    });
+
+    // Allow Enter key to add terms
+    document.getElementById('newBlockTerm')?.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') document.getElementById('addBlockTermBtn').click();
+    });
+    document.getElementById('newAllowTerm')?.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') document.getElementById('addAllowTermBtn').click();
+    });
+
+    // ============ Playlist History (kept from V1 for older files) ============
     async function loadPlaylists() {
         try {
             const response = await fetch('/api/playlist/history');
@@ -482,21 +982,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
-    const categoryEmojis = {
-        finance: '🏦',
-        sports: '🏈',
-        cooking: '🍳',
-        tech: '💻',
-        news: '📰',
-        other: '📦'
-    };
-
     function renderPlaylists(playlists) {
         const VIDEOS_PER_PLAYLIST = 50;
 
@@ -527,14 +1012,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 return `<a href="${playlistUrl}" target="_blank" class="secondary-btn">${label}</a>`;
             }).join('');
 
+            // Status summary
+            const pending = videos.filter(v => (v.status || 'pending') === 'pending').length;
+            const approved = videos.filter(v => v.status === 'approved').length;
+            const extracted = videos.filter(v => v.status === 'extracted').length;
+            const ignored = videos.filter(v => v.status === 'ignored').length;
+            const statusSummary = `⏳${pending} ✅${approved} 📝${extracted} 🚫${ignored}`;
+
             // Save to YouTube button
             const allVideoIds = videos.map(v => v.id);
             const saveButton = isLoggedIn
                 ? `<button class="save-youtube-btn" data-title="Playlist ${date}" data-videos='${JSON.stringify(allVideoIds)}'>💾 YouTube</button>`
                 : '';
 
-            // Generate category sections with video cards
-            // Fixed category order to prevent reordering when videos are deleted
+            // Category sections
             const categoryOrder = ['finance', 'news', 'tech', 'sports', 'cooking', 'other'];
             const sortedCategories = Object.entries(categories).sort((a, b) => {
                 const orderA = categoryOrder.indexOf(a[0]);
@@ -577,7 +1068,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="playlist-card-header" onclick="this.parentElement.classList.toggle('expanded')">
                         <div class="playlist-meta">
                             <span class="playlist-date">${date}</span>
-                            <span class="playlist-count">${count} videos • ${Object.keys(categories).length} categories</span>
+                            <span class="playlist-count">${count} videos • ${statusSummary}</span>
                         </div>
                         <div class="playlist-actions" onclick="event.stopPropagation()">
                             ${playButtons}
@@ -599,8 +1090,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function attachPlaylistListeners() {
-        // Delete playlist - handled via document event delegation below
-
         // Delete single video
         document.querySelectorAll('.video-delete-btn').forEach(btn => {
             btn.addEventListener('click', async (e) => {
@@ -613,9 +1102,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const data = await response.json();
                     if (data.success) {
                         showSuccess('Video removed.');
-                        // Reload playlists but keep this one expanded
                         await loadPlaylists();
-                        // Re-expand the playlist we were editing
                         const playlistCard = document.querySelector(`.playlist-card[data-filename="${filename}"]`);
                         if (playlistCard) {
                             playlistCard.classList.add('expanded');
@@ -630,11 +1117,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     showError('Server error.');
                 }
             });
-
         });
 
-
-        // Extract transcripts with streaming progress
+        // Extract transcripts
         document.querySelectorAll('.extract-btn').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 e.stopPropagation();
@@ -643,13 +1128,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const filename = btn.dataset.filename;
                 const playlistCard = btn.closest('.playlist-card');
 
-                // Disable button and show progress
                 btn.disabled = true;
                 const originalText = btn.textContent;
                 btn.textContent = '⏳ Extracting...';
                 btn.style.minWidth = '140px';
 
-                // Create simple status display
                 let statusDiv = playlistCard.querySelector('.extraction-status-display');
                 if (!statusDiv) {
                     statusDiv = document.createElement('div');
@@ -684,14 +1167,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     showError(error.message || 'Extraction failed.');
                 }
 
-                // Reset button after delay
                 setTimeout(() => {
                     btn.textContent = originalText;
                     btn.disabled = false;
                 }, 5000);
             });
         });
-
 
         // Save to YouTube
         document.querySelectorAll('.save-youtube-btn').forEach(btn => {
@@ -742,12 +1223,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // ============ Generate / Sync Button ============
     generatePlaylistBtn.addEventListener('click', async () => {
         generatePlaylistBtn.disabled = true;
         playlistLoading.classList.remove('hidden');
-        playlistResult.classList.add('hidden');
+        syncFeedback.classList.add('hidden');
 
-        console.log('%c🎬 Starting playlist generation...', 'color: #4CAF50; font-weight: bold');
+        console.log('%c🎬 Starting daily feed sync...', 'color: #4CAF50; font-weight: bold');
 
         try {
             const response = await fetch('/api/playlist/generate', { method: 'POST' });
@@ -755,7 +1237,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Display logs in browser console
             if (data.logs && Array.isArray(data.logs)) {
-                console.group('%c📋 Playlist Generation Logs', 'color: #2196F3; font-weight: bold');
+                console.group('%c📋 Feed Sync Logs', 'color: #2196F3; font-weight: bold');
                 data.logs.forEach(entry => {
                     const style = entry.type === 'error' ? 'color: red'
                         : entry.type === 'warn' ? 'color: orange'
@@ -766,19 +1248,68 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (data.success) {
-                showSuccess(`Playlist generated! found ${data.videoCount !== undefined ? data.videoCount : 'new'} videos.`);
-                loadPlaylists(); // Refresh history
+                // Show sync feedback banner
+                syncFeedback.classList.remove('hidden');
+                document.querySelector('#syncNew strong').textContent = data.newCount || 0;
+                document.querySelector('#syncDeduped strong').textContent = data.dbDeduped || 0;
+                document.querySelector('#syncFiltered strong').textContent = data.filterDropped || 0;
+                document.querySelector('#syncTotal strong').textContent = data.videoCount || 0;
+
+                showSuccess(`Sync complete! ${data.newCount || 0} new videos added.`);
+
+                // Reload workspace
+                await loadDailyWorkspace();
             } else {
-                showError(data.message || 'Failed to generate playlist.');
+                showError(data.error || data.message || 'Failed to sync daily feed.');
             }
         } catch (error) {
-            console.error('Generation error:', error);
-            showError('Failed to trigger generation.');
+            console.error('Sync error:', error);
+            showError('Failed to trigger sync.');
         } finally {
             generatePlaylistBtn.disabled = false;
             playlistLoading.classList.add('hidden');
         }
     });
+
+    // V3: Discover button handler
+    if (discoverBtn) {
+        discoverBtn.addEventListener('click', async () => {
+            discoverBtn.disabled = true;
+            discoverBtn.textContent = '⏳ Discovering...';
+            playlistLoading.classList.remove('hidden');
+
+            try {
+                const response = await fetch('/api/playlist/discover', { method: 'POST' });
+                const data = await response.json();
+
+                if (data.success) {
+                    // Show discovery feedback
+                    syncFeedback.classList.remove('hidden');
+                    document.getElementById('syncNew').innerHTML = `✨ <strong>${data.addedToDaily || 0}</strong> discovered`;
+                    document.getElementById('syncDeduped').innerHTML = `🔎 <strong>${data.searchesRun || 0}</strong> searches`;
+                    document.getElementById('syncFiltered').innerHTML = `📦 <strong>${data.candidatesFound || 0}</strong> candidates`;
+                    document.getElementById('syncTotal').innerHTML = `✅ <strong>${data.keptAfterFilter || 0}</strong> kept`;
+
+                    if (data.addedToDaily > 0) {
+                        showSuccess(`✨ Discovered ${data.addedToDaily} new videos!`);
+                    } else {
+                        showSuccess('Discovery complete — no new videos found this time.');
+                    }
+
+                    await loadDailyWorkspace();
+                } else {
+                    showError(data.error || 'Discovery failed.');
+                }
+            } catch (error) {
+                console.error('Discovery error:', error);
+                showError('Failed to run discovery.');
+            } finally {
+                discoverBtn.disabled = false;
+                discoverBtn.textContent = '✨ Discover';
+                playlistLoading.classList.add('hidden');
+            }
+        });
+    }
 
     async function saveChannels() {
         try {
@@ -811,25 +1342,21 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Normalize URL
         if (!url.startsWith('http')) {
             url = 'https://www.youtube.com/@' + url;
         }
 
-        // Check for duplicate URL
         if (channelsData.some(c => c.url === url || c.name.toLowerCase() === name.toLowerCase())) {
             showError('Channel already exists.');
             return;
         }
 
-        // Add new channel
         channelsData.push({
             name: name,
             url: url,
             include_shorts: newChannelShorts.checked
         });
 
-        // Save and refresh
         const saved = await saveChannels();
         if (saved) {
             newChannelName.value = '';
@@ -840,11 +1367,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Load channels on page load
+    // ============ Initial Load ============
     loadChannels();
-
-    // Check YouTube auth status on page load
     checkAuthStatus();
+    loadDailyWorkspace();
+    loadFilters();
 
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
@@ -854,12 +1381,10 @@ document.addEventListener('DOMContentLoaded', () => {
             deleteTargetId = null;
         }
     });
+
     // ========================================
     // DELETE PLAYLIST - Document-level event delegation
-    // This catches clicks on .delete-playlist-btn regardless of when they were rendered
     // ========================================
-    // IMPORTANT: Use capture phase (true) because .playlist-actions has onclick="event.stopPropagation()"
-    // which blocks bubbling. Capture fires top-down BEFORE that stopPropagation runs.
     document.addEventListener('click', async (e) => {
         const btn = e.target.closest('.delete-playlist-btn');
         if (!btn) return;
@@ -870,7 +1395,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const filename = btn.dataset.filename;
         console.log('[DELETE PLAYLIST] Button clicked for:', filename);
 
-        // First click = prime, second click = delete
         if (btn.dataset.primed !== 'true') {
             btn.dataset.primed = 'true';
             btn.innerHTML = '⚠️ Sure?';
@@ -878,7 +1402,6 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.style.borderColor = '#ef4444';
             btn.style.width = 'auto';
             btn.style.minWidth = '70px';
-            console.log('[DELETE PLAYLIST] Primed - click again to confirm');
 
             setTimeout(() => {
                 if (btn.dataset.primed === 'true') {
@@ -890,20 +1413,18 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Second click - do the delete
         btn.dataset.primed = '';
         btn.innerHTML = '⏳';
         btn.disabled = true;
-        console.log('[DELETE PLAYLIST] Confirmed - sending DELETE request for:', filename);
 
         try {
             const response = await fetch(`/api/playlist/${filename}`, { method: 'DELETE' });
             const data = await response.json();
-            console.log('[DELETE PLAYLIST] Response:', response.status, data);
 
             if (data.success) {
                 showSuccess('Playlist deleted!');
                 loadPlaylists();
+                loadDailyWorkspace();
             } else {
                 showError('Failed: ' + (data.error || 'Unknown'));
                 btn.innerHTML = '🗑️';
@@ -917,5 +1438,6 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.style.cssText = '';
             btn.disabled = false;
         }
-    }, true); // true = capture phase, fires BEFORE stopPropagation on parent div
+    }, true);
 });
+

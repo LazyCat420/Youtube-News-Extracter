@@ -1,0 +1,82 @@
+{
+    "block_list": [
+        "reaction",
+        "prank",
+        "gameplay",
+        "unboxing",
+        "mukbang",
+        "asmr",
+        "vlog",
+        "challenge",
+        "storytime",
+        "tier list",
+        "ranking every"
+    ],
+    "allow_list": [
+        "stock",
+        "market",
+        "finance",
+        "economy",
+        "earnings",
+        "fed",
+        "inflation",
+        "interest rate",
+        "gdp",
+        "recession",
+        "ipo",
+        "dividend",
+        "treasury",
+        "bonds",
+        "etf",
+        "nasdaq",
+        "dow",
+        "s&p",
+        "forex",
+        "portfolio",
+        "valuation",
+        "hedge",
+        "yield",
+        "revenue",
+        "profit",
+        "quarterly",
+        "annual report",
+        "sec filing",
+        "crypto",
+        "bitcoin",
+        "ethereum",
+        "defi",
+        "blockchain"
+    ],
+    "category_rules": {
+        "finance": {
+            "allow_weight": 3.0,
+            "block_weight": 1.0,
+            "threshold": 0
+        },
+        "tech": {
+            "allow_weight": 2.0,
+            "block_weight": 1.5,
+            "threshold": 0
+        },
+        "news": {
+            "allow_weight": 1.5,
+            "block_weight": 1.0,
+            "threshold": 0
+        },
+        "sports": {
+            "allow_weight": 1.0,
+            "block_weight": 2.0,
+            "threshold": 0
+        },
+        "cooking": {
+            "allow_weight": 1.0,
+            "block_weight": 2.0,
+            "threshold": 0
+        },
+        "other": {
+            "allow_weight": 1.0,
+            "block_weight": 1.5,
+            "threshold": 0
+        }
+    }
+}

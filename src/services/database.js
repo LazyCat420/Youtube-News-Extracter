@@ -86,6 +86,37 @@ const Database = {
         });
     },
 
+    /**
+     * Check if a single video exists in the database by its YouTube video_id
+     * Used by the auto-playlist generator for deduplication
+     */
+    checkVideoExists(videoId) {
+        return new Promise((resolve, reject) => {
+            db.get(`SELECT video_id FROM videos WHERE video_id = ?`, [videoId], (err, row) => {
+                if (err) reject(err);
+                else resolve(!!row);
+            });
+        });
+    },
+
+    /**
+     * Check which video IDs from an array already exist in the database
+     * Returns a Set of existing video IDs for O(1) lookup
+     * Used for batch deduplication during playlist generation
+     */
+    checkMultipleVideosExist(videoIds) {
+        return new Promise((resolve, reject) => {
+            if (!videoIds || videoIds.length === 0) {
+                return resolve(new Set());
+            }
+            const placeholders = videoIds.map(() => '?').join(',');
+            db.all(`SELECT video_id FROM videos WHERE video_id IN (${placeholders})`, videoIds, (err, rows) => {
+                if (err) reject(err);
+                else resolve(new Set(rows.map(r => r.video_id)));
+            });
+        });
+    },
+
     close() {
         db.close();
     }

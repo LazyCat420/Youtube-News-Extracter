@@ -104,8 +104,21 @@
                 </div>
 
                 <div class="playlist-header">
-                    <h2>Daily Auto-Playlist</h2>
-                    <button id="generatePlaylistBtn" class="primary-btn">⚡ Generate Now</button>
+                    <h2>📋 Daily Workspace</h2>
+                    <div class="playlist-header-actions">
+                        <button id="generatePlaylistBtn" class="primary-btn">🔄 Sync Daily Feed</button>
+                        <button id="discoverBtn" class="primary-btn discover-btn">✨ Discover</button>
+                    </div>
+                </div>
+
+                <!-- Sync Feedback Banner -->
+                <div id="syncFeedback" class="sync-feedback hidden">
+                    <div class="sync-stats">
+                        <span class="stat" id="syncNew">🆕 <strong>0</strong> new</span>
+                        <span class="stat" id="syncDeduped">🗄️ <strong>0</strong> deduped</span>
+                        <span class="stat" id="syncFiltered">🔍 <strong>0</strong> filtered</span>
+                        <span class="stat" id="syncTotal">📊 <strong>0</strong> total</span>
+                    </div>
                 </div>
 
                 <div id="playlistLoading" class="hidden">
@@ -113,14 +126,111 @@
                     <p>Scanning channels... this can take a minute.</p>
                 </div>
 
-                <div id="playlistResult" class="hidden">
-                    <!-- Result will be injected here -->
+                <!-- Workspace Groups -->
+                <div class="playlist-section">
+                    <div class="workspace-groups">
+
+                        <!-- Pending Group -->
+                        <div class="workspace-group" id="pendingGroup">
+                            <div class="group-header">
+                                <h3>⏳ New / Pending <span class="group-count" id="pendingCount">0</span></h3>
+                                <div class="group-actions">
+                                    <button class="small-btn approve-all-btn" data-status="approved"
+                                        title="Approve all pending videos">✅ Approve All</button>
+                                    <button class="small-btn dismiss-all-btn" data-status="ignored"
+                                        title="Dismiss all pending videos">🚫 Dismiss All</button>
+                                </div>
+                            </div>
+                            <div class="group-videos" id="pendingVideos">
+                                <!-- Pending videos rendered here -->
+                            </div>
+                        </div>
+
+                        <!-- Approved Group -->
+                        <div class="workspace-group" id="approvedGroup">
+                            <div class="group-header">
+                                <h3>✅ Ready to Extract <span class="group-count" id="approvedCount">0</span></h3>
+                                <div class="group-actions">
+                                    <button class="small-btn extract-all-btn"
+                                        title="Extract transcripts for approved videos">📝 Extract All</button>
+                                </div>
+                            </div>
+                            <div class="group-videos" id="approvedVideos">
+                                <!-- Approved videos rendered here -->
+                            </div>
+                        </div>
+
+                        <!-- Extracted Group -->
+                        <div class="workspace-group extracted-group" id="extractedGroup">
+                            <div class="group-header">
+                                <h3>📝 Completed <span class="group-count" id="extractedCount">0</span></h3>
+                            </div>
+                            <div class="group-videos" id="extractedVideos">
+                                <!-- Extracted videos rendered here (dimmed) -->
+                            </div>
+                        </div>
+
+                        <!-- Ignored Group -->
+                        <div class="workspace-group ignored-group" id="ignoredGroup">
+                            <div class="group-header collapsed-header" data-toggle="ignoredVideos">
+                                <h3>🚫 Ignored <span class="group-count" id="ignoredCount">0</span></h3>
+                                <span class="toggle-arrow">▶</span>
+                            </div>
+                            <div class="group-videos hidden" id="ignoredVideos">
+                                <!-- Ignored videos rendered here (collapsed by default) -->
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- V3: Quick Hits (Shorts Reel) -->
+                    <div class="workspace-group shorts-reel-group" id="shortsReelGroup" style="display: none;">
+                        <div class="group-header">
+                            <h3>⚡ Quick Hits <span class="group-count" id="shortsCount">0</span></h3>
+                        </div>
+                        <div class="shorts-reel" id="shortsReel">
+                            <!-- Shorts rendered here as horizontal scrolling cards -->
+                        </div>
+                    </div>
+
                 </div>
 
                 <div class="playlist-section">
                     <h3>Recent Playlists</h3>
                     <div id="playlistHistory" class="playlist-dashboard">
                         <!-- Playlists with video cards will be rendered here -->
+                    </div>
+                </div>
+
+                <!-- Filter Management Section -->
+                <div class="playlist-section">
+                    <div class="filter-section-header" data-toggle="filterContent">
+                        <h3>🔍 Manage Filters</h3>
+                        <span class="toggle-arrow">▶</span>
+                    </div>
+                    <div id="filterContent" class="filter-content hidden">
+                        <div class="filter-lists">
+                            <div class="filter-list-col">
+                                <h4>🚫 Block List <span class="filter-count" id="blockCount">0</span></h4>
+                                <div class="filter-add-form">
+                                    <input type="text" id="newBlockTerm" placeholder="Add blocked term..." />
+                                    <button class="small-btn" id="addBlockTermBtn">+</button>
+                                </div>
+                                <div id="blockListItems" class="filter-items">
+                                    <!-- Block list items rendered here -->
+                                </div>
+                            </div>
+                            <div class="filter-list-col">
+                                <h4>✅ Allow List <span class="filter-count" id="allowCount">0</span></h4>
+                                <div class="filter-add-form">
+                                    <input type="text" id="newAllowTerm" placeholder="Add allowed term..." />
+                                    <button class="small-btn" id="addAllowTermBtn">+</button>
+                                </div>
+                                <div id="allowListItems" class="filter-items">
+                                    <!-- Allow list items rendered here -->
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

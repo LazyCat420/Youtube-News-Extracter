@@ -126,7 +126,9 @@ app.delete('/api/videos/:id', async (req, res) => {
 
 // Auto-Playlist Routes
 const { generateDailyPlaylist } = require('./auto-yt-playlist/generate_daily');
+const { runDiscovery } = require('./auto-yt-playlist/discover');
 const CHANNELS_FILE = path.join(__dirname, 'auto-yt-playlist/channels.json');
+const FILTERS_FILE = path.join(__dirname, 'auto-yt-playlist/filters.json');
 const OUTPUT_DIR = path.join(__dirname, 'auto-yt-playlist/output');
 const fs = require('fs');
 
@@ -145,6 +147,18 @@ app.post('/api/playlist/generate', async (req, res) => {
     } catch (error) {
         console.error('Playlist generation error:', error);
         res.status(500).json({ error: 'Failed to generate playlist.' });
+    }
+});
+
+// V3: Discovery Engine — find related videos from new sources
+app.post('/api/playlist/discover', async (req, res) => {
+    try {
+        console.log('✨ Triggering discovery engine...');
+        const result = await runDiscovery();
+        res.json({ success: true, ...result });
+    } catch (error) {
+        console.error('Discovery error:', error);
+        res.status(500).json({ error: 'Discovery engine failed.' });
     }
 });
 
@@ -460,6 +474,169 @@ app.post('/api/playlist/channels', async (req, res) => {
     } catch (error) {
         console.error('Channels update error:', error);
         res.status(500).json({ error: 'Failed to update channels.' });
+    }
+});
+
+// ============ Filter Management Routes ============
+
+// Get current filters
+app.get('/api/playlist/filters', (req, res) => {
+    try {
+        if (!fs.existsSync(FILTERS_FILE)) {
+            return res.json({ success: true, filters: { block_list: [], allow_list: [], category_rules: {} } });
+        }
+        const filters = JSON.parse(fs.readFileSync(FILTERS_FILE, 'utf-8'));
+        res.json({ success: true, filters });
+    } catch (error) {
+        console.error('Filters fetch error:', error);
+        res.status(500).json({ error: 'Failed to fetch filters.' });
+    }
+});
+
+// Update filters (full replacement)
+app.post('/api/playlist/filters', (req, res) => {
+    try {
+        const { filters } = req.body;
+        if (!filters) {
+            return res.status(400).json({ error: 'Filters data required' });
+        }
+        fs.writeFileSync(FILTERS_FILE, JSON.stringify(filters, null, 2));
+        res.json({ success: true, message: 'Filters updated.' });
+    } catch (error) {
+        console.error('Filters update error:', error);
+        res.status(500).json({ error: 'Failed to update filters.' });
+    }
+});
+
+// Add a term to block_list or allow_list
+app.post('/api/playlist/filters/add-term', (req, res) => {
+    try {
+        const { term, list } = req.body; // list = 'block_list' or 'allow_list'
+        if (!term || !list || !['block_list', 'allow_list'].includes(list)) {
+            return res.status(400).json({ error: 'Valid term and list (block_list or allow_list) required' });
+        }
+
+        let filters = { block_list: [], allow_list: [], category_rules: {} };
+        if (fs.existsSync(FILTERS_FILE)) {
+            filters = JSON.parse(fs.readFileSync(FILTERS_FILE, 'utf-8'));
+        }
+
+        const normalizedTerm = term.toLowerCase().trim();
+        if (!filters[list].includes(normalizedTerm)) {
+            filters[list].push(normalizedTerm);
+            fs.writeFileSync(FILTERS_FILE, JSON.stringify(filters, null, 2));
+            res.json({ success: true, message: `Added "${normalizedTerm}" to ${list}`, filters });
+        } else {
+            res.json({ success: true, message: `"${normalizedTerm}" already in ${list}`, filters });
+        }
+    } catch (error) {
+        console.error('Add filter term error:', error);
+        res.status(500).json({ error: 'Failed to add filter term.' });
+    }
+});
+
+// Remove a term from block_list or allow_list
+app.post('/api/playlist/filters/remove-term', (req, res) => {
+    try {
+        const { term, list } = req.body;
+        if (!term || !list || !['block_list', 'allow_list'].includes(list)) {
+            return res.status(400).json({ error: 'Valid term and list required' });
+        }
+
+        let filters = { block_list: [], allow_list: [], category_rules: {} };
+        if (fs.existsSync(FILTERS_FILE)) {
+            filters = JSON.parse(fs.readFileSync(FILTERS_FILE, 'utf-8'));
+        }
+
+        const normalizedTerm = term.toLowerCase().trim();
+        filters[list] = filters[list].filter(t => t !== normalizedTerm);
+        fs.writeFileSync(FILTERS_FILE, JSON.stringify(filters, null, 2));
+        res.json({ success: true, message: `Removed "${normalizedTerm}" from ${list}`, filters });
+    } catch (error) {
+        console.error('Remove filter term error:', error);
+        res.status(500).json({ error: 'Failed to remove filter term.' });
+    }
+});
+
+// ============ Video Status Management ============
+
+// Update video status within a daily file
+app.patch('/api/playlist/:filename/video/:videoId/status', (req, res) => {
+    try {
+        const { filename, videoId } = req.params;
+        const { status } = req.body;
+
+        const validStatuses = ['pending', 'approved', 'extracted', 'ignored'];
+        if (!validStatuses.includes(status)) {
+            return res.status(400).json({ error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` });
+        }
+
+        if (!filename || filename.includes('..') || !filename.endsWith('.json')) {
+            return res.status(400).json({ error: 'Invalid filename' });
+        }
+
+        const jsonPath = path.join(OUTPUT_DIR, filename);
+        if (!fs.existsSync(jsonPath)) {
+            return res.status(404).json({ error: 'Daily file not found' });
+        }
+
+        let videos = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+        const video = videos.find(v => v.id === videoId);
+        if (!video) {
+            return res.status(404).json({ error: 'Video not found in playlist' });
+        }
+
+        video.status = status;
+        fs.writeFileSync(jsonPath, JSON.stringify(videos, null, 2));
+
+        res.json({ success: true, message: `Video status updated to ${status}`, video });
+    } catch (error) {
+        console.error('Status update error:', error);
+        res.status(500).json({ error: 'Failed to update video status.' });
+    }
+});
+
+// Bulk update video statuses
+app.patch('/api/playlist/:filename/bulk-status', (req, res) => {
+    try {
+        const { filename } = req.params;
+        const { videoIds, status } = req.body;
+
+        const validStatuses = ['pending', 'approved', 'extracted', 'ignored'];
+        if (!validStatuses.includes(status)) {
+            return res.status(400).json({ error: `Invalid status` });
+        }
+
+        if (!filename || filename.includes('..') || !filename.endsWith('.json')) {
+            return res.status(400).json({ error: 'Invalid filename' });
+        }
+
+        if (!Array.isArray(videoIds) || videoIds.length === 0) {
+            return res.status(400).json({ error: 'videoIds array required' });
+        }
+
+        const jsonPath = path.join(OUTPUT_DIR, filename);
+        if (!fs.existsSync(jsonPath)) {
+            return res.status(404).json({ error: 'Daily file not found' });
+        }
+
+        let videos = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+        const idsSet = new Set(videoIds);
+        let updated = 0;
+
+        videos.forEach(v => {
+            if (idsSet.has(v.id)) {
+                v.status = status;
+                updated++;
+            }
+        });
+
+        fs.writeFileSync(jsonPath, JSON.stringify(videos, null, 2));
+
+        res.json({ success: true, message: `Updated ${updated} videos to ${status}`, updated });
+    } catch (error) {
+        console.error('Bulk status update error:', error);
+        res.status(500).json({ error: 'Failed to bulk update statuses.' });
     }
 });
 
