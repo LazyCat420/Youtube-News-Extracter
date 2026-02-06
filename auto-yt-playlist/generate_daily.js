@@ -16,6 +16,23 @@ if (!fs.existsSync(OUTPUT_DIR)) {
 // Configuration
 const HOURS_LOOKBACK = 48;
 
+// Log collector for browser display
+let collectedLogs = [];
+function log(message, type = 'info') {
+    const timestamp = new Date().toLocaleTimeString();
+    const entry = { timestamp, type, message };
+    collectedLogs.push(entry);
+
+    // Also print to terminal
+    if (type === 'error') {
+        console.error(message);
+    } else if (type === 'warn') {
+        console.warn(message);
+    } else {
+        console.log(message);
+    }
+}
+
 async function loadChannels() {
     if (!fs.existsSync(CHANNELS_FILE)) {
         console.error('channels.json not found!');
@@ -23,6 +40,13 @@ async function loadChannels() {
     }
     const data = fs.readFileSync(CHANNELS_FILE, 'utf-8');
     return JSON.parse(data);
+}
+
+/**
+ * Save channels back to file (for caching channel IDs)
+ */
+function saveChannels(channels) {
+    fs.writeFileSync(CHANNELS_FILE, JSON.stringify(channels, null, 2));
 }
 
 /**
@@ -149,33 +173,48 @@ function fetchVideosViaYtDlp(channel) {
 }
 
 async function generateDailyPlaylist() {
+    // Reset logs for this run
+    collectedLogs = [];
+
     const channels = await loadChannels();
     const allVideos = [];
     const now = new Date();
     const cutOffDate = subHours(now, HOURS_LOOKBACK);
 
-    console.log(`\n🎬 Starting playlist generation`);
-    console.log(`📅 Looking for videos published after: ${cutOffDate.toISOString()}`);
-    console.log(`📺 Channels to scan: ${channels.length}\n`);
+    log(`🎬 Starting playlist generation`);
+    log(`📅 Looking for videos published after: ${cutOffDate.toISOString()}`);
+    log(`📺 Channels to scan: ${channels.length}`);
+    let channelsModified = false;
 
     for (const channel of channels) {
         try {
-            console.log(`\n========================================`);
-            console.log(`📺 Processing: ${channel.name}`);
-            console.log(`🔗 URL: ${channel.url}`);
-            console.log(`========================================`);
+            log(`========================================`);
+            log(`📺 Processing: ${channel.name}`);
+            log(`🔗 URL: ${channel.url}`);
+            log(`========================================`);
 
-            // Step 1: Resolve channel_id from URL
-            console.log(`  [STEP 1] Resolving channel_id...`);
-            const channelId = await resolveChannelId(channel.url);
+            // Step 1: Get channel_id (from cache or resolve via yt-dlp)
+            let channelId = channel.channel_id; // Check cache first
+
+            if (channelId) {
+                log(`  [STEP 1] ⚡ Using cached channel ID: ${channelId}`);
+            } else {
+                log(`  [STEP 1] Resolving channel_id via yt-dlp...`);
+                channelId = await resolveChannelId(channel.url);
+
+                if (channelId) {
+                    log(`  [STEP 1] ✅ Resolved: ${channelId} (will cache)`);
+                    // Cache the ID for future runs
+                    channel.channel_id = channelId;
+                    channelsModified = true;
+                }
+            }
 
             let videos = [];
 
             if (channelId) {
-                console.log(`  [STEP 1] ✅ Channel ID: ${channelId}`);
-
                 // Step 2: Fetch videos via RSS (fast and reliable)
-                console.log(`  [STEP 2] Fetching videos via RSS...`);
+                log(`  [STEP 2] Fetching videos via RSS...`);
                 videos = await fetchVideosViaRSS(channelId, channel.name);
             }
 
@@ -252,9 +291,15 @@ async function generateDailyPlaylist() {
         }
     }
 
-    console.log(`\n========================================`);
-    console.log(`📊 SUMMARY: Found ${allVideos.length} total videos`);
-    console.log(`========================================\n`);
+    // Save cached channel IDs to file if any were resolved
+    if (channelsModified) {
+        saveChannels(channels);
+        log(`💾 Cached ${channels.filter(c => c.channel_id).length} channel IDs to channels.json`);
+    }
+
+    log(`========================================`);
+    log(`📊 SUMMARY: Found ${allVideos.length} total videos`);
+    log(`========================================`);
 
     if (allVideos.length === 0) {
         console.log('❌ No new videos found.');
@@ -294,9 +339,9 @@ async function generateDailyPlaylist() {
     });
 
     fs.writeFileSync(`${outputBase}.md`, mdContent);
-    console.log(`📄 Saved Markdown: ${outputBase}.md`);
+    log(`📄 Saved Markdown: ${outputBase}.md`);
 
-    return { success: true, videoCount: allVideos.length };
+    return { success: true, videoCount: allVideos.length, logs: collectedLogs };
 }
 
 if (require.main === module) {

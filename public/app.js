@@ -456,9 +456,23 @@ document.addEventListener('DOMContentLoaded', () => {
         playlistLoading.classList.remove('hidden');
         playlistResult.classList.add('hidden');
 
+        console.log('%c🎬 Starting playlist generation...', 'color: #4CAF50; font-weight: bold');
+
         try {
             const response = await fetch('/api/playlist/generate', { method: 'POST' });
             const data = await response.json();
+
+            // Display logs in browser console
+            if (data.logs && Array.isArray(data.logs)) {
+                console.group('%c📋 Playlist Generation Logs', 'color: #2196F3; font-weight: bold');
+                data.logs.forEach(entry => {
+                    const style = entry.type === 'error' ? 'color: red'
+                        : entry.type === 'warn' ? 'color: orange'
+                            : 'color: #333';
+                    console.log(`%c[${entry.timestamp}] ${entry.message}`, style);
+                });
+                console.groupEnd();
+            }
 
             if (data.success) {
                 showSuccess(`Playlist generated! found ${data.videoCount !== undefined ? data.videoCount : 'new'} videos.`);

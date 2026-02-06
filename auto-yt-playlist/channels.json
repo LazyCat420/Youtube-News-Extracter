@@ -23,5 +23,45 @@
     "name": "Bloomberg",
     "url": "https://www.youtube.com/@markets/videos",
     "include_shorts": false
+  },
+  {
+    "name": "CNBC",
+    "url": "https://www.youtube.com/@CNBC",
+    "include_shorts": false
+  },
+  {
+    "name": "RealEismanPlaybook",
+    "url": "https://www.youtube.com/@RealEismanPlaybook",
+    "include_shorts": false
+  },
+  {
+    "name": "The Compound News",
+    "url": "https://www.youtube.com/@TheCompoundNews",
+    "include_shorts": false
+  },
+  {
+    "name": "Clear Value Tax",
+    "url": "https://www.youtube.com/@clearvaluetax9382",
+    "include_shorts": false
+  },
+  {
+    "name": "Aswath Damodaranon Valuation",
+    "url": "https://www.youtube.com/@AswathDamodaranonValuation",
+    "include_shorts": false
+  },
+  {
+    "name": "Yahoo Finance",
+    "url": "https://www.youtube.com/@YahooFinance",
+    "include_shorts": false
+  },
+  {
+    "name": "Adam Taggart | Thoughtful Money",
+    "url": "https://www.youtube.com/@adam.taggart",
+    "include_shorts": false
+  },
+  {
+    "name": "CSPAN",
+    "url": "https://www.youtube.com/@CSPAN",
+    "include_shorts": false
   }
 ]
