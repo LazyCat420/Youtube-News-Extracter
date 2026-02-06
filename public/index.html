@@ -118,16 +118,20 @@
                     <h3>Manage Channels</h3>
 
                     <div class="add-channel-form">
-                        <input type="text" id="newChannelName" placeholder="Channel Name (e.g. TechCrunch)" />
+                        <input type="text" id="newChannelName" placeholder="Channel Name (e.g. TechCrunch)"
+                            title="Channel display name" />
                         <input type="text" id="newChannelUrl"
-                            placeholder="Channel URL (e.g. https://www.youtube.com/@TechCrunch/videos)" />
+                            placeholder="Channel URL (e.g. https://www.youtube.com/@TechCrunch)"
+                            title="YouTube channel URL" />
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="newChannelShorts" />
+                            Include Shorts
+                        </label>
                         <button id="addChannelBtn" class="primary-btn">➕ Add Channel</button>
                     </div>
 
-                    <p class="subtext">Edit the JSON object below to update channel list.</p>
-                    <textarea id="channelsEditor" rows="10" class="code-editor"></textarea>
-                    <div class="action-buttons">
-                        <button id="saveChannelsBtn" class="secondary-btn">💾 Save Channels</button>
+                    <div id="channelsList" class="channels-list">
+                        <!-- Channels will be rendered here -->
                     </div>
                 </div>
             </section>

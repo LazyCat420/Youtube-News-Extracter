@@ -376,9 +376,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const playlistLoading = document.getElementById('playlistLoading');
     const playlistResult = document.getElementById('playlistResult');
     const playlistHistory = document.getElementById('playlistHistory');
-    const channelsEditor = document.getElementById('channelsEditor');
     const generatePlaylistBtn = document.getElementById('generatePlaylistBtn');
-    const saveChannelsBtn = document.getElementById('saveChannelsBtn');
+    const channelsList = document.getElementById('channelsList');
+
+    // Store channels data in memory
+    let channelsData = [];
 
     async function loadPlaylists() {
         try {
@@ -397,18 +399,62 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch('/api/playlist/channels');
             const data = await response.json();
             if (data.success) {
-                channelsEditor.value = JSON.stringify(data.channels, null, 4);
+                channelsData = data.channels || [];
+                renderChannels();
             }
         } catch (error) {
             console.error('Error loading channels:', error);
-            channelsEditor.value = 'Error loading channels.';
+            channelsList.innerHTML = '<p class="channels-empty">Error loading channels.</p>';
         }
+    }
+
+    function renderChannels() {
+        if (channelsData.length === 0) {
+            channelsList.innerHTML = '<p class="channels-empty">No channels configured. Add one above!</p>';
+            return;
+        }
+
+        channelsList.innerHTML = channelsData.map((ch, index) => `
+            <div class="channel-item" data-index="${index}">
+                <div class="channel-info">
+                    <div class="channel-name">${escapeHtml(ch.name)}</div>
+                    <div class="channel-url">${escapeHtml(ch.url)}</div>
+                    <div class="channel-tags">
+                        ${ch.include_shorts ? '<span class="channel-tag">Shorts</span>' : ''}
+                        ${ch.channel_id ? '<span class="channel-tag cached">⚡ Cached</span>' : '<span class="channel-tag">New</span>'}
+                    </div>
+                </div>
+                <div class="channel-actions">
+                    <button class="delete-btn delete-channel-btn" data-index="${index}" title="Delete channel">🗑️</button>
+                </div>
+            </div>
+        `).join('');
+
+        // Attach delete listeners
+        document.querySelectorAll('.delete-channel-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const index = parseInt(btn.dataset.index);
+                const channelName = channelsData[index].name;
+
+                if (!confirm(`Delete channel "${channelName}"?`)) return;
+
+                channelsData.splice(index, 1);
+                await saveChannels();
+                renderChannels();
+                showSuccess(`Deleted: ${channelName}`);
+            });
+        });
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 
     function renderPlaylists(playlists) {
         playlistHistory.innerHTML = playlists.map(p => {
             const date = new Date(p.createdAt).toLocaleString();
-            // Defensive check: ensure p.data is an array
             const count = Array.isArray(p.data) ? p.data.length : 0;
             const videoIds = Array.isArray(p.data) ? p.data.map(v => v.id).join(',') : '';
             const playlistUrl = `https://www.youtube.com/watch_videos?video_ids=${videoIds}`;
@@ -490,97 +536,67 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     async function saveChannels() {
-        saveChannelsBtn.disabled = true;
         try {
-            // Validate JSON first
-            let channels;
-            try {
-                channels = JSON.parse(channelsEditor.value);
-            } catch (e) {
-                showError('Invalid JSON in editor. Fix syntax before saving.');
-                return false;
-            }
-
             const response = await fetch('/api/playlist/channels', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ channels })
+                body: JSON.stringify({ channels: channelsData })
             });
             const data = await response.json();
-
-            if (data.success) {
-                showSuccess('Channels saved successfully!');
-                return true;
-            } else {
-                showError('Failed to save channels.');
-                return false;
-            }
+            return data.success;
         } catch (error) {
             console.error('Save channels error:', error);
-            showError('Server error while saving.');
+            showError('Failed to save channels.');
             return false;
-        } finally {
-            saveChannelsBtn.disabled = false;
         }
     }
-
-    saveChannelsBtn.addEventListener('click', saveChannels);
 
     // Add Channel Functionality
     const newChannelName = document.getElementById('newChannelName');
     const newChannelUrl = document.getElementById('newChannelUrl');
+    const newChannelShorts = document.getElementById('newChannelShorts');
     const addChannelBtn = document.getElementById('addChannelBtn');
 
     addChannelBtn.addEventListener('click', async () => {
         const name = newChannelName.value.trim();
-        const url = newChannelUrl.value.trim();
+        let url = newChannelUrl.value.trim();
 
         if (!name || !url) {
             showError('Please enter both name and URL.');
             return;
         }
 
-        try {
-            // Get current channels
-            let channels = [];
-            try {
-                channels = JSON.parse(channelsEditor.value);
-            } catch (e) {
-                // If invalid, try to reload or just fail
-                channels = [];
-                showError('Current JSON is invalid. Resetting or fix errors first.');
-                return;
-            }
+        // Normalize URL
+        if (!url.startsWith('http')) {
+            url = 'https://www.youtube.com/@' + url;
+        }
 
-            // check for duplicate URL
-            if (channels.some(c => c.url === url)) {
-                showError('Channel with this URL already exists.');
-                return;
-            }
+        // Check for duplicate URL
+        if (channelsData.some(c => c.url === url || c.name.toLowerCase() === name.toLowerCase())) {
+            showError('Channel already exists.');
+            return;
+        }
 
-            // Add new channel
-            channels.push({
-                name: name,
-                url: url,
-                include_shorts: false
-            });
+        // Add new channel
+        channelsData.push({
+            name: name,
+            url: url,
+            include_shorts: newChannelShorts.checked
+        });
 
-            // Update editor
-            channelsEditor.value = JSON.stringify(channels, null, 4);
-
-            // Save
-            const saved = await saveChannels();
-            if (saved) {
-                newChannelName.value = '';
-                newChannelUrl.value = '';
-                showSuccess(`Added channel: ${name}`);
-            }
-
-        } catch (error) {
-            console.error('Add channel error:', error);
-            showError('Failed to add channel.');
+        // Save and refresh
+        const saved = await saveChannels();
+        if (saved) {
+            newChannelName.value = '';
+            newChannelUrl.value = '';
+            newChannelShorts.checked = false;
+            renderChannels();
+            showSuccess(`Added channel: ${name}`);
         }
     });
+
+    // Load channels on page load
+    loadChannels();
 
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
