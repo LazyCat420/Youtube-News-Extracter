@@ -1,15 +1,15 @@
 :root {
-    --bg-color: #0f172a;
-    --card-bg: #1e293b;
-    --card-bg-hover: #263349;
-    --text-primary: #f1f5f9;
-    --text-secondary: #94a3b8;
-    --accent: #3b82f6;
-    --accent-hover: #2563eb;
-    --success: #22c55e;
-    --error: #ef4444;
-    --warning: #f59e0b;
-    --border: #334155;
+    --bg-color: #f0e6d3;
+    --card-bg: #e8dcc8;
+    --card-bg-hover: #ddd0ba;
+    --text-primary: #3e2723;
+    --text-secondary: #6d4c41;
+    --accent: #8d6e63;
+    --accent-hover: #6d4c41;
+    --success: #558b2f;
+    --error: #c62828;
+    --warning: #e65100;
+    --border: #c4a882;
 }
 
 * {
@@ -42,7 +42,7 @@ header h1 {
     font-size: 2.5rem;
     font-weight: 600;
     margin-bottom: 0.5rem;
-    background: linear-gradient(to right, #60a5fa, #a855f7);
+    background: linear-gradient(to right, #8d6e63, #5d4037);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
@@ -105,7 +105,7 @@ input[type="text"] {
     border-radius: 0.5rem;
     border: 1px solid var(--border);
     background-color: var(--card-bg);
-    color: white;
+    color: #3e2723;
     font-size: 1rem;
     outline: none;
     transition: border-color 0.2s;
@@ -120,7 +120,7 @@ button {
     border-radius: 0.5rem;
     border: none;
     background-color: var(--accent);
-    color: white;
+    color: #3e2723;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
@@ -493,7 +493,7 @@ button:disabled {
     border-radius: 0.5rem;
     white-space: pre-wrap;
     font-family: 'Consolas', monospace;
-    color: #e2e8f0;
+    color: #3e2723;
     font-size: 0.9rem;
     line-height: 1.6;
     max-height: 50vh;
@@ -602,7 +602,7 @@ button:disabled {
     padding: 0.5rem 1rem;
     border-radius: 0.5rem;
     font-size: 0.85rem;
-    color: white;
+    color: #3e2723;
     background-color: var(--card-bg-hover);
     border: 1px solid var(--border);
     transition: all 0.2s;
@@ -806,7 +806,7 @@ button:disabled {
     gap: 0.5rem;
     padding: 0.5rem 1rem;
     background: #4285f4;
-    color: white;
+    color: #3e2723;
     border: none;
     border-radius: 0.5rem;
     cursor: pointer;
@@ -842,7 +842,7 @@ button:disabled {
     gap: 0.25rem;
     padding: 0.4rem 0.75rem;
     background: linear-gradient(135deg, #ea4335, #fbbc05);
-    color: white;
+    color: #3e2723;
     border: none;
     border-radius: 0.5rem;
     cursor: pointer;
@@ -928,7 +928,7 @@ button:disabled {
 
 .extract-btn {
     background: linear-gradient(135deg, #10b981, #059669);
-    color: white;
+    color: #3e2723;
     border: none;
     padding: 0.4rem 0.75rem;
     border-radius: 0.5rem;
@@ -979,7 +979,7 @@ button:disabled {
     margin-left: auto;
     padding: 0.35rem 0.75rem;
     background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-    color: white;
+    color: #3e2723;
     text-decoration: none;
     border-radius: 0.5rem;
     font-size: 0.8rem;
@@ -1081,7 +1081,7 @@ button:disabled {
 
 .video-delete-btn:hover {
     background: rgba(239, 68, 68, 0.9);
-    color: white;
+    color: #3e2723;
     border-color: rgba(239, 68, 68, 0.5);
     transform: scale(1.1);
     box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
@@ -1832,7 +1832,7 @@ button:disabled {
 .filter-add-row button {
     padding: 0.4rem 0.75rem;
     background: var(--accent);
-    color: white;
+    color: #3e2723;
     border: none;
     border-radius: 0.4rem;
     cursor: pointer;
@@ -1993,122 +1993,8 @@ button:disabled {
     color: #f59e0b;
 }
 
-/* Shorts Reel Group */
-.shorts-reel-group .group-header {
-    background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(251, 191, 36, 0.05));
-    border-bottom: 2px solid rgba(245, 158, 11, 0.3);
-}
 
-.shorts-reel-group .count-badge,
-.shorts-reel-group .group-count {
-    background: rgba(245, 158, 11, 0.2);
-    color: #f59e0b;
-}
 
-/* Shorts Reel - Horizontal Scrolling Container */
-.shorts-reel {
-    display: flex;
-    gap: 0.75rem;
-    overflow-x: auto;
-    padding: 1rem;
-    scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(245, 158, 11, 0.3) transparent;
-}
-
-.shorts-reel::-webkit-scrollbar {
-    height: 6px;
-}
-
-.shorts-reel::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.shorts-reel::-webkit-scrollbar-thumb {
-    background: rgba(245, 158, 11, 0.3);
-    border-radius: 3px;
-}
-
-/* Shorts Card - Compact */
-.shorts-card {
-    flex: 0 0 180px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--border);
-    border-radius: 0.75rem;
-    overflow: hidden;
-    text-decoration: none;
-    color: inherit;
-    transition: all 0.2s ease;
-    position: relative;
-}
-
-.shorts-card:hover {
-    transform: translateY(-2px);
-    border-color: rgba(245, 158, 11, 0.5);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-.shorts-thumb {
-    width: 100%;
-    height: 100px;
-    object-fit: cover;
-}
-
-.shorts-info {
-    padding: 0.5rem;
-}
-
-.shorts-title {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: var(--text-primary);
-    line-height: 1.3;
-}
-
-.shorts-channel {
-    display: block;
-    margin-top: 0.25rem;
-    font-size: 0.65rem;
-    color: var(--text-secondary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.shorts-actions {
-    display: flex;
-    gap: 0.25rem;
-    padding: 0.35rem 0.5rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
-    justify-content: center;
-}
-
-.shorts-actions .ws-btn {
-    width: 28px;
-    height: 28px;
-    font-size: 0.75rem;
-}
-
-@media (max-width: 768px) {
-    .shorts-card {
-        flex: 0 0 150px;
-    }
-
-    .shorts-thumb {
-        height: 84px;
-    }
-
-    .playlist-header-actions {
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-}
 
 /* ========================================
    Smart Dismiss Popup
@@ -2340,7 +2226,7 @@ header {
     display: block;
     font-size: 0.8rem;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.7);
+    color: #5d4037;
     margin-bottom: 0.3rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -2357,10 +2243,10 @@ header {
     flex: 1;
     min-width: 0;
     padding: 0.5rem 0.75rem;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: #faf4e8;
+    border: 1px solid #c4a882;
     border-radius: 0.5rem;
-    color: white;
+    color: #3e2723;
     font-size: 0.85rem;
     font-family: inherit;
     overflow: hidden;
@@ -2368,8 +2254,8 @@ header {
 }
 
 .settings-row select option {
-    background: #1e1e2e;
-    color: white;
+    background: #f5ead6;
+    color: #3e2723;
 }
 
 .connection-status {
@@ -2397,7 +2283,7 @@ header {
 .summarize-btn:hover {
     background: linear-gradient(135deg, rgba(139, 92, 246, 0.4), rgba(99, 102, 241, 0.4));
     border-color: #8b5cf6;
-    color: white;
+    color: #3e2723;
 }
 
 .badge-summarized {
@@ -2466,21 +2352,22 @@ header {
 }
 
 /* ================================================================
-   RETRO TERMINAL THEME — Scoped to Database Tab (.retro-terminal)
-   90s CRT green/black aesthetic with IBM Plex Mono
+   RETRO JAPANESE THEME — Warm parchment/brown early 2000s aesthetic
+   Inspired by classic Japanese web design
    ================================================================ */
 
 .retro-terminal {
     font-family: 'IBM Plex Mono', 'Fira Code', 'Courier New', monospace;
     position: relative;
-    background: #0a0a0a;
-    border: 1px solid rgba(0, 255, 65, 0.15);
-    border-radius: 0.75rem;
+    background: #f5ead6;
+    border: 2px solid #c4a882;
+    border-radius: 0.5rem;
     padding: 1rem;
     overflow: hidden;
+    box-shadow: 2px 2px 0 #c4a882;
 }
 
-/* CRT Scanline Overlay */
+/* Paper Texture Overlay (replaces CRT scanlines) */
 .crt-overlay {
     position: absolute;
     top: 0;
@@ -2490,20 +2377,20 @@ header {
     pointer-events: none;
     z-index: 1;
     background: repeating-linear-gradient(0deg,
-            rgba(0, 0, 0, 0.08) 0px,
-            rgba(0, 0, 0, 0.08) 1px,
+            rgba(139, 90, 43, 0.02) 0px,
+            rgba(139, 90, 43, 0.02) 1px,
             transparent 1px,
-            transparent 3px);
+            transparent 4px);
 }
 
-/* Terminal Header */
+/* Header Bar */
 .term-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 0.5rem 0.75rem;
     margin-bottom: 0.75rem;
-    border-bottom: 1px solid rgba(0, 255, 65, 0.2);
+    border-bottom: 2px solid #c4a882;
     position: relative;
     z-index: 2;
 }
@@ -2511,13 +2398,12 @@ header {
 .term-title {
     font-size: 0.9rem;
     font-weight: 600;
-    color: #00ff41;
+    color: #5d4037;
     letter-spacing: 1.5px;
-    text-shadow: 0 0 6px rgba(0, 255, 65, 0.4);
 }
 
 .term-prompt {
-    color: #ffb000;
+    color: #8d6e63;
     font-weight: 700;
     margin-right: 0.5rem;
     animation: blink 1.2s step-end infinite;
@@ -2537,11 +2423,11 @@ header {
 
 .term-stat {
     font-size: 0.72rem;
-    color: rgba(0, 255, 65, 0.6);
-    background: rgba(0, 255, 65, 0.06);
+    color: #6d4c41;
+    background: rgba(139, 90, 43, 0.08);
     padding: 0.2rem 0.5rem;
     border-radius: 4px;
-    border: 1px solid rgba(0, 255, 65, 0.12);
+    border: 1px solid #c4a882;
 }
 
 /* Toolbar */
@@ -2556,10 +2442,10 @@ header {
 .term-search {
     flex: 1;
     padding: 0.45rem 0.75rem;
-    background: rgba(0, 255, 65, 0.04);
-    border: 1px solid rgba(0, 255, 65, 0.15);
+    background: #faf4e8;
+    border: 1px solid #c4a882;
     border-radius: 0.4rem;
-    color: #00ff41;
+    color: #3e2723;
     font-family: inherit;
     font-size: 0.8rem;
     outline: none;
@@ -2567,34 +2453,35 @@ header {
 }
 
 .term-search::placeholder {
-    color: rgba(0, 255, 65, 0.3);
+    color: #a1887f;
 }
 
 .term-search:focus {
-    border-color: rgba(0, 255, 65, 0.4);
-    box-shadow: 0 0 8px rgba(0, 255, 65, 0.1);
+    border-color: #8d6e63;
+    box-shadow: 0 0 4px rgba(141, 110, 99, 0.2);
 }
 
-/* Terminal Buttons */
+/* Buttons — warm brown retro style */
 .term-btn {
     font-family: inherit;
     font-size: 0.72rem;
     font-weight: 600;
     padding: 0.4rem 0.8rem;
-    border-radius: 0.35rem;
+    border-radius: 0.25rem;
     cursor: pointer;
-    border: 1px solid rgba(0, 255, 65, 0.25);
-    background: rgba(0, 255, 65, 0.08);
-    color: #00ff41;
+    border: 1px solid #c4a882;
+    background: #ede0d4;
+    color: #5d4037;
     letter-spacing: 0.5px;
     transition: all 0.15s;
     white-space: nowrap;
+    box-shadow: 1px 1px 0 #c4a882;
 }
 
 .term-btn:hover:not(:disabled) {
-    background: rgba(0, 255, 65, 0.15);
-    border-color: rgba(0, 255, 65, 0.4);
-    text-shadow: 0 0 4px rgba(0, 255, 65, 0.3);
+    background: #ddd0ba;
+    border-color: #8d6e63;
+    box-shadow: 1px 1px 0 #8d6e63;
 }
 
 .term-btn:disabled {
@@ -2608,37 +2495,36 @@ header {
 }
 
 .term-btn-amber {
-    border-color: rgba(255, 176, 0, 0.3);
-    background: rgba(255, 176, 0, 0.08);
-    color: #ffb000;
+    border-color: #d4a574;
+    background: #f5e1c8;
+    color: #8d5e2a;
 }
 
 .term-btn-amber:hover:not(:disabled) {
-    background: rgba(255, 176, 0, 0.15);
-    border-color: rgba(255, 176, 0, 0.5);
-    text-shadow: 0 0 4px rgba(255, 176, 0, 0.3);
+    background: #ecd4b3;
+    border-color: #8d5e2a;
 }
 
 .term-btn-green {
-    border-color: rgba(0, 255, 65, 0.3);
-    background: rgba(0, 255, 65, 0.08);
-    color: #00ff41;
+    border-color: #8fad6e;
+    background: #e8f0d8;
+    color: #4a6b2a;
 }
 
 .term-btn-green:hover:not(:disabled) {
-    background: rgba(0, 255, 65, 0.18);
-    border-color: rgba(0, 255, 65, 0.5);
+    background: #d8e6c4;
+    border-color: #4a6b2a;
 }
 
 .term-btn-red {
-    border-color: rgba(255, 80, 80, 0.25);
-    background: rgba(255, 80, 80, 0.06);
-    color: #ff5050;
+    border-color: #d4a0a0;
+    background: #f5e0e0;
+    color: #8b3a3a;
 }
 
 .term-btn-red:hover:not(:disabled) {
-    background: rgba(255, 80, 80, 0.15);
-    border-color: rgba(255, 80, 80, 0.4);
+    background: #ecc8c8;
+    border-color: #8b3a3a;
 }
 
 /* Two-Panel Layout */
@@ -2653,10 +2539,10 @@ header {
 .term-panel {
     display: flex;
     flex-direction: column;
-    border: 1px solid rgba(0, 255, 65, 0.12);
-    border-radius: 0.5rem;
+    border: 1px solid #c4a882;
+    border-radius: 0.35rem;
     overflow: hidden;
-    background: rgba(0, 12, 0, 0.6);
+    background: #faf4e8;
     max-height: calc(100vh - 280px);
 }
 
@@ -2665,13 +2551,12 @@ header {
     align-items: center;
     justify-content: space-between;
     padding: 0.5rem 0.75rem;
-    background: rgba(0, 255, 65, 0.04);
-    border-bottom: 1px solid rgba(0, 255, 65, 0.12);
+    background: #ede0d4;
+    border-bottom: 1px solid #c4a882;
     font-size: 0.78rem;
     font-weight: 600;
-    color: #00ff41;
+    color: #5d4037;
     letter-spacing: 1px;
-    text-shadow: 0 0 4px rgba(0, 255, 65, 0.2);
 }
 
 .panel-icon {
@@ -2679,12 +2564,12 @@ header {
 }
 
 .panel-badge {
-    background: rgba(0, 255, 65, 0.1);
-    color: #00ff41;
+    background: #e8dcc8;
+    color: #5d4037;
     padding: 0.1rem 0.4rem;
     border-radius: 3px;
     font-size: 0.65rem;
-    border: 1px solid rgba(0, 255, 65, 0.2);
+    border: 1px solid #c4a882;
 }
 
 .panel-body {
@@ -2693,28 +2578,28 @@ header {
     padding: 0.5rem;
 }
 
-/* Custom scrollbar for terminal */
+/* Scrollbar — warm tones */
 .retro-terminal ::-webkit-scrollbar {
     width: 6px;
 }
 
 .retro-terminal ::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.3);
+    background: #ede0d4;
 }
 
 .retro-terminal ::-webkit-scrollbar-thumb {
-    background: rgba(0, 255, 65, 0.2);
+    background: #c4a882;
     border-radius: 3px;
 }
 
 .retro-terminal ::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 255, 65, 0.35);
+    background: #8d6e63;
 }
 
 /* ============ Collapsible Date Groups ============ */
 .date-group {
     margin-bottom: 0.5rem;
-    border: 1px solid rgba(0, 255, 65, 0.08);
+    border: 1px solid #c4a882;
     border-radius: 0.4rem;
     overflow: hidden;
 }
@@ -2725,7 +2610,7 @@ header {
     align-items: center;
     padding: 0.45rem 0.6rem;
     cursor: pointer;
-    background: rgba(0, 255, 65, 0.03);
+    background: #ede0d4;
     -webkit-user-select: none;
     user-select: none;
     transition: background 0.15s;
@@ -2737,17 +2622,17 @@ header {
 }
 
 .date-group-header:hover {
-    background: rgba(0, 255, 65, 0.06);
+    background: #e8dcc8;
 }
 
 .date-group[open] .date-group-label {
-    color: #00ff41;
+    color: #3e2723;
 }
 
 .date-group-label {
     font-size: 0.75rem;
     font-weight: 600;
-    color: rgba(0, 255, 65, 0.7);
+    color: #6d4c41;
     letter-spacing: 0.8px;
 }
 
@@ -2761,26 +2646,26 @@ header {
     font-size: 0.6rem;
     padding: 0.1rem 0.35rem;
     border-radius: 3px;
-    background: rgba(255, 176, 0, 0.12);
-    color: #ffb000;
-    border: 1px solid rgba(255, 176, 0, 0.2);
+    background: #f5e1c8;
+    color: #8d5e2a;
+    border: 1px solid #d4a574;
 }
 
 .badge-green {
     font-size: 0.6rem;
     padding: 0.1rem 0.35rem;
     border-radius: 3px;
-    background: rgba(0, 255, 65, 0.1);
-    color: #00ff41;
-    border: 1px solid rgba(0, 255, 65, 0.2);
+    background: #e8f0d8;
+    color: #4a6b2a;
+    border: 1px solid #8fad6e;
 }
 
 .badge-total {
     font-size: 0.6rem;
     padding: 0.1rem 0.35rem;
     border-radius: 3px;
-    background: rgba(255, 255, 255, 0.06);
-    color: rgba(255, 255, 255, 0.5);
+    background: #e8dcc8;
+    color: #6d4c41;
 }
 
 .date-group-body {
@@ -2790,26 +2675,26 @@ header {
     gap: 0.35rem;
 }
 
-/* ============ Terminal Video Cards ============ */
+/* ============ Video Cards ============ */
 .term-card {
     padding: 0.55rem 0.65rem;
-    border: 1px solid rgba(0, 255, 65, 0.06);
+    border: 1px solid #c4a882;
     border-radius: 0.35rem;
-    background: rgba(0, 8, 0, 0.5);
+    background: #faf4e8;
     transition: border-color 0.15s, background 0.15s;
 }
 
 .term-card:hover {
-    border-color: rgba(0, 255, 65, 0.15);
-    background: rgba(0, 15, 0, 0.6);
+    border-color: #8d6e63;
+    background: #f5ead6;
 }
 
 .term-card.card-ready {
-    border-left: 2px solid rgba(0, 255, 65, 0.3);
+    border-left: 2px solid #8fad6e;
 }
 
 .term-card.card-pending {
-    border-left: 2px solid rgba(255, 176, 0, 0.3);
+    border-left: 2px solid #d4a574;
 }
 
 .term-card-row {
@@ -2828,19 +2713,17 @@ header {
 }
 
 .dot-green {
-    background: #00ff41;
-    box-shadow: 0 0 4px rgba(0, 255, 65, 0.5);
+    background: #558b2f;
 }
 
 .dot-amber {
-    background: #ffb000;
-    box-shadow: 0 0 4px rgba(255, 176, 0, 0.5);
+    background: #e65100;
 }
 
 .term-card-title {
     font-size: 0.78rem;
     font-weight: 500;
-    color: rgba(255, 255, 255, 0.85);
+    color: #3e2723;
     line-height: 1.3;
     margin: 0;
     display: -webkit-box;
@@ -2853,26 +2736,26 @@ header {
     display: flex;
     gap: 0.6rem;
     font-size: 0.62rem;
-    color: rgba(0, 255, 65, 0.4);
+    color: #8d6e63;
     margin-bottom: 0.3rem;
 }
 
 .meta-ready {
-    color: #00ff41;
+    color: #558b2f;
     font-weight: 600;
 }
 
 .meta-pending {
-    color: #ffb000;
+    color: #e65100;
     font-weight: 600;
 }
 
 .term-card-summary {
     font-size: 0.68rem;
     line-height: 1.45;
-    color: rgba(0, 255, 65, 0.6);
-    background: rgba(0, 255, 65, 0.03);
-    border-left: 2px solid rgba(0, 255, 65, 0.15);
+    color: #6d4c41;
+    background: #ede0d4;
+    border-left: 2px solid #c4a882;
     padding: 0.35rem 0.5rem;
     border-radius: 0 0.3rem 0.3rem 0;
     max-height: 3.5rem;
@@ -2888,7 +2771,7 @@ header {
     left: 0;
     right: 0;
     height: 1rem;
-    background: linear-gradient(transparent, rgba(0, 8, 0, 0.9));
+    background: linear-gradient(transparent, #ede0d4);
     pointer-events: none;
 }
 
@@ -2908,13 +2791,13 @@ header {
     align-items: center;
     padding: 2rem 1rem;
     gap: 0.5rem;
-    color: rgba(0, 255, 65, 0.6);
+    color: #6d4c41;
     font-size: 0.78rem;
 }
 
 .report-loading .subtext {
     font-size: 0.65rem;
-    color: rgba(0, 255, 65, 0.3);
+    color: #a1887f;
 }
 
 .report-display {
@@ -2935,10 +2818,10 @@ header {
 
 .report-display-meta {
     font-size: 0.65rem;
-    color: rgba(0, 255, 65, 0.5);
+    color: #6d4c41;
     padding: 0.4rem 0.5rem;
-    background: rgba(0, 255, 65, 0.04);
-    border: 1px solid rgba(0, 255, 65, 0.1);
+    background: #ede0d4;
+    border: 1px solid #c4a882;
     border-radius: 0.3rem;
     margin-bottom: 0.6rem;
 }
@@ -2946,18 +2829,17 @@ header {
 .report-display-content {
     font-size: 0.75rem;
     line-height: 1.55;
-    color: rgba(255, 255, 255, 0.8);
+    color: #3e2723;
 }
 
 .report-section-header {
     font-size: 0.82rem;
     font-weight: 700;
-    color: #00ff41;
+    color: #5d4037;
     margin-top: 0.8rem;
     margin-bottom: 0.3rem;
     padding-bottom: 0.2rem;
-    border-bottom: 1px solid rgba(0, 255, 65, 0.12);
-    text-shadow: 0 0 4px rgba(0, 255, 65, 0.2);
+    border-bottom: 1px solid #c4a882;
 }
 
 .report-section-header:first-child {
@@ -2966,22 +2848,22 @@ header {
 
 .report-bullet {
     font-size: 0.72rem;
-    color: rgba(255, 255, 255, 0.7);
+    color: #5d4037;
     padding: 0.1rem 0 0.1rem 0.5rem;
-    border-left: 2px solid rgba(0, 255, 65, 0.2);
+    border-left: 2px solid #c4a882;
     margin: 0.15rem 0;
 }
 
 .report-paragraph {
     margin: 0.2rem 0;
     font-size: 0.75rem;
-    color: rgba(255, 255, 255, 0.75);
+    color: #5d4037;
     line-height: 1.5;
 }
 
 /* Report History */
 .report-history {
-    border-top: 1px solid rgba(0, 255, 65, 0.1);
+    border-top: 1px solid #c4a882;
     padding-top: 0.5rem;
 }
 
@@ -2993,21 +2875,21 @@ header {
 .history-title {
     font-size: 0.7rem;
     font-weight: 600;
-    color: rgba(0, 255, 65, 0.5);
+    color: #8d6e63;
     letter-spacing: 0.8px;
 }
 
 .report-history-item {
     padding: 0.45rem 0.5rem;
-    border: 1px solid rgba(0, 255, 65, 0.06);
+    border: 1px solid #c4a882;
     border-radius: 0.3rem;
     margin-bottom: 0.35rem;
-    background: rgba(0, 8, 0, 0.4);
+    background: #faf4e8;
     transition: border-color 0.15s;
 }
 
 .report-history-item:hover {
-    border-color: rgba(0, 255, 65, 0.15);
+    border-color: #8d6e63;
 }
 
 .report-item-header {
@@ -3019,21 +2901,21 @@ header {
 
 .report-item-date {
     font-size: 0.65rem;
-    color: #00ff41;
+    color: #5d4037;
     font-weight: 500;
 }
 
 .report-item-count {
     font-size: 0.6rem;
-    color: rgba(0, 255, 65, 0.4);
-    background: rgba(0, 255, 65, 0.06);
+    color: #6d4c41;
+    background: #ede0d4;
     padding: 0.1rem 0.3rem;
     border-radius: 3px;
 }
 
 .report-item-preview {
     font-size: 0.62rem;
-    color: rgba(255, 255, 255, 0.4);
+    color: #8d6e63;
     line-height: 1.35;
     max-height: 2rem;
     overflow: hidden;
@@ -3050,17 +2932,17 @@ header {
     overflow-y: auto;
 }
 
-/* Terminal Empty State */
+/* Empty State */
 .term-empty {
     text-align: center;
-    color: rgba(0, 255, 65, 0.3);
+    color: #a1887f;
     font-size: 0.75rem;
     padding: 1.5rem 1rem;
     margin: 0;
 }
 
 .term-error {
-    color: #ff5050;
+    color: #c62828;
 }
 
 /* ============ Responsive ============ */
@@ -3336,10 +3218,10 @@ header {
 
 .modal-model-select {
     padding: 0.4rem 0.5rem;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: #faf4e8;
+    border: 1px solid #c4a882;
     border-radius: 0.5rem;
-    color: white;
+    color: #3e2723;
     font-size: 0.8rem;
     font-family: inherit;
     max-width: 200px;
@@ -3347,8 +3229,8 @@ header {
 }
 
 .modal-model-select option {
-    background: #1e1e2e;
-    color: white;
+    background: #f5ead6;
+    color: #3e2723;
 }
 
 /* ============ Report Column Styles ============ */
@@ -3476,18 +3358,19 @@ main.retro-terminal {
 .term-auth-bar {
     margin-bottom: 1rem;
     padding: 0.5rem 0.75rem;
-    background: rgba(0, 255, 65, 0.03);
-    border: 1px solid rgba(0, 255, 65, 0.08);
+    background: #ede0d4;
+    border: 1px solid #c4a882;
     border-radius: 0.5rem;
 }
 
 /* Step Containers */
 .pipeline-step {
     margin-bottom: 0.75rem;
-    border: 1px solid rgba(0, 255, 65, 0.12);
-    border-radius: 0.75rem;
-    background: rgba(0, 8, 0, 0.6);
+    border: 1px solid #c4a882;
+    border-radius: 0.5rem;
+    background: #faf4e8;
     overflow: hidden;
+    box-shadow: 1px 1px 0 #c4a882;
 }
 
 .step-header {
@@ -3495,16 +3378,15 @@ main.retro-terminal {
     align-items: center;
     gap: 0.75rem;
     padding: 0.6rem 1rem;
-    background: rgba(0, 255, 65, 0.05);
-    border-bottom: 1px solid rgba(0, 255, 65, 0.1);
+    background: #ede0d4;
+    border-bottom: 1px solid #c4a882;
     font-family: 'IBM Plex Mono', monospace;
 }
 
 .step-number {
     font-size: 1.4rem;
     font-weight: 700;
-    color: #00ff41;
-    text-shadow: 0 0 8px rgba(0, 255, 65, 0.4);
+    color: #5d4037;
     letter-spacing: -0.02em;
     min-width: 2rem;
 }
@@ -3512,14 +3394,14 @@ main.retro-terminal {
 .step-label {
     font-size: 0.85rem;
     font-weight: 700;
-    color: #00ff41;
+    color: #5d4037;
     text-transform: uppercase;
     letter-spacing: 0.1em;
 }
 
 .step-desc {
     font-size: 0.7rem;
-    color: rgba(0, 255, 65, 0.4);
+    color: #8d6e63;
     font-weight: 400;
     letter-spacing: 0.02em;
 }
@@ -3536,9 +3418,8 @@ main.retro-terminal {
 }
 
 .step-arrow {
-    color: rgba(0, 255, 65, 0.25);
+    color: #c4a882;
     font-size: 1rem;
-    text-shadow: 0 0 6px rgba(0, 255, 65, 0.15);
     animation: pulse-arrow 2s ease-in-out infinite;
 }
 
@@ -3579,9 +3460,9 @@ main.retro-terminal {
 /* ============ Collapsible Config Panels ============ */
 .source-config {
     margin-top: 0.75rem;
-    border: 1px solid rgba(0, 255, 65, 0.08);
+    border: 1px solid #c4a882;
     border-radius: 0.5rem;
-    background: rgba(0, 8, 0, 0.4);
+    background: #ede0d4;
 }
 
 .config-toggle {
@@ -3589,7 +3470,7 @@ main.retro-terminal {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 0.72rem;
     font-weight: 600;
-    color: rgba(0, 255, 65, 0.5);
+    color: #8d6e63;
     cursor: pointer;
     letter-spacing: 0.05em;
     list-style: none;
@@ -3599,7 +3480,7 @@ main.retro-terminal {
 }
 
 .config-toggle:hover {
-    color: #00ff41;
+    color: #5d4037;
 }
 
 .config-toggle::-webkit-details-marker {
@@ -3617,7 +3498,7 @@ details[open]>.config-toggle::before {
 
 .config-body {
     padding: 0.5rem 0.75rem 0.75rem;
-    border-top: 1px solid rgba(0, 255, 65, 0.06);
+    border-top: 1px solid #c4a882;
 }
 
 .config-section {
@@ -3627,7 +3508,7 @@ details[open]>.config-toggle::before {
 .config-section h4 {
     font-size: 0.72rem;
     font-weight: 600;
-    color: rgba(0, 255, 65, 0.6);
+    color: #6d4c41;
     margin: 0 0 0.4rem;
     font-family: 'IBM Plex Mono', monospace;
 }
@@ -3646,14 +3527,14 @@ details[open]>.config-toggle::before {
 
 /* ============ Term Button Variant: Red ============ */
 .term-btn-red {
-    background: rgba(255, 60, 60, 0.15);
-    color: #ff6b6b;
-    border-color: rgba(255, 60, 60, 0.3);
+    background: #f5e0e0;
+    color: #8b3a3a;
+    border-color: #d4a0a0;
 }
 
 .term-btn-red:hover {
-    background: rgba(255, 60, 60, 0.25);
-    box-shadow: 0 0 8px rgba(255, 60, 60, 0.2);
+    background: #ecc8c8;
+    box-shadow: 1px 1px 0 #8b3a3a;
 }
 
 /* ============ Database Card Thumbnails ============ */
@@ -3663,7 +3544,7 @@ details[open]>.config-toggle::before {
     border-radius: 0.25rem;
     object-fit: cover;
     flex-shrink: 0;
-    border: 1px solid rgba(0, 255, 65, 0.1);
+    border: 1px solid #c4a882;
     opacity: 0.85;
     transition: opacity 0.2s;
 }
@@ -3697,7 +3578,7 @@ details[open]>.config-toggle::before {
 a.term-card-title {
     font-size: 0.78rem;
     font-weight: 500;
-    color: rgba(255, 255, 255, 0.85);
+    color: #3e2723;
     line-height: 1.3;
     text-decoration: none;
     display: -webkit-box;
@@ -3708,7 +3589,7 @@ a.term-card-title {
 }
 
 a.term-card-title:hover {
-    color: #00ff41;
+    color: #8d6e63;
     text-decoration: underline;
 }
 
@@ -3734,4 +3615,52 @@ a.term-card-title:hover {
         width: 80px;
         height: 45px;
     }
+}
+
+/* ============ Dev Controls Panel ============ */
+.dev-controls {
+    font-family: 'IBM Plex Mono', monospace;
+    background: #f5ead6;
+    border: 2px solid #c4a882;
+    border-bottom: none;
+    border-radius: 0.5rem 0.5rem 0 0;
+    box-shadow: -2px -2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.dev-controls-toggle {
+    display: block;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #8b3a3a;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    background: #ede0d4;
+    border-radius: 0.5rem 0.5rem 0 0;
+    list-style: none;
+    user-select: none;
+}
+
+.dev-controls-toggle::-webkit-details-marker {
+    display: none;
+}
+
+.dev-controls-body {
+    padding: 0.75rem;
+    border-top: 1px solid #c4a882;
+}
+
+.dev-controls-desc {
+    font-size: 0.65rem;
+    color: #8b3a3a;
+    margin: 0 0 0.5rem;
+    line-height: 1.4;
+}
+
+.dev-controls-result {
+    display: block;
+    font-size: 0.65rem;
+    color: #5d4037;
+    margin-top: 0.25rem;
+    min-height: 1rem;
 }

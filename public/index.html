@@ -222,14 +222,6 @@
                         <div class="group-videos hidden" id="ignoredVideos"></div>
                     </div>
 
-                    <!-- V3: Quick Hits Shorts Reel -->
-                    <div class="workspace-group shorts-reel-group" id="shortsReelGroup" style="display: none;">
-                        <div class="group-header">
-                            <h3>⚡ Quick Hits <span class="group-count" id="shortsCount">0</span></h3>
-                        </div>
-                        <div class="shorts-reel" id="shortsReel"></div>
-                    </div>
-
                     <!-- Extracted/Completed Group -->
                     <div class="workspace-group extracted-group" id="extractedGroup">
                         <div class="group-header">
@@ -414,6 +406,18 @@
             </div>
         </div>
     </div>
+
+    <!-- Dev Controls Panel -->
+    <details id="devControlsPanel" class="dev-controls"
+        style="position:fixed; bottom:0; right:1rem; z-index:999; max-width:320px;">
+        <summary class="dev-controls-toggle">🛠️ Dev Controls</summary>
+        <div class="dev-controls-body">
+            <p class="dev-controls-desc">⚠️ These tools reset algorithm data. Use with caution.</p>
+            <button id="devResetStatuses" class="term-btn term-btn-red" style="width:100%; margin-bottom:0.5rem;">🔄
+                Reset All Video Statuses</button>
+            <span id="devResetResult" class="dev-controls-result"></span>
+        </div>
+    </details>
 
     <script src="topicDedup.js"></script>
     <script src="app.js"></script>

@@ -124,5 +124,20 @@
     "include_shorts": false,
     "shorts_strategy": "separate",
     "channel_id": "UCqK_GSMbpiV8spgD3ZGloSw"
+  },
+  {
+    "name": "Unchained Crypto",
+    "url": "https://www.youtube.com/@UnchainedCrypto",
+    "include_shorts": false
+  },
+  {
+    "name": "Wall Street Journal",
+    "url": "https://www.youtube.com/@wsj",
+    "include_shorts": false
+  },
+  {
+    "name": "Financial Times",
+    "url": "https://www.youtube.com/@FinancialTimes",
+    "include_shorts": false
   }
 ]

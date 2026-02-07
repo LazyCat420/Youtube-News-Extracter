@@ -938,6 +938,47 @@ app.patch('/api/playlist/:filename/bulk-status', (req, res) => {
     }
 });
 
+// ============ Dev Controls ============
+
+// Reset all video statuses to 'pending' across all daily files
+app.post('/api/dev/reset-statuses', (req, res) => {
+    try {
+        if (!fs.existsSync(OUTPUT_DIR)) {
+            return res.json({ success: true, message: 'No output directory found', filesReset: 0 });
+        }
+
+        const files = fs.readdirSync(OUTPUT_DIR).filter(f => f.endsWith('.json'));
+        let totalReset = 0;
+        let filesReset = 0;
+
+        for (const file of files) {
+            const jsonPath = path.join(OUTPUT_DIR, file);
+            let videos = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+            let changed = false;
+
+            videos.forEach(v => {
+                if (v.status && v.status !== 'pending') {
+                    v.status = 'pending';
+                    delete v.blocked_term;
+                    totalReset++;
+                    changed = true;
+                }
+            });
+
+            if (changed) {
+                fs.writeFileSync(jsonPath, JSON.stringify(videos, null, 2));
+                filesReset++;
+            }
+        }
+
+        console.log(`[Dev] Reset ${totalReset} video statuses across ${filesReset} files`);
+        res.json({ success: true, message: `Reset ${totalReset} videos across ${filesReset} files`, totalReset, filesReset });
+    } catch (error) {
+        console.error('Dev reset error:', error);
+        res.status(500).json({ error: 'Failed to reset statuses.' });
+    }
+});
+
 // ============ YouTube OAuth Routes ============
 
 // Check auth status

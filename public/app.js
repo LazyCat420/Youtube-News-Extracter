@@ -586,9 +586,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const ignoredCount = document.getElementById('ignoredCount');
     // V3 elements
     const discoverBtn = document.getElementById('discoverBtn');
-    const shortsReelGroup = document.getElementById('shortsReelGroup');
-    const shortsReel = document.getElementById('shortsReel');
-    const shortsCount = document.getElementById('shortsCount');
 
     // Store state
     let channelsData = [];
@@ -669,15 +666,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ============ Workspace: Render Grouped Videos ============
     function renderWorkspace(videos) {
-        // V3: Separate shorts from long-form
-        const shorts = videos.filter(v => v.is_short === true);
-        const longForm = videos.filter(v => v.is_short !== true);
-
         // Merge pending + approved into one "ready" group
         const groups = {
-            ready: longForm.filter(v => (v.status || 'pending') === 'pending' || v.status === 'approved'),
-            extracted: longForm.filter(v => v.status === 'extracted'),
-            ignored: longForm.filter(v => v.status === 'ignored')
+            ready: videos.filter(v => (v.status || 'pending') === 'pending' || v.status === 'approved'),
+            extracted: videos.filter(v => v.status === 'extracted'),
+            ignored: videos.filter(v => v.status === 'ignored')
         };
 
         // Update counts
@@ -716,15 +709,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // Show/hide empty groups
         document.getElementById('extractedGroup').style.display = groups.extracted.length > 0 ? 'block' : 'none';
         document.getElementById('ignoredGroup').style.display = groups.ignored.length > 0 ? 'block' : 'none';
-
-        // V3: Render shorts reel
-        if (shorts.length > 0) {
-            shortsReelGroup.style.display = 'block';
-            shortsCount.textContent = shorts.length;
-            shortsReel.innerHTML = shorts.map(v => renderShortsCard(v)).join('');
-        } else {
-            shortsReelGroup.style.display = 'none';
-        }
 
         // Attach workspace event listeners
         attachWorkspaceListeners();
@@ -824,7 +808,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         return `
             <div class="ws-video-card ${groupType}" data-video-id="${video.id}">
-                <img class="ws-thumb" src="${thumb}" alt="" onerror="this.src='https://via.placeholder.com/120x68?text=No+Thumb'" loading="lazy">
+                <img class="ws-thumb" src="${thumb}" alt="" onerror="this.style.display='none'" loading="lazy">
                 <div class="ws-video-info">
                     <a href="https://youtube.com/watch?v=${video.id}" target="_blank" class="ws-title" title="${title}">${title}</a>
                     <div class="ws-meta">
@@ -840,29 +824,7 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
-    // V3: Render a compact card for the shorts reel
-    function renderShortsCard(video) {
-        const title = escapeHtml(video.title || 'Untitled');
-        const channel = escapeHtml(video.channelName || 'Unknown');
-        const thumb = video.thumbnail || `https://i.ytimg.com/vi/${video.id}/mqdefault.jpg`;
-        const discoveryTag = video.source === 'discovery'
-            ? '<span class="discovery-badge-sm">✨</span>'
-            : '';
 
-        return `
-            <a href="https://youtube.com/watch?v=${video.id}" target="_blank" class="shorts-card" title="${title}">
-                <img class="shorts-thumb" src="${thumb}" alt="" onerror="this.src='https://via.placeholder.com/160x90?text=No+Thumb'" loading="lazy">
-                <div class="shorts-info">
-                    <span class="shorts-title">${title}</span>
-                    <span class="shorts-channel">${channel} ${discoveryTag}</span>
-                </div>
-                <div class="shorts-actions">
-                <button class="ws-btn ws-approve" data-id="${video.id}" data-status="approved" title="Approve" onclick="event.preventDefault(); event.stopPropagation();">✅</button>
-                    <button class="ws-btn ws-dismiss-trigger" data-id="${video.id}" data-title="${title}" title="Dismiss" onclick="event.preventDefault(); event.stopPropagation();">🚫</button>
-                </div>
-            </a>
-        `;
-    }
 
     // ============ Workspace: Event Listeners ============
     function attachWorkspaceListeners() {
@@ -1735,7 +1697,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="video-grid">
                         ${catVideos.map(v => `
                             <div class="video-card" data-video-id="${v.id}">
-                                <img class="video-thumbnail" src="${v.thumbnail || `https://i.ytimg.com/vi/${v.id}/mqdefault.jpg`}" alt="" onerror="this.src='https://via.placeholder.com/120x68?text=No+Thumb'">
+                                <img class="video-thumbnail" src="${v.thumbnail || `https://i.ytimg.com/vi/${v.id}/mqdefault.jpg`}" alt="" onerror="this.style.display='none'">
                                 <div class="video-info">
                                     <a href="https://youtube.com/watch?v=${v.id}" target="_blank" class="video-title" title="${escapeHtml(v.title)}">${escapeHtml(v.title)}</a>
                                     <div class="video-channel">${escapeHtml(v.channelName || 'Unknown')}</div>
@@ -2470,3 +2432,41 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+// ============ Dev Controls ============
+document.addEventListener('DOMContentLoaded', () => {
+    const resetBtn = document.getElementById('devResetStatuses');
+    const resultSpan = document.getElementById('devResetResult');
+
+    if (resetBtn) {
+        resetBtn.addEventListener('click', async () => {
+            if (!confirm('⚠️ This will reset ALL video statuses (approved, ignored, extracted) back to pending.\\n\\nAre you sure?')) {
+                return;
+            }
+
+            resetBtn.disabled = true;
+            resetBtn.textContent = '⏳ Resetting...';
+            resultSpan.textContent = '';
+
+            try {
+                const resp = await fetch('/api/dev/reset-statuses', { method: 'POST' });
+                const data = await resp.json();
+
+                if (data.success) {
+                    resultSpan.textContent = `✅ ${data.message}`;
+                    resultSpan.style.color = '#558b2f';
+                    // Reload page to reflect reset changes
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    resultSpan.textContent = `❌ ${data.error || 'Reset failed'}`;
+                    resultSpan.style.color = '#c62828';
+                }
+            } catch (err) {
+                resultSpan.textContent = `❌ ${err.message}`;
+                resultSpan.style.color = '#c62828';
+            }
+
+            resetBtn.textContent = '🔄 Reset All Video Statuses';
+            resetBtn.disabled = false;
+        });
+    }
+});
