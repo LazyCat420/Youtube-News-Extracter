@@ -4,11 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let allVideos = [];
     let deleteTargetId = null;
 
-    // Tab Elements
-    const tabBtns = document.querySelectorAll('.tab-btn');
-    const tabContents = document.querySelectorAll('.tab-content');
-
-    // Extract Tab Elements
+    // Extract Elements (unified pipeline — no tabs)
     const urlInput = document.getElementById('youtubeUrl');
     const extractBtn = document.getElementById('extractBtn');
     const loadingDiv = document.getElementById('loading');
@@ -26,10 +22,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const searchInput = document.getElementById('searchInput');
     const videoCount = document.getElementById('videoCount');
-    const unsummarizedList = document.getElementById('unsummarizedList');
-    const summarizedList = document.getElementById('summarizedList');
-    const unsummarizedCount = document.getElementById('unsummarizedCount');
-    const summarizedCount = document.getElementById('summarizedCount');
+    const videoFeed = document.getElementById('videoFeed');
+    const reportViewer = document.getElementById('reportViewer');
+    const reportList = document.getElementById('reportList');
     const dbLoading = document.getElementById('dbLoading');
     const emptyState = document.getElementById('emptyState');
 
@@ -48,28 +43,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
     const closeDeleteModalBtns = document.querySelectorAll('.close-delete-modal');
 
-    // ============ Tab Switching ============
-    tabBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const tabName = btn.dataset.tab;
-
-            // Update buttons
-            tabBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-
-            // Update content
-            tabContents.forEach(content => content.classList.remove('active'));
-            document.getElementById(`${tabName}-tab`).classList.add('active');
-
-            // Load database videos when switching to database tab
-            if (tabName === 'database') {
-                loadVideos();
-            } else if (tabName === 'playlist') {
-                loadPlaylists();
-                loadChannels();
-            }
-        });
-    });
+    // ============ Auto-load everything (no tabs) ============
+    loadVideos();
+    loadDailyWorkspace();  // populates currentDailyVideos + renders workspace
+    loadChannels();
 
     // ============ Extract Tab ============
     extractBtn.addEventListener('click', async () => {
@@ -180,9 +157,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ============ Database Tab ============
     async function loadVideos() {
+        console.log('[Render] Loading videos...');
         dbLoading.classList.remove('hidden');
-        unsummarizedList.innerHTML = '';
-        summarizedList.innerHTML = '';
+        videoFeed.innerHTML = '';
         emptyState.classList.add('hidden');
 
         try {
@@ -193,77 +170,109 @@ document.addEventListener('DOMContentLoaded', () => {
                 allVideos = data.videos;
                 renderVideos(allVideos);
             } else {
-                unsummarizedList.innerHTML = '<p class="error">Failed to load videos.</p>';
+                videoFeed.innerHTML = '<p class="term-empty">Failed to load videos.</p>';
             }
         } catch (error) {
             console.error('Error:', error);
-            unsummarizedList.innerHTML = '<p class="error">Failed to connect to server.</p>';
+            videoFeed.innerHTML = '<p class="term-empty">Failed to connect to server.</p>';
         } finally {
             dbLoading.classList.add('hidden');
         }
+
+        // Also load reports
+        loadReports();
+    }
+
+    function groupByDate(videos) {
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
+        const weekAgo = new Date(today); weekAgo.setDate(weekAgo.getDate() - 7);
+
+        const groups = {
+            'TODAY': [],
+            'YESTERDAY': [],
+            'THIS WEEK': [],
+            'OLDER': []
+        };
+
+        videos.forEach(v => {
+            const d = new Date(v.scraped_at);
+            if (d >= today) groups['TODAY'].push(v);
+            else if (d >= yesterday) groups['YESTERDAY'].push(v);
+            else if (d >= weekAgo) groups['THIS WEEK'].push(v);
+            else groups['OLDER'].push(v);
+        });
+
+        return groups;
     }
 
     function renderVideos(videos) {
+        console.log('[Render] Rendering', videos.length, 'videos');
         videoCount.textContent = `${videos.length} video${videos.length !== 1 ? 's' : ''}`;
 
         if (videos.length === 0) {
             emptyState.classList.remove('hidden');
-            unsummarizedList.innerHTML = '';
-            summarizedList.innerHTML = '';
-            unsummarizedCount.textContent = '0';
-            summarizedCount.textContent = '0';
+            videoFeed.innerHTML = '';
             return;
         }
 
         emptyState.classList.add('hidden');
+        const groups = groupByDate(videos);
+        let html = '';
 
-        const unsummarized = videos.filter(v => !v.summary || v.summary.length === 0);
-        const summarized = videos.filter(v => v.summary && v.summary.length > 0);
+        Object.entries(groups).forEach(([label, items]) => {
+            if (items.length === 0) return;
 
-        unsummarizedCount.textContent = unsummarized.length;
-        summarizedCount.textContent = summarized.length;
+            const summarized = items.filter(v => v.summary && v.summary.length > 0).length;
+            const unsummarized = items.length - summarized;
+            const isOpen = items.length <= 10 ? 'open' : '';
 
-        // Render unsummarized cards
-        unsummarizedList.innerHTML = unsummarized.length === 0
-            ? '<p class="column-empty">🎉 All videos are summarized!</p>'
-            : unsummarized.map(video => `
-            <div class="video-card-v2" data-id="${video.id}">
-                <h4 class="card-title">${escapeHtml(video.title || 'Untitled Video')}</h4>
-                <div class="card-meta">
-                    <span>📅 ${formatDate(video.scraped_at)}</span>
-                    <span>📝 ${formatNumber(video.transcript_length)} chars</span>
+            html += `
+            <details class="date-group" ${isOpen}>
+                <summary class="date-group-header">
+                    <span class="date-group-label">▸ ${label}</span>
+                    <span class="date-group-badges">
+                        ${unsummarized > 0 ? `<span class="badge-amber">${unsummarized} pending</span>` : ''}
+                        ${summarized > 0 ? `<span class="badge-green">${summarized} ready</span>` : ''}
+                        <span class="badge-total">${items.length}</span>
+                    </span>
+                </summary>
+                <div class="date-group-body">
+                    ${items.map(video => {
+                const hasSummary = video.summary && video.summary.length > 0;
+                const statusDot = hasSummary ? '<span class="status-dot dot-green"></span>' : '<span class="status-dot dot-amber"></span>';
+                return `
+                        <div class="term-card ${hasSummary ? 'card-ready' : 'card-pending'}" data-id="${video.id}">
+                            <div class="term-card-row">
+                                <img class="term-card-thumb" src="https://i.ytimg.com/vi/${video.video_id}/mqdefault.jpg" alt="" onerror="this.style.display='none'" loading="lazy" />
+                                <div class="term-card-info">
+                                    <div class="term-card-title-row">
+                                        ${statusDot}
+                                        <a href="https://youtube.com/watch?v=${video.video_id}" target="_blank" class="term-card-title">${escapeHtml(video.title || 'Untitled Video')}</a>
+                                    </div>
+                                    <div class="term-card-meta">
+                                        <span>${formatDate(video.scraped_at)}</span>
+                                        <span>${formatNumber(video.transcript_length)} chars</span>
+                                        ${hasSummary ? '<span class="meta-ready">SUMMARIZED</span>' : '<span class="meta-pending">PENDING</span>'}
+                                    </div>
+                                </div>
+                            </div>
+                            ${hasSummary ? `<div class="term-card-summary">${escapeHtml(video.summary).replace(/\\n/g, '<br>')}</div>` : ''}
+                            <div class="term-card-actions">
+                                <button class="term-btn term-btn-sm view-btn" data-id="${video.id}">VIEW</button>
+                                ${!hasSummary ? `<button class="term-btn term-btn-green term-btn-sm summarize-single-btn" data-id="${video.id}" data-title="${escapeHtml(video.title || 'Untitled')}">SUMMARIZE</button>` : ''}
+                                <button class="term-btn term-btn-red term-btn-sm delete-btn" data-id="${video.id}" data-title="${escapeHtml(video.title || 'Untitled')}">DEL</button>
+                            </div>
+                        </div>`;
+            }).join('')}
                 </div>
-                <div class="card-preview">${escapeHtml(video.transcript_preview || '').substring(0, 120)}...</div>
-                <div class="card-actions">
-                    <button class="secondary-btn view-btn" data-id="${video.id}">👁️ View</button>
-                    <button class="action-btn summarize-single-btn" data-id="${video.id}" data-title="${escapeHtml(video.title || 'Untitled')}">🤖 Summarize</button>
-                    <button class="icon-btn delete-btn" data-id="${video.id}" data-title="${escapeHtml(video.title || 'Untitled')}">🗑️</button>
-                </div>
-            </div>
-        `).join('');
+            </details>`;
+        });
 
-        // Render summarized cards
-        summarizedList.innerHTML = summarized.length === 0
-            ? '<p class="column-empty">No videos summarized yet.</p>'
-            : summarized.map(video => `
-            <div class="video-card-v2 card-summarized" data-id="${video.id}">
-                <div class="card-header-row">
-                    <h4 class="card-title">${escapeHtml(video.title || 'Untitled Video')}</h4>
-                    <span class="badge badge-summarized">🤖</span>
-                </div>
-                <div class="card-meta">
-                    <span>📅 ${formatDate(video.scraped_at)}</span>
-                    <span>📝 ${formatNumber(video.transcript_length)} chars</span>
-                </div>
-                <div class="card-summary">${escapeHtml(video.summary).replace(/\n/g, '<br>')}</div>
-                <div class="card-actions">
-                    <button class="secondary-btn view-btn" data-id="${video.id}">👁️ View</button>
-                    <button class="icon-btn delete-btn" data-id="${video.id}" data-title="${escapeHtml(video.title || 'Untitled')}">🗑️</button>
-                </div>
-            </div>
-        `).join('');
+        videoFeed.innerHTML = html;
 
-        // Attach event listeners to both columns
+        // Attach event listeners
         document.querySelectorAll('.view-btn').forEach(btn => {
             btn.addEventListener('click', () => viewVideo(btn.dataset.id));
         });
@@ -276,32 +285,121 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        // Single video summarize buttons (only unsummarized column)
+        // Single video summarize buttons
         document.querySelectorAll('.summarize-single-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
                 const id = btn.dataset.id;
                 btn.disabled = true;
-                btn.textContent = '⏳';
+                btn.textContent = '...';
                 try {
                     const resp = await fetch(`/api/summarize/${id}`, { method: 'POST' });
                     const data = await resp.json();
                     if (data.success) {
-                        btn.textContent = '✅';
+                        btn.textContent = 'OK';
                         const v = allVideos.find(v => v.id == id);
                         if (v) v.summary = data.summary;
                         setTimeout(() => loadVideos(), 1500);
                     } else {
-                        btn.textContent = '❌';
+                        btn.textContent = 'ERR';
                         alert(data.error || 'Summarization failed');
-                        setTimeout(() => { btn.textContent = '🤖 Summarize'; btn.disabled = false; }, 2000);
+                        setTimeout(() => { btn.textContent = 'SUMMARIZE'; btn.disabled = false; }, 2000);
                     }
                 } catch (err) {
                     console.error('Summarize error:', err);
-                    btn.textContent = '❌';
-                    setTimeout(() => { btn.textContent = '🤖 Summarize'; btn.disabled = false; }, 2000);
+                    btn.textContent = 'ERR';
+                    setTimeout(() => { btn.textContent = 'SUMMARIZE'; btn.disabled = false; }, 2000);
                 }
             });
         });
+    }
+
+    // ============ Report History ============
+    async function loadReports() {
+        console.log('[Reports] Loading report history...');
+        try {
+            const resp = await fetch('/api/reports');
+            const data = await resp.json();
+            if (data.success && data.reports.length > 0) {
+                reportList.innerHTML = data.reports.map(r => {
+                    const d = new Date(r.generated_at);
+                    const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                    const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                    const preview = (r.preview || '').substring(0, 80);
+                    return `
+                    <div class="report-history-item" data-id="${r.id}">
+                        <div class="report-item-header">
+                            <span class="report-item-date">${dateStr} ${timeStr}</span>
+                            <span class="report-item-count">${r.video_count} sources</span>
+                        </div>
+                        <div class="report-item-preview">${escapeHtml(preview)}...</div>
+                        <div class="report-item-actions">
+                            <button class="term-btn term-btn-sm report-view-btn" data-id="${r.id}">VIEW</button>
+                            <button class="term-btn term-btn-red term-btn-sm report-delete-btn" data-id="${r.id}">DEL</button>
+                        </div>
+                    </div>`;
+                }).join('');
+
+                // Attach report action listeners
+                document.querySelectorAll('.report-view-btn').forEach(btn => {
+                    btn.addEventListener('click', () => displayReport(btn.dataset.id));
+                });
+                document.querySelectorAll('.report-delete-btn').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        try {
+                            await fetch(`/api/reports/${btn.dataset.id}`, { method: 'DELETE' });
+                            loadReports();
+                        } catch (err) {
+                            console.error('[Reports] Delete error:', err);
+                        }
+                    });
+                });
+
+                console.log(`[Reports] Loaded ${data.reports.length} reports`);
+            } else {
+                reportList.innerHTML = '<p class="term-empty">No saved reports yet.</p>';
+            }
+        } catch (err) {
+            console.error('[Reports] Load error:', err);
+            reportList.innerHTML = '<p class="term-empty">Error loading reports.</p>';
+        }
+    }
+
+    async function displayReport(id) {
+        console.log('[Reports] Displaying report', id);
+        reportViewer.innerHTML = '<div class="report-loading"><div class="spinner"></div><p>Loading report...</p></div>';
+        try {
+            const resp = await fetch(`/api/reports/${id}`);
+            const data = await resp.json();
+            if (data.success) {
+                const r = data.report;
+                const d = new Date(r.generated_at);
+                const formattedReport = formatReportText(r.content);
+                reportViewer.innerHTML = `
+                    <div class="report-display">
+                        <div class="report-display-meta">
+                            ${d.toLocaleDateString()} ${d.toLocaleTimeString()} · ${r.video_count} sources
+                        </div>
+                        <div class="report-display-content">${formattedReport}</div>
+                    </div>`;
+                console.log(`[Reports] Displayed report #${id}`);
+            }
+        } catch (err) {
+            reportViewer.innerHTML = `<p class="term-empty">Error loading report: ${err.message}</p>`;
+        }
+    }
+
+    function formatReportText(text) {
+        return text.split('\n').map(line => {
+            const trimmed = line.trim();
+            if (!trimmed) return '<br>';
+            if (/^[^\w\s\-]/.test(trimmed) && trimmed.length < 80 && !trimmed.startsWith('-')) {
+                return `<div class="report-section-header">${escapeHtml(trimmed)}</div>`;
+            }
+            if (trimmed.startsWith('-') || trimmed.startsWith('*')) {
+                return `<div class="report-bullet">${escapeHtml(trimmed)}</div>`;
+            }
+            return `<p class="report-paragraph">${escapeHtml(trimmed)}</p>`;
+        }).join('');
     }
 
     // Search functionality
@@ -1252,16 +1350,24 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.querySelector('.extract-all-btn')?.addEventListener('click', async () => {
+        const btn = document.querySelector('.extract-all-btn');
+        if (btn.disabled) return; // prevent double-click
+
+        console.log('[Extract All] Clicked. currentDailyVideos:', currentDailyVideos.length);
         // Include both pending + approved (the merged "Ready to Extract" group), exclude shorts
         const readyVideos = currentDailyVideos
             .filter(v => ((v.status || 'pending') === 'pending' || v.status === 'approved') && v.is_short !== true);
 
-        if (readyVideos.length === 0) return;
-        if (!confirm(`Extract transcripts for all ${readyVideos.length} ready videos? This may take several minutes.`)) return;
+        console.log('[Extract All] Ready videos:', readyVideos.length);
+        if (readyVideos.length === 0) {
+            alert('No videos ready to extract. Click "Sync Daily Feed" first to load videos.');
+            return;
+        }
 
-        const btn = document.querySelector('.extract-all-btn');
+        // Start immediately — progress bar provides visual feedback
+        console.log('[Extract All] Starting extraction of', readyVideos.length, 'videos...');
         btn.disabled = true;
-        btn.textContent = '⏳ Extracting...';
+        btn.textContent = `⏳ 0/${readyVideos.length}`;
 
         // Show progress banner
         const progressEl = document.getElementById('extractionProgress');
@@ -1343,6 +1449,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Auto-hide progress after 10s
         setTimeout(() => { progressEl.classList.add('hidden'); }, 10000);
+
+        // Refresh database list (Step 3) and smooth-scroll to it
+        loadVideos();
+        setTimeout(() => {
+            document.getElementById('step3')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 1500);
     });
 
     async function bulkUpdateStatus(videoIds, status) {
@@ -2308,14 +2420,13 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('generateReportBtn').addEventListener('click', async () => {
         console.log('[News Report] Generate button clicked');
         const btn = document.getElementById('generateReportBtn');
-        const content = document.getElementById('reportContent');
 
         btn.disabled = true;
-        btn.textContent = '⏳ Generating...';
-        content.innerHTML = `
+        btn.textContent = '... GENERATING';
+        reportViewer.innerHTML = `
             <div class="report-loading">
                 <div class="spinner"></div>
-                <p>Generating daily news briefing...</p>
+                <p>GENERATING DAILY INTEL BRIEFING...</p>
                 <p class="subtext">This may take 30-60 seconds</p>
             </div>`;
 
@@ -2331,43 +2442,30 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('[News Report] Response:', data.success ? 'Success' : data.error);
 
             if (data.success) {
-                // Format the report — convert line breaks to HTML
-                const formattedReport = data.report
-                    .split('\n')
-                    .map(line => {
-                        const trimmed = line.trim();
-                        if (!trimmed) return '<br>';
-                        // Section headers (lines with emoji at start and no bullet)
-                        if (/^[^\w\s•\-]/.test(trimmed) && trimmed.length < 80 && !trimmed.startsWith('•') && !trimmed.startsWith('-')) {
-                            return `<div class="report-section-header">${escapeHtml(trimmed)}</div>`;
-                        }
-                        // Bullet points
-                        if (trimmed.startsWith('•') || trimmed.startsWith('-') || trimmed.startsWith('*')) {
-                            return `<div class="report-bullet">${escapeHtml(trimmed)}</div>`;
-                        }
-                        // Regular paragraph
-                        return `<p class="report-paragraph">${escapeHtml(trimmed)}</p>`;
-                    })
-                    .join('');
-
+                const formattedReport = formatReportText(data.report);
                 const timestamp = new Date(data.generatedAt).toLocaleString();
-                content.innerHTML = `
-                    <div class="report-meta">
-                        📰 ${data.videoCount} sources · Generated ${timestamp}
-                    </div>
-                    <div class="report-text">${formattedReport}</div>`;
+                reportViewer.innerHTML = `
+                    <div class="report-display">
+                        <div class="report-display-meta">
+                            ${timestamp} · ${data.videoCount} sources · Report #${data.reportId || '?'}
+                        </div>
+                        <div class="report-display-content">${formattedReport}</div>
+                    </div>`;
 
-                console.log(`[News Report] ✅ Displayed report (${data.report.length} chars from ${data.videoCount} videos)`);
+                console.log(`[News Report] Displayed report (${data.report.length} chars from ${data.videoCount} videos)`);
+
+                // Refresh report history
+                loadReports();
             } else {
-                content.innerHTML = `<p class="column-empty" style="color: #fca5a5;">❌ ${escapeHtml(data.error || 'Failed to generate report')}</p>`;
-                console.error('[News Report] ❌ Error:', data.error);
+                reportViewer.innerHTML = `<p class="term-empty term-error">${escapeHtml(data.error || 'Failed to generate report')}</p>`;
+                console.error('[News Report] Error:', data.error);
             }
         } catch (err) {
-            content.innerHTML = `<p class="column-empty" style="color: #fca5a5;">❌ ${escapeHtml(err.message)}</p>`;
-            console.error('[News Report] ❌ Fetch error:', err.message);
+            reportViewer.innerHTML = `<p class="term-empty term-error">${escapeHtml(err.message)}</p>`;
+            console.error('[News Report] Fetch error:', err.message);
         }
 
-        btn.textContent = '⚡ Generate';
+        btn.textContent = '⚡ GENERATE';
         btn.disabled = false;
     });
 });

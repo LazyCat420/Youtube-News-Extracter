@@ -327,9 +327,14 @@ Rules:
 
         console.log(`[News Report] ✅ Report generated (${report.length} chars) from ${videos.length} videos`);
 
+        // Save report to database for history
+        const saved = await Database.saveReport(report, videos.length);
+        console.log(`[News Report] Saved as report #${saved.id}`);
+
         res.json({
             success: true,
             report,
+            reportId: saved.id,
             videoCount: videos.length,
             hours,
             generatedAt: new Date().toISOString()
@@ -337,6 +342,40 @@ Rules:
     } catch (error) {
         console.error('[News Report] Error:', error.message);
         res.status(500).json({ error: `Report generation failed: ${error.message}` });
+    }
+});
+
+// List all saved reports
+app.get('/api/reports', async (req, res) => {
+    try {
+        const reports = await Database.getAllReports();
+        res.json({ success: true, reports });
+    } catch (error) {
+        console.error('[Reports] List error:', error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get a single report by ID
+app.get('/api/reports/:id', async (req, res) => {
+    try {
+        const report = await Database.getReportById(req.params.id);
+        if (!report) return res.status(404).json({ error: 'Report not found' });
+        res.json({ success: true, report });
+    } catch (error) {
+        console.error('[Reports] Get error:', error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Delete a report
+app.delete('/api/reports/:id', async (req, res) => {
+    try {
+        const result = await Database.deleteReport(req.params.id);
+        res.json({ success: true, deleted: result.deleted });
+    } catch (error) {
+        console.error('[Reports] Delete error:', error.message);
+        res.status(500).json({ error: error.message });
     }
 });
 

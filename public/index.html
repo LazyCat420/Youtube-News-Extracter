@@ -7,7 +7,9 @@
     <title>YouTube Transcript Extractor</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=Outfit:wght@300;400;600&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 
@@ -19,301 +21,317 @@
             <button id="settingsGear" class="settings-gear" title="Settings">⚙️</button>
         </header>
 
-        <!-- Tab Navigation -->
-        <nav class="tabs">
-            <button class="tab-btn active" data-tab="extract">📥 Extract</button>
-            <button class="tab-btn" data-tab="database">📂 Database</button>
-            <button class="tab-btn" data-tab="playlist">▶️ Auto Playlist</button>
-        </nav>
+        <!-- Unified Pipeline (no tabs) -->
+        <main class="retro-terminal">
+            <!-- CRT Scanline Overlay -->
+            <div class="crt-overlay"></div>
 
-        <main>
-            <!-- Extract Tab -->
-            <section id="extract-tab" class="tab-content active">
-                <div class="input-group">
-                    <input type="text" id="youtubeUrl" placeholder="https://www.youtube.com/watch?v=..." />
-                    <button id="extractBtn">Extract</button>
+            <!-- Terminal Header Bar -->
+            <div class="term-header">
+                <div class="term-title">
+                    <span class="term-prompt">&gt;_</span> SIGNAL INTELLIGENCE PIPELINE
                 </div>
-
-                <div id="loading" class="hidden">
-                    <div class="spinner"></div>
-                    <p>Extracting... this may take up to 60 seconds.</p>
+                <div class="term-stats">
+                    <span id="videoCount" class="term-stat">0 videos</span>
                 </div>
+            </div>
 
-                <div id="preview" class="hidden">
-                    <div class="preview-card">
-                        <div class="preview-header">
-                            <span class="badge">Preview</span>
-                            <h2 id="previewTitle"></h2>
-                        </div>
-                        <div class="meta">
-                            <span id="previewDesc"></span>
-                        </div>
-                        <div class="transcript-container">
-                            <pre id="previewTranscript"></pre>
-                        </div>
-                        <div class="action-buttons">
-                            <button id="copyBtn" class="secondary-btn">📋 Copy to Clipboard</button>
-                            <button id="saveBtn" class="primary-btn">💾 Save to Database</button>
-                        </div>
-                    </div>
+            <!-- YouTube Auth Status Bar (from auto-playlist) -->
+            <div id="authBar" class="auth-bar term-auth-bar">
+                <div id="authStatus" class="auth-status">
+                    <span class="auth-loading">Checking login status...</span>
                 </div>
-
-                <div id="success" class="hidden">
-                    <div class="success-message">
-                        <span>✅</span>
-                        <p id="successMsg"></p>
-                    </div>
+                <div id="authActions">
+                    <!-- Login/Logout buttons injected by JS -->
                 </div>
+            </div>
 
-                <div id="error" class="hidden">
-                    <p id="errorMsg"></p>
+            <!-- ═══════════════════════════════════════════════════
+                 STEP 1: SOURCE — Sync feeds & add URLs
+                 ═══════════════════════════════════════════════════ -->
+            <div class="pipeline-step" id="step1">
+                <div class="step-header">
+                    <span class="step-number">01</span>
+                    <span class="step-label">SOURCE</span>
+                    <span class="step-desc">Sync feeds & add URLs</span>
                 </div>
-            </section>
-
-            <!-- Database Tab -->
-            <section id="database-tab" class="tab-content">
-                <div class="db-header">
-                    <div class="search-group">
-                        <input type="text" id="searchInput" placeholder="🔍 Search videos..." />
-                    </div>
-                    <button id="summarizeAllBtn" class="action-btn summarize-btn"
-                        title="Summarize all unsummarized videos">🤖 Summarize All</button>
-                    <span id="videoCount" class="video-count">0 videos</span>
-                </div>
-
-                <div id="dbLoading" class="hidden">
-                    <div class="spinner"></div>
-                    <p>Loading videos...</p>
-                </div>
-
-                <!-- Summarization Progress Banner (hidden by default) -->
-                <div id="summarizeProgress" class="summarize-progress-banner hidden">
-                    <div class="sum-progress-header">
-                        <span id="sumProgressStatus">🤖 Summarizing...</span>
-                        <span id="sumProgressCounts">0 / 0</span>
-                    </div>
-                    <div id="sumProgressTitle" class="sum-progress-title">—</div>
-                    <div class="sum-progress-bar-bg">
-                        <div class="sum-progress-bar" id="sumProgressBar"></div>
-                    </div>
-                    <div class="sum-progress-stats">
-                        <span id="sumStatSuccess">✅ 0</span>
-                        <span id="sumStatFail">❌ 0</span>
-                    </div>
-                    <div class="sum-results-log" id="sumResultsLog"></div>
-                </div>
-
-                <!-- Two-Column Layout -->
-                <div class="db-columns">
-                    <!-- Left: Unsummarized -->
-                    <div class="db-column">
-                        <div class="db-column-header unsummarized-header">
-                            <h3>📝 Unsummarized</h3>
-                            <span class="db-column-count" id="unsummarizedCount">0</span>
-                        </div>
-                        <div id="unsummarizedList" class="db-column-list"></div>
-                    </div>
-                    <!-- Right: Summarized -->
-                    <div class="db-column">
-                        <div class="db-column-header summarized-header">
-                            <h3>🤖 Summarized</h3>
-                            <span class="db-column-count" id="summarizedCount">0</span>
-                        </div>
-                        <div id="summarizedList" class="db-column-list"></div>
-                    </div>
-                    <!-- Third: Daily Report -->
-                    <div class="db-column report-column">
-                        <div class="db-column-header report-header">
-                            <h3>📰 Daily Report</h3>
-                            <button id="generateReportBtn" class="action-btn report-generate-btn">⚡ Generate</button>
-                        </div>
-                        <div id="reportContent" class="db-column-list report-body">
-                            <p class="column-empty">Click <strong>⚡ Generate</strong> to create a news briefing from the
-                                last 24 hours of summaries.</p>
+                <div class="step-body">
+                    <div class="source-actions">
+                        <button id="generatePlaylistBtn" class="term-btn term-btn-green">🔄 SYNC DAILY FEED</button>
+                        <button id="discoverBtn" class="term-btn term-btn-amber">✨ DISCOVER</button>
+                        <div class="source-url-input">
+                            <input type="text" id="youtubeUrl" class="term-search"
+                                placeholder="[ADD URL] paste youtube link..." />
+                            <button id="extractBtn" class="term-btn">📥 EXTRACT</button>
                         </div>
                     </div>
-                </div>
 
-                <div id="emptyState" class="empty-state hidden">
-                    <p>📭 No videos saved yet.</p>
-                    <p class="subtext">Extract a transcript and save it to see it here.</p>
-                </div>
-            </section>
-
-            <!-- Auto Playlist Tab -->
-            <section id="playlist-tab" class="tab-content">
-                <!-- YouTube Auth Status Bar -->
-                <div id="authBar" class="auth-bar">
-                    <div id="authStatus" class="auth-status">
-                        <span class="auth-loading">Checking login status...</span>
+                    <!-- Sync Feedback Banner -->
+                    <div id="syncFeedback" class="sync-feedback hidden">
+                        <div class="sync-stats">
+                            <span class="stat" id="syncNew">🆕 <strong>0</strong> new</span>
+                            <span class="stat" id="syncDeduped">🗄️ <strong>0</strong> deduped</span>
+                            <span class="stat" id="syncFiltered">🔍 <strong>0</strong> filtered</span>
+                            <span class="stat" id="syncTotal">📊 <strong>0</strong> total</span>
+                        </div>
                     </div>
-                    <div id="authActions">
-                        <!-- Login/Logout buttons will be injected here -->
+
+                    <div id="playlistLoading" class="hidden">
+                        <div class="spinner"></div>
+                        <p>Scanning channels... this can take a minute.</p>
                     </div>
-                </div>
 
-                <div class="playlist-header">
-                    <h2>📋 Daily Workspace</h2>
-                    <div class="playlist-header-actions">
-                        <button id="generatePlaylistBtn" class="primary-btn">🔄 Sync Daily Feed</button>
-                        <button id="discoverBtn" class="primary-btn discover-btn">✨ Discover</button>
+                    <!-- Single-URL extraction feedback -->
+                    <div id="loading" class="hidden">
+                        <div class="spinner"></div>
+                        <p>Extracting... this may take up to 60 seconds.</p>
                     </div>
-                </div>
-
-                <!-- Sync Feedback Banner -->
-                <div id="syncFeedback" class="sync-feedback hidden">
-                    <div class="sync-stats">
-                        <span class="stat" id="syncNew">🆕 <strong>0</strong> new</span>
-                        <span class="stat" id="syncDeduped">🗄️ <strong>0</strong> deduped</span>
-                        <span class="stat" id="syncFiltered">🔍 <strong>0</strong> filtered</span>
-                        <span class="stat" id="syncTotal">📊 <strong>0</strong> total</span>
+                    <div id="preview" class="hidden">
+                        <div class="preview-card">
+                            <div class="preview-header">
+                                <span class="badge">Preview</span>
+                                <h2 id="previewTitle"></h2>
+                            </div>
+                            <div class="meta">
+                                <span id="previewDesc"></span>
+                            </div>
+                            <div class="transcript-container">
+                                <pre id="previewTranscript"></pre>
+                            </div>
+                            <div class="action-buttons">
+                                <button id="copyBtn" class="term-btn">📋 COPY</button>
+                                <button id="saveBtn" class="term-btn term-btn-green">💾 SAVE TO DB</button>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                    <div id="success" class="hidden">
+                        <div class="success-message">
+                            <span>✅</span>
+                            <p id="successMsg"></p>
+                        </div>
+                    </div>
+                    <div id="error" class="hidden">
+                        <p id="errorMsg"></p>
+                    </div>
 
-                <div id="playlistLoading" class="hidden">
-                    <div class="spinner"></div>
-                    <p>Scanning channels... this can take a minute.</p>
-                </div>
+                    <!-- Manage Channels (collapsible) -->
+                    <details class="source-config">
+                        <summary class="config-toggle">⚙️ MANAGE CHANNELS & FILTERS</summary>
+                        <div class="config-body">
+                            <!-- Channel Management -->
+                            <div class="config-section">
+                                <h4>📺 Channels</h4>
+                                <div class="add-channel-form">
+                                    <input type="text" id="newChannelName" class="term-search"
+                                        placeholder="Channel Name" />
+                                    <input type="text" id="newChannelUrl" class="term-search"
+                                        placeholder="Channel URL" />
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="newChannelShorts" /> Shorts
+                                    </label>
+                                    <button id="addChannelBtn" class="term-btn term-btn-green">➕ ADD</button>
+                                </div>
+                                <div id="channelsList" class="channels-list"></div>
+                            </div>
 
-                <!-- Workspace Groups -->
-                <div class="playlist-section">
-                    <div class="workspace-groups">
-
-                        <!-- Ready to Extract Group (merged pending + approved) -->
-                        <div class="workspace-group" id="pendingGroup">
-                            <div class="group-header">
-                                <h3>📋 Ready to Extract <span class="group-count" id="pendingCount">0</span></h3>
-                                <div class="group-actions">
-                                    <button class="small-btn dismiss-all-btn" data-status="ignored"
-                                        title="Dismiss all videos">🚫 Dismiss All</button>
-                                    <button class="small-btn extract-all-btn"
-                                        title="Extract transcripts for all videos">📝 Extract All</button>
+                            <!-- Filter Management -->
+                            <div class="config-section">
+                                <h4>🔍 Filters</h4>
+                                <div class="filter-lists">
+                                    <div class="filter-list-col">
+                                        <h4>🚫 Block List <span class="filter-count" id="blockCount">0</span></h4>
+                                        <div class="filter-add-form">
+                                            <input type="text" id="newBlockTerm" class="term-search"
+                                                placeholder="Add blocked term..." />
+                                            <button class="term-btn term-btn-red" id="addBlockTermBtn">+</button>
+                                        </div>
+                                        <div id="blockListItems" class="filter-items"></div>
+                                    </div>
+                                    <div class="filter-list-col">
+                                        <h4>✅ Allow List <span class="filter-count" id="allowCount">0</span></h4>
+                                        <div class="filter-add-form">
+                                            <input type="text" id="newAllowTerm" class="term-search"
+                                                placeholder="Add allowed term..." />
+                                            <button class="term-btn term-btn-green" id="addAllowTermBtn">+</button>
+                                        </div>
+                                        <div id="allowListItems" class="filter-items"></div>
+                                    </div>
                                 </div>
                             </div>
+                        </div>
+                    </details>
+                </div>
+            </div>
 
-                            <!-- Extraction Progress Banner (hidden by default) -->
-                            <div id="extractionProgress" class="extraction-progress hidden">
-                                <div class="extract-progress-header">
-                                    <span class="extract-progress-status" id="extractProgressStatus">⏳
-                                        Starting...</span>
-                                    <span class="extract-progress-counts" id="extractProgressCounts">0 / 0</span>
-                                </div>
-                                <div class="extract-progress-title" id="extractProgressTitle">—</div>
-                                <div class="extract-progress-bar-bg">
-                                    <div class="extract-progress-bar" id="extractProgressBar" style="width: 0%"></div>
-                                </div>
-                                <div class="extract-progress-stats">
-                                    <span class="stat-success" id="extractStatSuccess">✅ 0</span>
-                                    <span class="stat-fail" id="extractStatFail">❌ 0</span>
-                                    <span class="stat-skip" id="extractStatSkip">⏭️ 0 skipped</span>
-                                </div>
-                                <div class="extract-results-log" id="extractResultsLog">
-                                    <!-- Per-video results appended here -->
-                                </div>
-                            </div>
-                            <div class="group-videos" id="pendingVideos">
-                                <!-- Videos ready for extraction rendered here -->
+            <div class="step-divider"><span class="step-arrow">▼</span></div>
+
+            <!-- ═══════════════════════════════════════════════════
+                 STEP 2: CURATE — Review, dismiss, then Extract All
+                 ═══════════════════════════════════════════════════ -->
+            <div class="pipeline-step" id="step2">
+                <div class="step-header">
+                    <span class="step-number">02</span>
+                    <span class="step-label">CURATE</span>
+                    <span class="step-desc">Review & dismiss, then extract</span>
+                </div>
+                <div class="step-body">
+                    <!-- Ready to Extract Group -->
+                    <div class="workspace-group" id="pendingGroup">
+                        <div class="group-header">
+                            <h3>📋 Ready to Extract <span class="group-count" id="pendingCount">0</span></h3>
+                            <div class="group-actions">
+                                <button class="term-btn term-btn-red term-btn-sm dismiss-all-btn" data-status="ignored"
+                                    title="Dismiss all">🚫 DISMISS ALL</button>
+                                <button class="term-btn term-btn-green term-btn-sm extract-all-btn"
+                                    title="Extract transcripts for all">📝 EXTRACT ALL</button>
                             </div>
                         </div>
 
-                        <!-- Extracted Group -->
-                        <div class="workspace-group extracted-group" id="extractedGroup">
-                            <div class="group-header">
-                                <h3>📝 Completed <span class="group-count" id="extractedCount">0</span></h3>
+                        <!-- Extraction Progress Banner -->
+                        <div id="extractionProgress" class="extraction-progress hidden">
+                            <div class="extract-progress-header">
+                                <span class="extract-progress-status" id="extractProgressStatus">⏳ Starting...</span>
+                                <span class="extract-progress-counts" id="extractProgressCounts">0 / 0</span>
                             </div>
-                            <div class="group-videos" id="extractedVideos">
-                                <!-- Extracted videos rendered here (dimmed) -->
+                            <div class="extract-progress-title" id="extractProgressTitle">—</div>
+                            <div class="extract-progress-bar-bg">
+                                <div class="extract-progress-bar" id="extractProgressBar"></div>
                             </div>
+                            <div class="extract-progress-stats">
+                                <span class="stat-success" id="extractStatSuccess">✅ 0</span>
+                                <span class="stat-fail" id="extractStatFail">❌ 0</span>
+                                <span class="stat-skip" id="extractStatSkip">⏭️ 0 skipped</span>
+                            </div>
+                            <div class="extract-results-log" id="extractResultsLog"></div>
                         </div>
 
-                        <!-- Ignored Group -->
-                        <div class="workspace-group ignored-group" id="ignoredGroup">
-                            <div class="group-header collapsed-header" data-toggle="ignoredVideos">
-                                <h3>🚫 Ignored <span class="group-count" id="ignoredCount">0</span></h3>
-                                <div class="ignored-header-actions">
-                                    <button class="bulk-btn restore-all-btn">↩️ Restore All</button>
-                                    <span class="toggle-arrow">▶</span>
-                                </div>
-                            </div>
-                            <div class="group-videos hidden" id="ignoredVideos">
-                                <!-- Ignored videos rendered here (collapsed by default) -->
-                            </div>
+                        <div class="group-videos" id="pendingVideos">
+                            <!-- Video cards rendered here by JS -->
                         </div>
-
                     </div>
 
-                    <!-- V3: Quick Hits (Shorts Reel) -->
+                    <!-- Ignored Group -->
+                    <div class="workspace-group ignored-group" id="ignoredGroup">
+                        <div class="group-header collapsed-header" data-toggle="ignoredVideos">
+                            <h3>🚫 Ignored <span class="group-count" id="ignoredCount">0</span></h3>
+                            <div class="ignored-header-actions">
+                                <button class="term-btn term-btn-sm restore-all-btn">↩️ RESTORE ALL</button>
+                                <span class="toggle-arrow">▶</span>
+                            </div>
+                        </div>
+                        <div class="group-videos hidden" id="ignoredVideos"></div>
+                    </div>
+
+                    <!-- V3: Quick Hits Shorts Reel -->
                     <div class="workspace-group shorts-reel-group" id="shortsReelGroup" style="display: none;">
                         <div class="group-header">
                             <h3>⚡ Quick Hits <span class="group-count" id="shortsCount">0</span></h3>
                         </div>
-                        <div class="shorts-reel" id="shortsReel">
-                            <!-- Shorts rendered here as horizontal scrolling cards -->
+                        <div class="shorts-reel" id="shortsReel"></div>
+                    </div>
+
+                    <!-- Extracted/Completed Group -->
+                    <div class="workspace-group extracted-group" id="extractedGroup">
+                        <div class="group-header">
+                            <h3>📝 Completed <span class="group-count" id="extractedCount">0</span></h3>
+                        </div>
+                        <div class="group-videos" id="extractedVideos"></div>
+                    </div>
+
+                    <!-- Recent Playlists -->
+                    <details class="source-config">
+                        <summary class="config-toggle">📂 RECENT PLAYLISTS</summary>
+                        <div id="playlistHistory" class="playlist-dashboard"></div>
+                    </details>
+                </div>
+            </div>
+
+            <div class="step-divider"><span class="step-arrow">▼</span></div>
+
+            <!-- ═══════════════════════════════════════════════════
+                 STEP 3: PROCESS — Database entries + LLM summaries
+                 ═══════════════════════════════════════════════════ -->
+            <div class="pipeline-step" id="step3">
+                <div class="step-header">
+                    <span class="step-number">03</span>
+                    <span class="step-label">PROCESS</span>
+                    <span class="step-desc">Database entries + LLM summaries</span>
+                </div>
+                <div class="step-body">
+                    <!-- Toolbar -->
+                    <div class="term-toolbar">
+                        <input type="text" id="searchInput" class="term-search" placeholder="[SEARCH] type query..." />
+                        <button id="summarizeAllBtn" class="term-btn term-btn-amber">🤖 SUMMARIZE ALL</button>
+                    </div>
+
+                    <!-- Summarization Progress Banner -->
+                    <div id="summarizeProgress" class="summarize-progress-banner hidden">
+                        <div class="sum-progress-header">
+                            <span id="sumProgressStatus">🤖 Summarizing...</span>
+                            <span id="sumProgressCounts">0 / 0</span>
+                        </div>
+                        <div id="sumProgressTitle" class="sum-progress-title">—</div>
+                        <div class="sum-progress-bar-bg">
+                            <div class="sum-progress-bar" id="sumProgressBar"></div>
+                        </div>
+                        <div class="sum-progress-stats">
+                            <span id="sumStatSuccess">✅ 0</span>
+                            <span id="sumStatFail">❌ 0</span>
+                        </div>
+                        <div class="sum-results-log" id="sumResultsLog"></div>
+                    </div>
+
+                    <div id="dbLoading" class="hidden">
+                        <div class="spinner"></div>
+                        <p>Loading videos...</p>
+                    </div>
+
+                    <!-- Video Feed with thumbnails -->
+                    <div id="videoFeed" class="panel-body">
+                        <!-- Date groups rendered by JS -->
+                    </div>
+
+                    <div id="emptyState" class="empty-state hidden">
+                        <p>📭 No videos saved yet.</p>
+                        <p class="subtext">Extract videos from Step 1 to see them here.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-divider"><span class="step-arrow">▼</span></div>
+
+            <!-- ═══════════════════════════════════════════════════
+                 STEP 4: REPORT — Generate final intel briefing
+                 ═══════════════════════════════════════════════════ -->
+            <div class="pipeline-step" id="step4">
+                <div class="step-header">
+                    <span class="step-number">04</span>
+                    <span class="step-label">REPORT</span>
+                    <span class="step-desc">Generate final intel briefing</span>
+                </div>
+                <div class="step-body">
+                    <div class="term-toolbar">
+                        <button id="generateReportBtn" class="term-btn term-btn-green">⚡ GENERATE REPORT</button>
+                    </div>
+
+                    <!-- Report Viewer -->
+                    <div id="reportViewer" class="report-viewer">
+                        <p class="term-empty">No report generated yet. Click <strong>⚡ GENERATE REPORT</strong> to
+                            create a daily intel briefing.</p>
+                    </div>
+
+                    <!-- Report History -->
+                    <div id="reportHistory" class="report-history">
+                        <div class="history-header">
+                            <span class="history-title">▸ HISTORY</span>
+                        </div>
+                        <div id="reportList" class="report-list">
+                            <p class="term-empty">No saved reports yet.</p>
                         </div>
                     </div>
-
                 </div>
+            </div>
 
-                <div class="playlist-section">
-                    <h3>Recent Playlists</h3>
-                    <div id="playlistHistory" class="playlist-dashboard">
-                        <!-- Playlists with video cards will be rendered here -->
-                    </div>
-                </div>
-
-                <!-- Filter Management Section -->
-                <div class="playlist-section">
-                    <div class="filter-section-header" data-toggle="filterContent">
-                        <h3>🔍 Manage Filters</h3>
-                        <span class="toggle-arrow">▶</span>
-                    </div>
-                    <div id="filterContent" class="filter-content hidden">
-                        <div class="filter-lists">
-                            <div class="filter-list-col">
-                                <h4>🚫 Block List <span class="filter-count" id="blockCount">0</span></h4>
-                                <div class="filter-add-form">
-                                    <input type="text" id="newBlockTerm" placeholder="Add blocked term..." />
-                                    <button class="small-btn" id="addBlockTermBtn">+</button>
-                                </div>
-                                <div id="blockListItems" class="filter-items">
-                                    <!-- Block list items rendered here -->
-                                </div>
-                            </div>
-                            <div class="filter-list-col">
-                                <h4>✅ Allow List <span class="filter-count" id="allowCount">0</span></h4>
-                                <div class="filter-add-form">
-                                    <input type="text" id="newAllowTerm" placeholder="Add allowed term..." />
-                                    <button class="small-btn" id="addAllowTermBtn">+</button>
-                                </div>
-                                <div id="allowListItems" class="filter-items">
-                                    <!-- Allow list items rendered here -->
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="playlist-section">
-                    <h3>Manage Channels</h3>
-
-                    <div class="add-channel-form">
-                        <input type="text" id="newChannelName" placeholder="Channel Name (e.g. TechCrunch)"
-                            title="Channel display name" />
-                        <input type="text" id="newChannelUrl"
-                            placeholder="Channel URL (e.g. https://www.youtube.com/@TechCrunch)"
-                            title="YouTube channel URL" />
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="newChannelShorts" />
-                            Include Shorts
-                        </label>
-                        <button id="addChannelBtn" class="primary-btn">➕ Add Channel</button>
-                    </div>
-
-                    <div id="channelsList" class="channels-list">
-                        <!-- Channels will be rendered here -->
-                    </div>
-                </div>
-            </section>
         </main>
     </div>
 

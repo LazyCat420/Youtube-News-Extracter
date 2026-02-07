@@ -32,6 +32,14 @@ function initDb() {
             console.error('Migration error:', err.message);
         }
     });
+
+    // Reports table for persisting generated news reports
+    db.run(`CREATE TABLE IF NOT EXISTS reports (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        content TEXT NOT NULL,
+        video_count INTEGER DEFAULT 0,
+        generated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
 }
 
 const Database = {
@@ -154,6 +162,53 @@ const Database = {
                     else resolve(rows);
                 }
             );
+        });
+    },
+
+    // ============ Report CRUD ============
+
+    saveReport(content, videoCount) {
+        return new Promise((resolve, reject) => {
+            db.run(
+                `INSERT INTO reports (content, video_count) VALUES (?, ?)`,
+                [content, videoCount],
+                function (err) {
+                    if (err) reject(err);
+                    else resolve({ id: this.lastID });
+                }
+            );
+        });
+    },
+
+    getAllReports() {
+        return new Promise((resolve, reject) => {
+            db.all(
+                `SELECT id, SUBSTR(content, 1, 150) as preview, video_count, generated_at
+                 FROM reports ORDER BY generated_at DESC`,
+                [],
+                (err, rows) => {
+                    if (err) reject(err);
+                    else resolve(rows);
+                }
+            );
+        });
+    },
+
+    getReportById(id) {
+        return new Promise((resolve, reject) => {
+            db.get(`SELECT * FROM reports WHERE id = ?`, [id], (err, row) => {
+                if (err) reject(err);
+                else resolve(row);
+            });
+        });
+    },
+
+    deleteReport(id) {
+        return new Promise((resolve, reject) => {
+            db.run(`DELETE FROM reports WHERE id = ?`, [id], function (err) {
+                if (err) reject(err);
+                else resolve({ deleted: this.changes > 0 });
+            });
         });
     },
 
