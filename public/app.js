@@ -489,10 +489,25 @@ document.addEventListener('DOMContentLoaded', () => {
         extractedCount.textContent = groups.extracted.length;
         ignoredCount.textContent = groups.ignored.length;
 
-        // Render each group
-        pendingVideos.innerHTML = groups.ready.length > 0
-            ? groups.ready.map(v => renderVideoCard(v, 'pending')).join('')
-            : '<p class="group-empty">All caught up! No videos to review.</p>';
+        // Cluster ready videos by topic
+        if (groups.ready.length > 0 && window.TopicDedup) {
+            const allowList = (currentFilters && currentFilters.allow_list) || [];
+            const { clusters } = window.TopicDedup.clusterByTopic(groups.ready, allowList);
+
+            // Render: multi-video clusters get cluster cards, solo gets normal cards
+            pendingVideos.innerHTML = clusters.map(cluster => {
+                if (cluster.videos.length > 1) {
+                    return renderClusterCard(cluster);
+                } else {
+                    return renderVideoCard(cluster.videos[0], 'pending');
+                }
+            }).join('');
+        } else if (groups.ready.length > 0) {
+            // Fallback if TopicDedup not loaded
+            pendingVideos.innerHTML = groups.ready.map(v => renderVideoCard(v, 'pending')).join('');
+        } else {
+            pendingVideos.innerHTML = '<p class="group-empty">All caught up! No videos to review.</p>';
+        }
 
         extractedVideos.innerHTML = groups.extracted.length > 0
             ? groups.extracted.map(v => renderVideoCard(v, 'extracted')).join('')
@@ -517,6 +532,57 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Attach workspace event listeners
         attachWorkspaceListeners();
+    }
+    /**
+     * Render a cluster card for multi-video topic groups.
+     * Shows a collapsed summary with source count, expandable to pick the best video.
+     */
+    function renderClusterCard(cluster) {
+        const videos = cluster.videos;
+        const channels = [...new Set(videos.map(v => v.channelName || 'Unknown'))];
+        const channelList = channels.slice(0, 3).join(', ') + (channels.length > 3 ? ` +${channels.length - 3}` : '');
+        const anchorTitle = escapeHtml(videos[0].title || 'Untitled');
+        const videoIds = videos.map(v => v.id).join(',');
+        const thumb = videos[0].thumbnail || `https://i.ytimg.com/vi/${videos[0].id}/mqdefault.jpg`;
+
+        // Build the expanded picker rows
+        const pickerRows = videos.map((v, i) => {
+            const vTitle = escapeHtml(v.title || 'Untitled');
+            const vChannel = escapeHtml(v.channelName || 'Unknown');
+            const vThumb = v.thumbnail || `https://i.ytimg.com/vi/${v.id}/mqdefault.jpg`;
+            return `
+                <label class="cluster-pick-row" data-id="${v.id}">
+                    <input type="radio" name="cluster-${videos[0].id}" value="${v.id}" ${i === 0 ? 'checked' : ''} />
+                    <img src="${vThumb}" alt="" class="cluster-pick-thumb" />
+                    <div class="cluster-pick-info">
+                        <span class="cluster-pick-title">${vTitle}</span>
+                        <span class="cluster-pick-channel">${vChannel}</span>
+                    </div>
+                </label>
+            `;
+        }).join('');
+
+        return `
+            <div class="cluster-card" data-cluster-ids="${videoIds}">
+                <div class="cluster-header">
+                    <img src="${thumb}" alt="" class="cluster-thumb" />
+                    <div class="cluster-info">
+                        <span class="cluster-title">${anchorTitle}</span>
+                        <span class="cluster-sources">📺 ${channelList} · <strong>${videos.length} sources</strong></span>
+                    </div>
+                    <div class="cluster-actions">
+                        <button class="ws-btn cluster-toggle" title="Pick best video">▼ Pick Best</button>
+                        <button class="ws-btn ws-dismiss-trigger cluster-dismiss-all" data-ids="${videoIds}" title="Dismiss all ${videos.length} videos">🚫 All</button>
+                    </div>
+                </div>
+                <div class="cluster-picker hidden">
+                    ${pickerRows}
+                    <div class="cluster-picker-actions">
+                        <button class="small-btn cluster-keep-selected" data-ids="${videoIds}">✅ Keep Selected · Dismiss Rest</button>
+                    </div>
+                </div>
+            </div>
+        `;
     }
 
     function renderVideoCard(video, groupType) {
@@ -717,6 +783,56 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Clear blocked_term (phrase removed, but video stays ignored)
                     await updateVideoStatus(videoId, 'ignored', '');
                     showSuccess('Block phrase removed. Video remains ignored.');
+                }
+            });
+        });
+
+        // ============ Cluster Event Handlers ============
+
+        // Toggle cluster picker open/closed
+        document.querySelectorAll('.cluster-toggle').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const card = btn.closest('.cluster-card');
+                const picker = card.querySelector('.cluster-picker');
+                const isHidden = picker.classList.contains('hidden');
+                picker.classList.toggle('hidden');
+                btn.textContent = isHidden ? '▲ Close' : '▼ Pick Best';
+            });
+        });
+
+        // Dismiss all videos in a cluster
+        document.querySelectorAll('.cluster-dismiss-all').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                const ids = btn.dataset.ids.split(',');
+                btn.disabled = true;
+                btn.textContent = '⏳';
+                for (const id of ids) {
+                    await updateVideoStatus(id, 'ignored');
+                }
+            });
+        });
+
+        // Keep selected video, dismiss rest in cluster
+        document.querySelectorAll('.cluster-keep-selected').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const ids = btn.dataset.ids.split(',');
+                const card = btn.closest('.cluster-card');
+                const selected = card.querySelector('input[type="radio"]:checked');
+                if (!selected) return;
+
+                const keepId = selected.value;
+                btn.disabled = true;
+                btn.textContent = '⏳ Processing...';
+
+                // Dismiss all except the selected one
+                for (const id of ids) {
+                    if (id !== keepId) {
+                        await updateVideoStatus(id, 'ignored');
+                    }
                 }
             });
         });
@@ -1038,12 +1154,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.querySelector('.extract-all-btn')?.addEventListener('click', async () => {
-        const approvedIds = currentDailyVideos
-            .filter(v => v.status === 'approved')
+        // Include both pending + approved (the merged "Ready to Extract" group), exclude shorts
+        const readyIds = currentDailyVideos
+            .filter(v => ((v.status || 'pending') === 'pending' || v.status === 'approved') && v.is_short !== true)
             .map(v => v.id);
 
-        if (approvedIds.length === 0) return;
-        if (!confirm(`Extract transcripts for all ${approvedIds.length} approved videos? This may take several minutes.`)) return;
+        if (readyIds.length === 0) return;
+        if (!confirm(`Extract transcripts for all ${readyIds.length} ready videos? This may take several minutes.`)) return;
 
         const btn = document.querySelector('.extract-all-btn');
         btn.disabled = true;
@@ -1051,7 +1168,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Extract one by one
         let extracted = 0;
-        for (const videoId of approvedIds) {
+        for (const videoId of readyIds) {
             try {
                 const response = await fetch('/api/extract', {
                     method: 'POST',
@@ -1068,15 +1185,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                     await updateVideoStatus(videoId, 'extracted');
                     extracted++;
-                    btn.textContent = `⏳ ${extracted}/${approvedIds.length}`;
+                    btn.textContent = `⏳ ${extracted}/${readyIds.length}`;
                 }
             } catch (err) {
                 console.error(`Extract failed for ${videoId}:`, err);
             }
         }
 
-        btn.textContent = `✅ ${extracted}/${approvedIds.length}`;
-        showSuccess(`Extracted ${extracted} of ${approvedIds.length} transcripts!`);
+        btn.textContent = `✅ ${extracted}/${readyIds.length}`;
+        showSuccess(`Extracted ${extracted} of ${readyIds.length} transcripts!`);
         setTimeout(() => { btn.textContent = '📝 Extract All'; btn.disabled = false; }, 3000);
     });
 
@@ -1323,12 +1440,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 return `<a href="${playlistUrl}" target="_blank" class="secondary-btn">${label}</a>`;
             }).join('') : '<span class="playlist-empty-msg">No active videos</span>';
 
-            // Status summary (shows full breakdown including ignored)
-            const pending = allPlaylistVideos.filter(v => (v.status || 'pending') === 'pending').length;
-            const approved = allPlaylistVideos.filter(v => v.status === 'approved').length;
+            // Status summary — merge pending + approved into "ready"
+            const ready = allPlaylistVideos.filter(v => (v.status || 'pending') === 'pending' || v.status === 'approved').length;
             const extracted = allPlaylistVideos.filter(v => v.status === 'extracted').length;
             const ignored = allPlaylistVideos.filter(v => v.status === 'ignored').length;
-            const statusSummary = `⏳${pending} ✅${approved} 📝${extracted} 🚫${ignored}`;
+            const statusSummary = `📋${ready} 📝${extracted} 🚫${ignored}`;
 
             // Save to YouTube button (only active videos)
             const allVideoIds = videos.map(v => v.id); // Already filtered — no ignored videos
@@ -1378,15 +1494,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="playlist-card" data-filename="${p.filename}">
                     <div class="playlist-card-header" onclick="this.parentElement.classList.toggle('expanded')">
                         <div class="playlist-meta">
+                            <div class="playlist-play-links" onclick="event.stopPropagation()">
+                                ${playButtons}
+                                ${saveButton}
+                            </div>
                             <span class="playlist-date">${date}</span>
-                            <span class="playlist-count">${count} videos • ${statusSummary}</span>
+                            <span class="playlist-count">${videos.length} active / ${count} total • ${statusSummary}</span>
                         </div>
                         <div class="playlist-actions" onclick="event.stopPropagation()">
-                            ${playButtons}
-                            ${saveButton}
-                            <button class="extract-btn" data-filename="${p.filename}">📜 Extract</button>
-                            <button class="expand-btn">📂 View</button>
-                            <button class="icon-btn delete-playlist-btn" data-filename="${p.filename}">🗑️</button>
+                            <button class="expand-btn">📂 Details</button>
                         </div>
                     </div>
                     <div class="collapsed-content">

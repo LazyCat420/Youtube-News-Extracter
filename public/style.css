@@ -1316,6 +1316,179 @@ button:disabled {
     color: #64748b;
 }
 
+/* ============ Topic Cluster Cards ============ */
+.cluster-card {
+    border: 1px solid rgba(139, 92, 246, 0.25);
+    border-radius: 0.6rem;
+    margin: 0.4rem 0;
+    background: rgba(139, 92, 246, 0.06);
+    overflow: hidden;
+    transition: border-color 0.2s;
+}
+
+.cluster-card:hover {
+    border-color: rgba(139, 92, 246, 0.4);
+}
+
+.cluster-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 1rem;
+}
+
+.cluster-thumb {
+    width: 70px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 0.3rem;
+    flex-shrink: 0;
+    opacity: 0.85;
+}
+
+.cluster-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.cluster-title {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cluster-sources {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+}
+
+.cluster-sources strong {
+    color: #a78bfa;
+    font-weight: 600;
+}
+
+.cluster-actions {
+    display: flex;
+    gap: 0.4rem;
+    flex-shrink: 0;
+}
+
+.cluster-toggle {
+    background: rgba(139, 92, 246, 0.15) !important;
+    border: 1px solid rgba(139, 92, 246, 0.3) !important;
+    color: #c4b5fd !important;
+    font-size: 0.7rem !important;
+    padding: 0.25rem 0.6rem !important;
+    border-radius: 0.4rem !important;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.cluster-toggle:hover {
+    background: rgba(139, 92, 246, 0.25) !important;
+}
+
+.cluster-dismiss-all {
+    font-size: 0.7rem !important;
+    padding: 0.25rem 0.5rem !important;
+}
+
+/* Cluster Picker (expanded) */
+.cluster-picker {
+    border-top: 1px solid rgba(139, 92, 246, 0.15);
+    background: rgba(0, 0, 0, 0.15);
+    padding: 0.5rem;
+}
+
+.cluster-pick-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.4rem 0.5rem;
+    border-radius: 0.4rem;
+    cursor: pointer;
+    transition: background 0.15s;
+    border: 1px solid transparent;
+}
+
+.cluster-pick-row:hover {
+    background: rgba(139, 92, 246, 0.1);
+}
+
+.cluster-pick-row:has(input:checked) {
+    background: rgba(139, 92, 246, 0.15);
+    border-color: rgba(139, 92, 246, 0.3);
+}
+
+.cluster-pick-row input[type="radio"] {
+    accent-color: #8b5cf6;
+    flex-shrink: 0;
+}
+
+.cluster-pick-thumb {
+    width: 60px;
+    height: 34px;
+    object-fit: cover;
+    border-radius: 0.25rem;
+    flex-shrink: 0;
+}
+
+.cluster-pick-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+}
+
+.cluster-pick-title {
+    font-size: 0.75rem;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cluster-pick-channel {
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+}
+
+.cluster-picker-actions {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0.4rem 0.25rem 0;
+}
+
+.cluster-keep-selected {
+    background: rgba(16, 185, 129, 0.15) !important;
+    border: 1px solid rgba(16, 185, 129, 0.3) !important;
+    color: #34d399 !important;
+    font-size: 0.72rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: 0.4rem;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.cluster-keep-selected:hover {
+    background: rgba(16, 185, 129, 0.25) !important;
+}
+
+/* Playlist Play Links (moved to top of card) */
+.playlist-play-links {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.3rem;
+}
+
 /* Workspace Video Cards */
 .ws-video-card {
     display: flex;
