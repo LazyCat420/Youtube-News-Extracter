@@ -124,6 +124,131 @@ app.delete('/api/videos/:id', async (req, res) => {
     }
 });
 
+// ============ Settings & LLM Summarization Routes ============
+const SETTINGS_FILE = path.join(__dirname, 'config/settings.json');
+
+function loadSettings() {
+    try {
+        const fs = require('fs');
+        if (fs.existsSync(SETTINGS_FILE)) {
+            return JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf-8'));
+        }
+    } catch (e) { console.error('Settings load error:', e.message); }
+    return { ollama_endpoint: 'http://10.0.0.29:11434', ollama_model: '' };
+}
+
+function saveSettings(settings) {
+    const fs = require('fs');
+    const dir = path.dirname(SETTINGS_FILE);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(SETTINGS_FILE, JSON.stringify(settings, null, 4));
+}
+
+// Get settings
+app.get('/api/settings', (req, res) => {
+    res.json({ success: true, settings: loadSettings() });
+});
+
+// Save settings
+app.post('/api/settings', (req, res) => {
+    try {
+        const { ollama_endpoint, ollama_model } = req.body;
+        const settings = loadSettings();
+        if (ollama_endpoint !== undefined) settings.ollama_endpoint = ollama_endpoint;
+        if (ollama_model !== undefined) settings.ollama_model = ollama_model;
+        saveSettings(settings);
+        res.json({ success: true, settings });
+    } catch (error) {
+        console.error('Settings save error:', error);
+        res.status(500).json({ error: 'Failed to save settings.' });
+    }
+});
+
+// Proxy: Get Ollama model list
+app.get('/api/ollama/models', async (req, res) => {
+    try {
+        const settings = loadSettings();
+        const endpoint = settings.ollama_endpoint || 'http://10.0.0.29:11434';
+        const response = await fetch(`${endpoint}/api/tags`);
+        if (!response.ok) throw new Error(`Ollama returned ${response.status}`);
+        const data = await response.json();
+        const models = (data.models || []).map(m => ({
+            name: m.name,
+            size: m.size,
+            modified: m.modified_at
+        }));
+        res.json({ success: true, models });
+    } catch (error) {
+        console.error('Ollama model fetch error:', error.message);
+        res.status(502).json({ error: `Cannot reach Ollama: ${error.message}` });
+    }
+});
+
+// Summarize a single video
+app.post('/api/summarize/:id', async (req, res) => {
+    try {
+        const video = await Database.getVideoById(req.params.id);
+        if (!video) return res.status(404).json({ error: 'Video not found' });
+        if (!video.transcript || video.transcript.length < 50) {
+            return res.status(400).json({ error: 'No transcript available to summarize' });
+        }
+
+        const settings = loadSettings();
+        if (!settings.ollama_model) {
+            return res.status(400).json({ error: 'No Ollama model selected. Configure in Settings.' });
+        }
+
+        const endpoint = settings.ollama_endpoint || 'http://10.0.0.29:11434';
+        const model = settings.ollama_model;
+
+        // Truncate transcript to ~4000 chars to stay within context
+        const transcript = video.transcript.substring(0, 4000);
+
+        console.log(`[LLM] Summarizing video ${video.id}: "${video.title}" with ${model}...`);
+
+        const ollamaResponse = await fetch(`${endpoint}/api/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                model,
+                messages: [
+                    {
+                        role: 'system',
+                        content: 'You are a concise news analyst. Summarize transcripts into clear bullet points. Be factual and concise. Use plain text bullet points starting with "• ".'
+                    },
+                    {
+                        role: 'user',
+                        content: `Summarize this news video transcript in 5-8 bullet points:\n\nTitle: ${video.title}\n\nTranscript:\n${transcript}`
+                    }
+                ],
+                stream: false,
+                options: { temperature: 0.3 }
+            })
+        });
+
+        if (!ollamaResponse.ok) {
+            const errText = await ollamaResponse.text();
+            throw new Error(`Ollama error ${ollamaResponse.status}: ${errText}`);
+        }
+
+        const result = await ollamaResponse.json();
+        const summary = result.message?.content || '';
+
+        if (!summary) {
+            return res.status(500).json({ error: 'LLM returned empty summary' });
+        }
+
+        // Save summary to database
+        await Database.saveSummary(video.id, summary);
+        console.log(`[LLM] Summary saved for video ${video.id} (${summary.length} chars)`);
+
+        res.json({ success: true, summary, videoId: video.id });
+    } catch (error) {
+        console.error('Summarize error:', error.message);
+        res.status(500).json({ error: `Summarization failed: ${error.message}` });
+    }
+});
+
 // Auto-Playlist Routes
 const { generateDailyPlaylist } = require('./auto-yt-playlist/generate_daily');
 const { runDiscovery } = require('./auto-yt-playlist/discover');

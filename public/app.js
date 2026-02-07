@@ -210,10 +210,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         emptyState.classList.add('hidden');
-        videoList.innerHTML = videos.map(video => `
+        videoList.innerHTML = videos.map(video => {
+            const hasSummary = video.summary && video.summary.length > 0;
+            const summaryBadge = hasSummary ? '<span class="badge badge-summarized">🤖 Summarized</span>' : '';
+            return `
             <div class="video-card" data-id="${video.id}">
                 <div class="video-card-header">
                     <h3>${escapeHtml(video.title || 'Untitled Video')}</h3>
+                    ${summaryBadge}
                 </div>
                 <div class="video-card-meta">
                     <span>📅 ${formatDate(video.scraped_at)}</span>
@@ -224,10 +228,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div class="video-card-actions">
                     <button class="secondary-btn view-btn" data-id="${video.id}">👁️ View</button>
+                    ${!hasSummary ? `<button class="action-btn summarize-single-btn" data-id="${video.id}" data-title="${escapeHtml(video.title || 'Untitled')}">🤖</button>` : ''}
                     <button class="icon-btn delete-btn" data-id="${video.id}" data-title="${escapeHtml(video.title || 'Untitled')}">🗑️</button>
                 </div>
             </div>
-        `).join('');
+        `}).join('');
 
         // Attach event listeners
         document.querySelectorAll('.view-btn').forEach(btn => {
@@ -239,6 +244,34 @@ document.addEventListener('DOMContentLoaded', () => {
                 deleteTargetId = btn.dataset.id;
                 deleteVideoTitle.textContent = btn.dataset.title;
                 deleteModal.classList.remove('hidden');
+            });
+        });
+
+        // Single video summarize buttons
+        document.querySelectorAll('.summarize-single-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const id = btn.dataset.id;
+                btn.disabled = true;
+                btn.textContent = '⏳';
+                try {
+                    const resp = await fetch(`/api/summarize/${id}`, { method: 'POST' });
+                    const data = await resp.json();
+                    if (data.success) {
+                        btn.textContent = '✅';
+                        // Update local data
+                        const v = allVideos.find(v => v.id == id);
+                        if (v) v.summary = data.summary;
+                        setTimeout(() => loadVideos(), 1500);
+                    } else {
+                        btn.textContent = '❌';
+                        alert(data.error || 'Summarization failed');
+                        setTimeout(() => { btn.textContent = '🤖'; btn.disabled = false; }, 2000);
+                    }
+                } catch (err) {
+                    console.error('Summarize error:', err);
+                    btn.textContent = '❌';
+                    setTimeout(() => { btn.textContent = '🤖'; btn.disabled = false; }, 2000);
+                }
             });
         });
     }
@@ -257,7 +290,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // ============ View Modal ============
+    let currentModalVideoId = null;
+
     async function viewVideo(id) {
         try {
             const response = await fetch(`/api/videos/${id}`);
@@ -265,10 +299,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (response.ok && data.success) {
                 const video = data.video;
+                currentModalVideoId = video.id;
                 modalTitle.textContent = video.title || 'Untitled Video';
                 modalDate.textContent = `📅 ${formatDate(video.scraped_at)}`;
                 modalLength.textContent = `📝 ${formatNumber(video.transcript?.length || 0)} characters`;
                 modalTranscript.textContent = video.transcript || 'No transcript available';
+
+                // Show summary if exists
+                const summarySection = document.getElementById('modalSummarySection');
+                const summaryContent = document.getElementById('modalSummary');
+                const summarizeBtn = document.getElementById('modalSummarizeBtn');
+
+                if (video.summary) {
+                    summaryContent.innerHTML = video.summary.replace(/\n/g, '<br>');
+                    summarySection.classList.remove('hidden');
+                    summarizeBtn.textContent = '🔄 Re-Summarize';
+                } else {
+                    summarySection.classList.add('hidden');
+                    summaryContent.innerHTML = '';
+                    summarizeBtn.textContent = '🤖 Summarize';
+                }
+
                 modal.classList.remove('hidden');
             } else {
                 alert('Failed to load video details.');
@@ -1155,46 +1206,96 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.querySelector('.extract-all-btn')?.addEventListener('click', async () => {
         // Include both pending + approved (the merged "Ready to Extract" group), exclude shorts
-        const readyIds = currentDailyVideos
-            .filter(v => ((v.status || 'pending') === 'pending' || v.status === 'approved') && v.is_short !== true)
-            .map(v => v.id);
+        const readyVideos = currentDailyVideos
+            .filter(v => ((v.status || 'pending') === 'pending' || v.status === 'approved') && v.is_short !== true);
 
-        if (readyIds.length === 0) return;
-        if (!confirm(`Extract transcripts for all ${readyIds.length} ready videos? This may take several minutes.`)) return;
+        if (readyVideos.length === 0) return;
+        if (!confirm(`Extract transcripts for all ${readyVideos.length} ready videos? This may take several minutes.`)) return;
 
         const btn = document.querySelector('.extract-all-btn');
         btn.disabled = true;
         btn.textContent = '⏳ Extracting...';
 
-        // Extract one by one
-        let extracted = 0;
-        for (const videoId of readyIds) {
+        // Show progress banner
+        const progressEl = document.getElementById('extractionProgress');
+        const statusEl = document.getElementById('extractProgressStatus');
+        const countsEl = document.getElementById('extractProgressCounts');
+        const titleEl = document.getElementById('extractProgressTitle');
+        const barEl = document.getElementById('extractProgressBar');
+        const successEl = document.getElementById('extractStatSuccess');
+        const failEl = document.getElementById('extractStatFail');
+        const skipEl = document.getElementById('extractStatSkip');
+        const logEl = document.getElementById('extractResultsLog');
+
+        progressEl.classList.remove('hidden');
+        logEl.innerHTML = '';
+        let successCount = 0;
+        let failCount = 0;
+        let skipCount = 0;
+        const total = readyVideos.length;
+
+        for (let i = 0; i < readyVideos.length; i++) {
+            const video = readyVideos[i];
+            const videoTitle = video.title || 'Untitled';
+            const pct = Math.round(((i) / total) * 100);
+
+            // Update progress UI
+            statusEl.textContent = `⏳ Extracting ${i + 1} of ${total}...`;
+            countsEl.textContent = `${i + 1} / ${total}`;
+            titleEl.textContent = `📺 ${videoTitle}`;
+            barEl.style.width = `${pct}%`;
+            btn.textContent = `⏳ ${i + 1}/${total}`;
+
             try {
                 const response = await fetch('/api/extract', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url: `https://www.youtube.com/watch?v=${videoId}` })
+                    body: JSON.stringify({ url: `https://www.youtube.com/watch?v=${video.id}` })
                 });
                 const data = await response.json();
 
-                if (data.success && data.transcript) {
+                if (data.success && data.transcript && data.transcript.length > 0) {
                     await fetch('/api/videos/save', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(data)
                     });
-                    await updateVideoStatus(videoId, 'extracted');
-                    extracted++;
-                    btn.textContent = `⏳ ${extracted}/${readyIds.length}`;
+                    await updateVideoStatus(video.id, 'extracted');
+                    successCount++;
+                    logEl.innerHTML += `<div class="log-entry log-success">✅ ${escapeHtml(videoTitle)}</div>`;
+                } else {
+                    // Got response but no transcript (video has no captions)
+                    skipCount++;
+                    console.warn(`Skip (no transcript): ${videoTitle}`);
+                    logEl.innerHTML += `<div class="log-entry log-skip">⏭️ ${escapeHtml(videoTitle)} — no transcript</div>`;
                 }
             } catch (err) {
-                console.error(`Extract failed for ${videoId}:`, err);
+                failCount++;
+                console.error(`Extract failed for ${video.id}:`, err);
+                logEl.innerHTML += `<div class="log-entry log-fail">❌ ${escapeHtml(videoTitle)} — error</div>`;
             }
+            // Auto-scroll log to bottom
+            logEl.scrollTop = logEl.scrollHeight;
+
+            // Update stats
+            successEl.textContent = `✅ ${successCount}`;
+            failEl.textContent = `❌ ${failCount}`;
+            skipEl.textContent = `⏭️ ${skipCount} skipped`;
         }
 
-        btn.textContent = `✅ ${extracted}/${readyIds.length}`;
-        showSuccess(`Extracted ${extracted} of ${readyIds.length} transcripts!`);
-        setTimeout(() => { btn.textContent = '📝 Extract All'; btn.disabled = false; }, 3000);
+        // Completion
+        const finalPct = 100;
+        barEl.style.width = `${finalPct}%`;
+        statusEl.textContent = `✅ Extraction complete!`;
+        countsEl.textContent = `${total} / ${total}`;
+        titleEl.textContent = `${successCount} extracted, ${skipCount} skipped, ${failCount} failed`;
+
+        btn.textContent = `✅ ${successCount}/${total}`;
+        showSuccess(`Extracted ${successCount} of ${total} transcripts!`);
+        setTimeout(() => { btn.textContent = '📝 Extract All'; btn.disabled = false; }, 5000);
+
+        // Auto-hide progress after 10s
+        setTimeout(() => { progressEl.classList.add('hidden'); }, 10000);
     });
 
     async function bulkUpdateStatus(videoIds, status) {
@@ -1866,5 +1967,239 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.disabled = false;
         }
     }, true);
+
+    // ============ Settings Modal ============
+    const settingsModal = document.getElementById('settingsModal');
+    const settingsGear = document.getElementById('settingsGear');
+    const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+    const ollamaEndpointInput = document.getElementById('ollamaEndpoint');
+    const ollamaModelSelect = document.getElementById('ollamaModel');
+    const testConnectionBtn = document.getElementById('testConnectionBtn');
+    const refreshModelsBtn = document.getElementById('refreshModelsBtn');
+    const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+    const connectionStatus = document.getElementById('connectionStatus');
+
+    // Open settings
+    settingsGear.addEventListener('click', async () => {
+        settingsModal.classList.remove('hidden');
+        // Load current settings
+        try {
+            const resp = await fetch('/api/settings');
+            const data = await resp.json();
+            if (data.success) {
+                ollamaEndpointInput.value = data.settings.ollama_endpoint || '';
+                // Load models then set selected
+                await loadOllamaModels(data.settings.ollama_model);
+            }
+        } catch (e) {
+            console.error('Settings load error:', e);
+        }
+    });
+
+    // Close settings
+    closeSettingsBtn.addEventListener('click', () => settingsModal.classList.add('hidden'));
+    settingsModal.addEventListener('click', (e) => {
+        if (e.target === settingsModal) settingsModal.classList.add('hidden');
+    });
+
+    // Test connection
+    testConnectionBtn.addEventListener('click', async () => {
+        let endpoint = ollamaEndpointInput.value.trim();
+
+        // Validate URL format
+        if (!endpoint) {
+            connectionStatus.textContent = '❌ Please enter an Ollama endpoint URL';
+            connectionStatus.className = 'connection-status status-error';
+            return;
+        }
+        // Fix common mistake: http:host instead of http://host
+        if (endpoint.match(/^https?:[^/]/)) {
+            endpoint = endpoint.replace(/^(https?:)/, '$1//');
+            ollamaEndpointInput.value = endpoint;
+        }
+        // Strip trailing slash
+        endpoint = endpoint.replace(/\/+$/, '');
+        ollamaEndpointInput.value = endpoint;
+
+        connectionStatus.textContent = '⏳ Saving endpoint & testing...';
+        connectionStatus.className = 'connection-status';
+
+        try {
+            // Save endpoint FIRST so backend uses it
+            const saveResp = await fetch('/api/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ollama_endpoint: endpoint })
+            });
+            const saveText = await saveResp.text();
+            // Check if server returned HTML (routes not loaded — server needs restart)
+            if (saveText.startsWith('<!DOCTYPE') || saveText.startsWith('<html')) {
+                connectionStatus.textContent = '❌ Server needs restart! New routes not loaded.';
+                connectionStatus.className = 'connection-status status-error';
+                return;
+            }
+
+            // Now test connection
+            const resp = await fetch('/api/ollama/models');
+            const text = await resp.text();
+            if (text.startsWith('<!DOCTYPE') || text.startsWith('<html')) {
+                connectionStatus.textContent = '❌ Server needs restart! API routes not available.';
+                connectionStatus.className = 'connection-status status-error';
+                return;
+            }
+            const data = JSON.parse(text);
+            if (data.success) {
+                connectionStatus.textContent = `✅ Connected! ${data.models.length} models available`;
+                connectionStatus.className = 'connection-status status-ok';
+                populateModels(data.models);
+            } else {
+                connectionStatus.textContent = `❌ ${data.error}`;
+                connectionStatus.className = 'connection-status status-error';
+            }
+        } catch (e) {
+            connectionStatus.textContent = `❌ Connection failed: ${e.message}`;
+            connectionStatus.className = 'connection-status status-error';
+        }
+    });
+
+    // Load models from Ollama
+    async function loadOllamaModels(selectedModel) {
+        try {
+            // Save endpoint first so backend uses it
+            await fetch('/api/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ollama_endpoint: ollamaEndpointInput.value })
+            });
+
+            const resp = await fetch('/api/ollama/models');
+            const data = await resp.json();
+            if (data.success) {
+                populateModels(data.models, selectedModel);
+            }
+        } catch (e) {
+            console.error('Model fetch error:', e);
+        }
+    }
+
+    function populateModels(models, selectedModel) {
+        ollamaModelSelect.innerHTML = '<option value="">— Select a model —</option>';
+        models.forEach(m => {
+            const opt = document.createElement('option');
+            opt.value = m.name;
+            const sizeMB = m.size ? `(${(m.size / 1e9).toFixed(1)}GB)` : '';
+            opt.textContent = `${m.name} ${sizeMB}`;
+            if (m.name === selectedModel) opt.selected = true;
+            ollamaModelSelect.appendChild(opt);
+        });
+    }
+
+    // Refresh models button
+    refreshModelsBtn.addEventListener('click', () => loadOllamaModels());
+
+    // Save settings
+    saveSettingsBtn.addEventListener('click', async () => {
+        saveSettingsBtn.disabled = true;
+        saveSettingsBtn.textContent = '⏳ Saving...';
+        try {
+            const resp = await fetch('/api/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ollama_endpoint: ollamaEndpointInput.value,
+                    ollama_model: ollamaModelSelect.value
+                })
+            });
+            const data = await resp.json();
+            if (data.success) {
+                saveSettingsBtn.textContent = '✅ Saved!';
+                setTimeout(() => {
+                    saveSettingsBtn.textContent = '💾 Save Settings';
+                    saveSettingsBtn.disabled = false;
+                }, 1500);
+            }
+        } catch (e) {
+            saveSettingsBtn.textContent = '❌ Error';
+            setTimeout(() => {
+                saveSettingsBtn.textContent = '💾 Save Settings';
+                saveSettingsBtn.disabled = false;
+            }, 2000);
+        }
+    });
+
+    // ============ Modal Summarize Button ============
+    document.getElementById('modalSummarizeBtn').addEventListener('click', async () => {
+        if (!currentModalVideoId) return;
+        const btn = document.getElementById('modalSummarizeBtn');
+        const summarySection = document.getElementById('modalSummarySection');
+        const summaryContent = document.getElementById('modalSummary');
+
+        btn.disabled = true;
+        btn.textContent = '⏳ Summarizing...';
+
+        try {
+            const resp = await fetch(`/api/summarize/${currentModalVideoId}`, { method: 'POST' });
+            const data = await resp.json();
+
+            if (data.success) {
+                summaryContent.innerHTML = data.summary.replace(/\n/g, '<br>');
+                summarySection.classList.remove('hidden');
+                btn.textContent = '🔄 Re-Summarize';
+                btn.disabled = false;
+                // Update local data
+                const v = allVideos.find(v => v.id == currentModalVideoId);
+                if (v) v.summary = data.summary;
+            } else {
+                alert(data.error || 'Summarization failed');
+                btn.textContent = '🤖 Summarize';
+                btn.disabled = false;
+            }
+        } catch (err) {
+            console.error('Modal summarize error:', err);
+            alert('Summarization failed: ' + err.message);
+            btn.textContent = '🤖 Summarize';
+            btn.disabled = false;
+        }
+    });
+
+    // ============ Summarize All Button ============
+    document.getElementById('summarizeAllBtn').addEventListener('click', async () => {
+        const unsummarized = allVideos.filter(v => !v.summary && v.transcript_length > 50);
+        if (unsummarized.length === 0) {
+            alert('All videos are already summarized!');
+            return;
+        }
+        if (!confirm(`Summarize ${unsummarized.length} videos? This may take a while.`)) return;
+
+        const btn = document.getElementById('summarizeAllBtn');
+        btn.disabled = true;
+        btn.textContent = '⏳ 0/' + unsummarized.length;
+
+        let success = 0, fail = 0;
+        for (let i = 0; i < unsummarized.length; i++) {
+            const v = unsummarized[i];
+            btn.textContent = `⏳ ${i + 1}/${unsummarized.length}`;
+            try {
+                const resp = await fetch(`/api/summarize/${v.id}`, { method: 'POST' });
+                const data = await resp.json();
+                if (data.success) {
+                    success++;
+                    v.summary = data.summary;
+                } else {
+                    fail++;
+                }
+            } catch (e) {
+                fail++;
+            }
+        }
+
+        btn.textContent = `✅ ${success}/${unsummarized.length}`;
+        showSuccess(`Summarized ${success} of ${unsummarized.length} videos!`);
+        loadVideos(); // Refresh to show badges
+        setTimeout(() => {
+            btn.textContent = '🤖 Summarize All';
+            btn.disabled = false;
+        }, 3000);
+    });
 });
 

@@ -1489,6 +1489,107 @@ button:disabled {
     margin-bottom: 0.3rem;
 }
 
+/* ============ Extraction Progress Banner ============ */
+.extraction-progress {
+    background: rgba(99, 102, 241, 0.12);
+    border: 1px solid rgba(99, 102, 241, 0.35);
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    margin: 0.5rem 0;
+    backdrop-filter: blur(8px);
+}
+
+.extract-progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.3rem;
+}
+
+.extract-progress-status {
+    font-weight: 600;
+    color: var(--accent);
+    font-size: 0.85rem;
+}
+
+.extract-progress-counts {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.6);
+    font-variant-numeric: tabular-nums;
+}
+
+.extract-progress-title {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.85);
+    margin-bottom: 0.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.extract-progress-bar-bg {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 0.4rem;
+}
+
+.extract-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #6366f1, #8b5cf6, #a78bfa);
+    border-radius: 3px;
+    transition: width 0.4s ease;
+}
+
+.extract-progress-stats {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.75rem;
+}
+
+.stat-success {
+    color: #10b981;
+}
+
+.stat-fail {
+    color: #ef4444;
+}
+
+.stat-skip {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* Results log */
+.extract-results-log {
+    max-height: 150px;
+    overflow-y: auto;
+    margin-top: 0.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 0.4rem;
+}
+
+.log-entry {
+    font-size: 0.75rem;
+    padding: 0.15rem 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.log-success {
+    color: #10b981;
+}
+
+.log-fail {
+    color: #ef4444;
+}
+
+.log-skip {
+    color: rgba(255, 255, 255, 0.4);
+}
+
 /* Workspace Video Cards */
 .ws-video-card {
     display: flex;
@@ -2201,10 +2302,137 @@ button:disabled {
     color: #a78bfa;
 }
 
-/* Empty playlist message when all videos are ignored */
 .playlist-empty-msg {
     font-size: 0.8rem;
     color: var(--text-secondary);
     font-style: italic;
     padding: 0.4rem 0.75rem;
+}
+
+/* ============ Settings Gear ============ */
+.settings-gear {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    background: none;
+    border: none;
+    font-size: 1.4rem;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.2s, transform 0.3s;
+}
+
+.settings-gear:hover {
+    opacity: 1;
+    transform: rotate(90deg);
+}
+
+header {
+    position: relative;
+}
+
+/* ============ Settings Modal ============ */
+.settings-group {
+    margin-bottom: 1.2rem;
+}
+
+.settings-group label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 0.3rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.settings-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.settings-row input,
+.settings-row select {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 0.5rem;
+    color: white;
+    font-size: 0.85rem;
+    font-family: inherit;
+}
+
+.settings-row select option {
+    background: #1e1e2e;
+    color: white;
+}
+
+.connection-status {
+    display: block;
+    font-size: 0.75rem;
+    margin-top: 0.3rem;
+    min-height: 1rem;
+}
+
+.status-ok {
+    color: #10b981;
+}
+
+.status-error {
+    color: #ef4444;
+}
+
+/* ============ Summarize Buttons & Badges ============ */
+.summarize-btn {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(99, 102, 241, 0.25));
+    border: 1px solid rgba(139, 92, 246, 0.4);
+    color: #c4b5fd;
+}
+
+.summarize-btn:hover {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.4), rgba(99, 102, 241, 0.4));
+    border-color: #8b5cf6;
+    color: white;
+}
+
+.badge-summarized {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: #6ee7b7;
+    padding: 0.1rem 0.5rem;
+    border-radius: 1rem;
+    font-size: 0.65rem;
+    font-weight: 500;
+}
+
+.summarize-single-btn {
+    padding: 0.3rem 0.5rem !important;
+    font-size: 0.8rem;
+    min-width: unset;
+}
+
+/* ============ Summary Display ============ */
+.summary-section {
+    background: rgba(139, 92, 246, 0.08);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+}
+
+.summary-section h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.85rem;
+    color: #c4b5fd;
+}
+
+.summary-content {
+    font-size: 0.82rem;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.85);
 }

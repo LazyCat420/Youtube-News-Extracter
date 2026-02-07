@@ -16,6 +16,7 @@
         <header>
             <h1>YouTube Transcript Extractor</h1>
             <p>Extract and save video transcripts to your database</p>
+            <button id="settingsGear" class="settings-gear" title="Settings">⚙️</button>
         </header>
 
         <!-- Tab Navigation -->
@@ -75,6 +76,8 @@
                     <div class="search-group">
                         <input type="text" id="searchInput" placeholder="🔍 Search videos..." />
                     </div>
+                    <button id="summarizeAllBtn" class="action-btn summarize-btn"
+                        title="Summarize all unsummarized videos">🤖 Summarize All</button>
                     <span id="videoCount" class="video-count">0 videos</span>
                 </div>
 
@@ -139,6 +142,27 @@
                                         title="Dismiss all videos">🚫 Dismiss All</button>
                                     <button class="small-btn extract-all-btn"
                                         title="Extract transcripts for all videos">📝 Extract All</button>
+                                </div>
+                            </div>
+
+                            <!-- Extraction Progress Banner (hidden by default) -->
+                            <div id="extractionProgress" class="extraction-progress hidden">
+                                <div class="extract-progress-header">
+                                    <span class="extract-progress-status" id="extractProgressStatus">⏳
+                                        Starting...</span>
+                                    <span class="extract-progress-counts" id="extractProgressCounts">0 / 0</span>
+                                </div>
+                                <div class="extract-progress-title" id="extractProgressTitle">—</div>
+                                <div class="extract-progress-bar-bg">
+                                    <div class="extract-progress-bar" id="extractProgressBar" style="width: 0%"></div>
+                                </div>
+                                <div class="extract-progress-stats">
+                                    <span class="stat-success" id="extractStatSuccess">✅ 0</span>
+                                    <span class="stat-fail" id="extractStatFail">❌ 0</span>
+                                    <span class="stat-skip" id="extractStatSkip">⏭️ 0 skipped</span>
+                                </div>
+                                <div class="extract-results-log" id="extractResultsLog">
+                                    <!-- Per-video results appended here -->
                                 </div>
                             </div>
                             <div class="group-videos" id="pendingVideos">
@@ -259,9 +283,14 @@
                 <span id="modalLength"></span>
             </div>
             <div class="modal-body">
+                <div id="modalSummarySection" class="summary-section hidden">
+                    <h3>🤖 AI Summary</h3>
+                    <div id="modalSummary" class="summary-content"></div>
+                </div>
                 <pre id="modalTranscript"></pre>
             </div>
             <div class="modal-footer">
+                <button id="modalSummarizeBtn" class="action-btn summarize-btn">🤖 Summarize</button>
                 <button id="modalCopyBtn" class="secondary-btn">📋 Copy to Clipboard</button>
             </div>
         </div>
@@ -281,6 +310,38 @@
             <div class="modal-footer">
                 <button class="secondary-btn close-delete-modal">Cancel</button>
                 <button id="confirmDeleteBtn" class="danger-btn">🗑️ Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal hidden">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>⚙️ Settings</h2>
+                <button class="close-btn" id="closeSettingsBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-group">
+                    <label for="ollamaEndpoint">Ollama Endpoint</label>
+                    <div class="settings-row">
+                        <input type="text" id="ollamaEndpoint" placeholder="http://10.0.0.29:11434" />
+                        <button id="testConnectionBtn" class="action-btn" title="Test connection">🔌 Test</button>
+                    </div>
+                    <span id="connectionStatus" class="connection-status"></span>
+                </div>
+                <div class="settings-group">
+                    <label for="ollamaModel">Model</label>
+                    <div class="settings-row">
+                        <select id="ollamaModel">
+                            <option value="">— Select a model —</option>
+                        </select>
+                        <button id="refreshModelsBtn" class="action-btn" title="Refresh model list">🔄</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="saveSettingsBtn" class="primary-btn">💾 Save Settings</button>
             </div>
         </div>
     </div>

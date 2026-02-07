@@ -20,9 +20,18 @@ function initDb() {
         url TEXT,
         description TEXT,
         transcript TEXT,
+        summary TEXT,
         scraped_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         processed_by_ollama BOOLEAN DEFAULT 0
     )`);
+
+    // Migration: Add summary column if it doesn't exist
+    db.run(`ALTER TABLE videos ADD COLUMN summary TEXT`, (err) => {
+        // Ignore "duplicate column" error — means migration already ran
+        if (err && !err.message.includes('duplicate column')) {
+            console.error('Migration error:', err.message);
+        }
+    });
 }
 
 const Database = {
@@ -56,11 +65,21 @@ const Database = {
         db.run(`UPDATE videos SET processed_by_ollama = 1 WHERE id = ?`, [id]);
     },
 
+    saveSummary(id, summary) {
+        return new Promise((resolve, reject) => {
+            db.run(`UPDATE videos SET summary = ?, processed_by_ollama = 1 WHERE id = ?`, [summary, id], function (err) {
+                if (err) reject(err);
+                else resolve({ updated: this.changes > 0 });
+            });
+        });
+    },
+
     getAllVideos() {
         return new Promise((resolve, reject) => {
             db.all(`SELECT id, video_id, title, url, scraped_at, 
                     SUBSTR(transcript, 1, 200) as transcript_preview,
-                    LENGTH(transcript) as transcript_length
+                    LENGTH(transcript) as transcript_length,
+                    summary, processed_by_ollama
                     FROM videos ORDER BY scraped_at DESC`, [], (err, rows) => {
                 if (err) reject(err);
                 else resolve(rows);
