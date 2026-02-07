@@ -383,11 +383,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // V2 Workspace elements
     const syncFeedback = document.getElementById('syncFeedback');
     const pendingVideos = document.getElementById('pendingVideos');
-    const approvedVideos = document.getElementById('approvedVideos');
     const extractedVideos = document.getElementById('extractedVideos');
     const ignoredVideos = document.getElementById('ignoredVideos');
     const pendingCount = document.getElementById('pendingCount');
-    const approvedCount = document.getElementById('approvedCount');
     const extractedCount = document.getElementById('extractedCount');
     const ignoredCount = document.getElementById('ignoredCount');
     // V3 elements
@@ -466,11 +464,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderWorkspaceEmpty() {
         pendingVideos.innerHTML = '<p class="group-empty">No videos yet. Click "Sync Daily Feed" to start!</p>';
-        approvedVideos.innerHTML = '';
         extractedVideos.innerHTML = '';
         ignoredVideos.innerHTML = '';
         pendingCount.textContent = '0';
-        approvedCount.textContent = '0';
         extractedCount.textContent = '0';
         ignoredCount.textContent = '0';
     }
@@ -481,27 +477,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const shorts = videos.filter(v => v.is_short === true);
         const longForm = videos.filter(v => v.is_short !== true);
 
+        // Merge pending + approved into one "ready" group
         const groups = {
-            pending: longForm.filter(v => (v.status || 'pending') === 'pending'),
-            approved: longForm.filter(v => v.status === 'approved'),
+            ready: longForm.filter(v => (v.status || 'pending') === 'pending' || v.status === 'approved'),
             extracted: longForm.filter(v => v.status === 'extracted'),
             ignored: longForm.filter(v => v.status === 'ignored')
         };
 
         // Update counts
-        pendingCount.textContent = groups.pending.length;
-        approvedCount.textContent = groups.approved.length;
+        pendingCount.textContent = groups.ready.length;
         extractedCount.textContent = groups.extracted.length;
         ignoredCount.textContent = groups.ignored.length;
 
         // Render each group
-        pendingVideos.innerHTML = groups.pending.length > 0
-            ? groups.pending.map(v => renderVideoCard(v, 'pending')).join('')
-            : '<p class="group-empty">All caught up! No pending videos.</p>';
-
-        approvedVideos.innerHTML = groups.approved.length > 0
-            ? groups.approved.map(v => renderVideoCard(v, 'approved')).join('')
-            : '<p class="group-empty">Approve videos from the pending list above.</p>';
+        pendingVideos.innerHTML = groups.ready.length > 0
+            ? groups.ready.map(v => renderVideoCard(v, 'pending')).join('')
+            : '<p class="group-empty">All caught up! No videos to review.</p>';
 
         extractedVideos.innerHTML = groups.extracted.length > 0
             ? groups.extracted.map(v => renderVideoCard(v, 'extracted')).join('')
@@ -552,18 +543,19 @@ document.addEventListener('DOMContentLoaded', () => {
         let actions = '';
         if (groupType === 'pending') {
             actions = `
-                <button class="ws-btn ws-approve" data-id="${video.id}" data-status="approved" title="Approve for extraction">✅</button>
                 <button class="ws-btn ws-dismiss-trigger" data-id="${video.id}" data-title="${title}" title="Dismiss this video">🚫</button>
-            `;
-        } else if (groupType === 'approved') {
-            actions = `
-                <button class="ws-btn ws-extract-single" data-id="${video.id}" title="Extract transcript">📝</button>
-                <button class="ws-btn ws-revert" data-id="${video.id}" data-status="pending" title="Move back to pending">⏪</button>
             `;
         } else if (groupType === 'extracted') {
             actions = `<span class="status-badge status-extracted">✅ Done</span>`;
         } else if (groupType === 'ignored') {
+            const blockedBadge = video.blocked_term
+                ? `<span class="blocked-badge" title="Blocked by phrase: ${escapeHtml(video.blocked_term)}">
+                     🚫 "${escapeHtml(video.blocked_term)}"
+                   </span>
+                   <button class="ws-btn ws-edit-block" data-id="${video.id}" data-term="${escapeHtml(video.blocked_term)}" title="Edit block phrase">✏️</button>`
+                : '';
             actions = `
+                ${blockedBadge}
                 <button class="ws-btn ws-restore" data-id="${video.id}" data-status="pending" title="Restore to pending">↩️</button>
             `;
         }
@@ -689,6 +681,45 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
+
+        // Edit block phrase on ignored videos
+        document.querySelectorAll('.ws-edit-block').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const videoId = btn.dataset.id;
+                const oldTerm = btn.dataset.term;
+                const newTerm = prompt(`Edit block phrase:\n\nCurrent: "${oldTerm}"\nEnter new phrase (or clear to remove block):`, oldTerm);
+
+                if (newTerm === null) return; // Cancelled
+
+                const trimmed = newTerm.trim();
+
+                // Remove old term from filters
+                if (oldTerm) {
+                    try {
+                        await fetch('/api/playlist/filters/remove-term', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ term: oldTerm, list: 'block_list' })
+                        });
+                    } catch (err) {
+                        console.error('Failed to remove old filter term:', err);
+                    }
+                }
+
+                if (trimmed) {
+                    // Add new term to filters
+                    await addFilterTerm(trimmed, 'block_list');
+                    // Update video's blocked_term
+                    await updateVideoStatus(videoId, 'ignored', trimmed);
+                    showSuccess(`🚫 Block phrase updated to "${trimmed}"`);
+                } else {
+                    // Clear blocked_term (phrase removed, but video stays ignored)
+                    await updateVideoStatus(videoId, 'ignored', '');
+                    showSuccess('Block phrase removed. Video remains ignored.');
+                }
+            });
+        });
     }
 
     // ============ Smart Dismiss Popup ============
@@ -810,7 +841,7 @@ document.addEventListener('DOMContentLoaded', () => {
             await updateVideoStatus(videoId, 'ignored');
         });
 
-        // "Block & Ignore" → add to block_list + ignore
+        // "Block & Ignore" → add to block_list + ignore, persist the block phrase
         popup.querySelector('.dismiss-block-confirm').addEventListener('click', async (e) => {
             e.stopPropagation();
             const input = popup.querySelector('.dismiss-custom-input');
@@ -830,8 +861,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 showSuccess(`🚫 Blocked "${word}" — future syncs will filter this topic`);
             }
 
-            // Also ignore the video
-            await updateVideoStatus(videoId, 'ignored');
+            // Also ignore the video AND persist the block phrase on the video object
+            await updateVideoStatus(videoId, 'ignored', word);
         });
 
         // Enter key on input → trigger block
@@ -875,21 +906,31 @@ document.addEventListener('DOMContentLoaded', () => {
             return false;
         }
     }
-    async function updateVideoStatus(videoId, newStatus) {
+    async function updateVideoStatus(videoId, newStatus, blockedTerm = null) {
         if (!currentDailyFile) return;
 
         try {
+            const body = { status: newStatus };
+            if (blockedTerm !== null) body.blocked_term = blockedTerm;
+
             const response = await fetch(`/api/playlist/${currentDailyFile}/video/${videoId}/status`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: newStatus })
+                body: JSON.stringify(body)
             });
             const data = await response.json();
 
             if (data.success) {
                 // Update local state
                 const video = currentDailyVideos.find(v => v.id === videoId);
-                if (video) video.status = newStatus;
+                if (video) {
+                    video.status = newStatus;
+                    if (blockedTerm !== null && blockedTerm !== '') {
+                        video.blocked_term = blockedTerm;
+                    } else if (newStatus === 'pending' || blockedTerm === '') {
+                        delete video.blocked_term;
+                    }
+                }
                 renderWorkspace(currentDailyVideos);
             } else {
                 showError(data.error || 'Failed to update status');
@@ -1255,10 +1296,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         playlistHistory.innerHTML = playlists.map((p, playlistIndex) => {
             const date = new Date(p.createdAt).toLocaleString();
-            const videos = Array.isArray(p.data) ? p.data : [];
-            const count = videos.length;
+            const allPlaylistVideos = Array.isArray(p.data) ? p.data : [];
+            // Filter out ignored videos from play links and category views
+            const videos = allPlaylistVideos.filter(v => v.status !== 'ignored');
+            const count = allPlaylistVideos.length;
 
-            // Group videos by category
+            // Group active (non-ignored) videos by category
             const categories = {};
             videos.forEach(v => {
                 const cat = v.category || 'other';
@@ -1266,29 +1309,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 categories[cat].push(v);
             });
 
-            // Split videos into chunks of 50 for play buttons
+            // Split active videos into chunks of 50 for play buttons
             const chunks = [];
             for (let i = 0; i < videos.length; i += VIDEOS_PER_PLAYLIST) {
                 chunks.push(videos.slice(i, i + VIDEOS_PER_PLAYLIST));
             }
 
-            // Generate play buttons
-            const playButtons = chunks.map((chunk, index) => {
+            // Generate play buttons (only non-ignored videos)
+            const playButtons = chunks.length > 0 ? chunks.map((chunk, index) => {
                 const videoIds = chunk.map(v => v.id).join(',');
                 const playlistUrl = `https://www.youtube.com/watch_videos?video_ids=${videoIds}`;
                 const label = chunks.length > 1 ? `▶️ Part ${index + 1}` : '▶️ Play';
                 return `<a href="${playlistUrl}" target="_blank" class="secondary-btn">${label}</a>`;
-            }).join('');
+            }).join('') : '<span class="playlist-empty-msg">No active videos</span>';
 
-            // Status summary
-            const pending = videos.filter(v => (v.status || 'pending') === 'pending').length;
-            const approved = videos.filter(v => v.status === 'approved').length;
-            const extracted = videos.filter(v => v.status === 'extracted').length;
-            const ignored = videos.filter(v => v.status === 'ignored').length;
+            // Status summary (shows full breakdown including ignored)
+            const pending = allPlaylistVideos.filter(v => (v.status || 'pending') === 'pending').length;
+            const approved = allPlaylistVideos.filter(v => v.status === 'approved').length;
+            const extracted = allPlaylistVideos.filter(v => v.status === 'extracted').length;
+            const ignored = allPlaylistVideos.filter(v => v.status === 'ignored').length;
             const statusSummary = `⏳${pending} ✅${approved} 📝${extracted} 🚫${ignored}`;
 
-            // Save to YouTube button
-            const allVideoIds = videos.map(v => v.id);
+            // Save to YouTube button (only active videos)
+            const allVideoIds = videos.map(v => v.id); // Already filtered — no ignored videos
             const saveButton = isLoggedIn
                 ? `<button class="save-youtube-btn" data-title="Playlist ${date}" data-videos='${JSON.stringify(allVideoIds)}'>💾 YouTube</button>`
                 : '';

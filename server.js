@@ -598,7 +598,7 @@ app.post('/api/playlist/filters/remove-term', (req, res) => {
 app.patch('/api/playlist/:filename/video/:videoId/status', (req, res) => {
     try {
         const { filename, videoId } = req.params;
-        const { status } = req.body;
+        const { status, blocked_term } = req.body;
 
         const validStatuses = ['pending', 'approved', 'extracted', 'ignored'];
         if (!validStatuses.includes(status)) {
@@ -621,6 +621,15 @@ app.patch('/api/playlist/:filename/video/:videoId/status', (req, res) => {
         }
 
         video.status = status;
+
+        // Persist or clear the blocked_term
+        if (blocked_term !== undefined && blocked_term !== null) {
+            video.blocked_term = blocked_term;
+        } else if (status === 'pending') {
+            // Restoring to pending clears the block metadata
+            delete video.blocked_term;
+        }
+
         fs.writeFileSync(jsonPath, JSON.stringify(videos, null, 2));
 
         res.json({ success: true, message: `Video status updated to ${status}`, video });

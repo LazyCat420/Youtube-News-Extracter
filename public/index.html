@@ -130,33 +130,19 @@
                 <div class="playlist-section">
                     <div class="workspace-groups">
 
-                        <!-- Pending Group -->
+                        <!-- Ready to Extract Group (merged pending + approved) -->
                         <div class="workspace-group" id="pendingGroup">
                             <div class="group-header">
-                                <h3>⏳ New / Pending <span class="group-count" id="pendingCount">0</span></h3>
+                                <h3>📋 Ready to Extract <span class="group-count" id="pendingCount">0</span></h3>
                                 <div class="group-actions">
-                                    <button class="small-btn approve-all-btn" data-status="approved"
-                                        title="Approve all pending videos">✅ Approve All</button>
                                     <button class="small-btn dismiss-all-btn" data-status="ignored"
-                                        title="Dismiss all pending videos">🚫 Dismiss All</button>
+                                        title="Dismiss all videos">🚫 Dismiss All</button>
+                                    <button class="small-btn extract-all-btn"
+                                        title="Extract transcripts for all videos">📝 Extract All</button>
                                 </div>
                             </div>
                             <div class="group-videos" id="pendingVideos">
-                                <!-- Pending videos rendered here -->
-                            </div>
-                        </div>
-
-                        <!-- Approved Group -->
-                        <div class="workspace-group" id="approvedGroup">
-                            <div class="group-header">
-                                <h3>✅ Ready to Extract <span class="group-count" id="approvedCount">0</span></h3>
-                                <div class="group-actions">
-                                    <button class="small-btn extract-all-btn"
-                                        title="Extract transcripts for approved videos">📝 Extract All</button>
-                                </div>
-                            </div>
-                            <div class="group-videos" id="approvedVideos">
-                                <!-- Approved videos rendered here -->
+                                <!-- Videos ready for extraction rendered here -->
                             </div>
                         </div>
 

@@ -1283,26 +1283,15 @@ button:disabled {
     gap: 0.5rem;
 }
 
-/* Pending group - warm amber */
+/* Ready to Extract group - blue */
 #pendingGroup .ws-group-header {
-    background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(251, 191, 36, 0.05));
-    border-bottom: 2px solid rgba(245, 158, 11, 0.3);
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(96, 165, 250, 0.05));
+    border-bottom: 2px solid rgba(59, 130, 246, 0.3);
 }
 
 #pendingGroup .count-badge {
-    background: rgba(245, 158, 11, 0.2);
-    color: #f59e0b;
-}
-
-/* Approved group - green */
-#approvedGroup .ws-group-header {
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(52, 211, 153, 0.05));
-    border-bottom: 2px solid rgba(16, 185, 129, 0.3);
-}
-
-#approvedGroup .count-badge {
-    background: rgba(16, 185, 129, 0.2);
-    color: #10b981;
+    background: rgba(59, 130, 246, 0.2);
+    color: #3b82f6;
 }
 
 /* Extracted group - blue */
@@ -2012,4 +2001,37 @@ button:disabled {
 .restore-all-btn {
     font-size: 0.75rem;
     padding: 0.25rem 0.6rem;
+}
+
+/* Blocked Badge — appears on ignored videos that were blocked by a phrase */
+.blocked-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #fca5a5;
+    padding: 0.15rem 0.5rem;
+    border-radius: 1rem;
+    font-size: 0.7rem;
+    font-weight: 500;
+    white-space: nowrap;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: help;
+}
+
+.ws-edit-block:hover {
+    background: rgba(139, 92, 246, 0.2);
+    border-color: #8b5cf6;
+    color: #a78bfa;
+}
+
+/* Empty playlist message when all videos are ignored */
+.playlist-empty-msg {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-style: italic;
+    padding: 0.4rem 0.75rem;
 }
