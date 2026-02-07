@@ -977,6 +977,25 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.textContent = origText;
     });
 
+    document.querySelector('.restore-all-btn')?.addEventListener('click', async (e) => {
+        e.stopPropagation(); // Don't trigger the collapsed-header toggle
+        const ignoredIds = currentDailyVideos
+            .filter(v => v.status === 'ignored')
+            .map(v => v.id);
+
+        if (ignoredIds.length === 0) return;
+
+        const btn = document.querySelector('.restore-all-btn');
+        const origText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = `⏳ Restoring ${ignoredIds.length}...`;
+
+        await bulkUpdateStatus(ignoredIds, 'pending');
+
+        btn.disabled = false;
+        btn.textContent = origText;
+    });
+
     document.querySelector('.extract-all-btn')?.addEventListener('click', async () => {
         const approvedIds = currentDailyVideos
             .filter(v => v.status === 'approved')

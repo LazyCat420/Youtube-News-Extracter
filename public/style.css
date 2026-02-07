@@ -2001,3 +2001,15 @@ button:disabled {
     border-color: #ef4444 !important;
     color: #fff !important;
 }
+
+/* Ignored group header actions */
+.ignored-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.restore-all-btn {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.6rem;
+}
