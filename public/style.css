@@ -1846,3 +1846,158 @@ button:disabled {
         gap: 0.5rem;
     }
 }
+
+/* ========================================
+   Smart Dismiss Popup
+   ======================================== */
+.dismiss-popup {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: rgba(15, 23, 42, 0.98);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    animation: popupFadeIn 0.15s ease;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+@keyframes popupFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.dismiss-popup-header {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-bottom: 0.35rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.dismiss-popup-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.dismiss-opt {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-align: left;
+    transition: all 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.dismiss-opt:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.dismiss-opt-sub {
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+    font-weight: 400;
+}
+
+.dismiss-just-ignore:hover {
+    border-color: rgba(96, 165, 250, 0.4);
+    background: rgba(96, 165, 250, 0.1);
+}
+
+.dismiss-block-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.dismiss-block-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #f87171;
+}
+
+.dismiss-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.dismiss-chip {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    color: #fca5a5;
+    padding: 0.15rem 0.5rem;
+    border-radius: 1rem;
+    font-size: 0.7rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.dismiss-chip:hover,
+.dismiss-chip.active {
+    background: rgba(239, 68, 68, 0.25);
+    border-color: #ef4444;
+    color: #fff;
+}
+
+.dismiss-custom-row {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+}
+
+.dismiss-custom-input {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: var(--text-primary);
+    padding: 0.35rem 0.5rem;
+    border-radius: 0.35rem;
+    font-size: 0.75rem;
+    outline: none;
+    transition: border-color 0.15s ease;
+}
+
+.dismiss-custom-input:focus {
+    border-color: #ef4444;
+}
+
+.dismiss-block-confirm {
+    white-space: nowrap;
+    background: rgba(239, 68, 68, 0.2) !important;
+    border-color: rgba(239, 68, 68, 0.4) !important;
+    color: #fca5a5 !important;
+    font-size: 0.7rem !important;
+    padding: 0.35rem 0.6rem !important;
+}
+
+.dismiss-block-confirm:hover {
+    background: rgba(239, 68, 68, 0.35) !important;
+    border-color: #ef4444 !important;
+    color: #fff !important;
+}

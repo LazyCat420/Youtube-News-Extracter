@@ -553,7 +553,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (groupType === 'pending') {
             actions = `
                 <button class="ws-btn ws-approve" data-id="${video.id}" data-status="approved" title="Approve for extraction">✅</button>
-                <button class="ws-btn ws-ignore" data-id="${video.id}" data-status="ignored" title="Ignore this video">🚫</button>
+                <button class="ws-btn ws-dismiss-trigger" data-id="${video.id}" data-title="${title}" title="Dismiss this video">🚫</button>
             `;
         } else if (groupType === 'approved') {
             actions = `
@@ -565,7 +565,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (groupType === 'ignored') {
             actions = `
                 <button class="ws-btn ws-restore" data-id="${video.id}" data-status="pending" title="Restore to pending">↩️</button>
-                <button class="ws-btn ws-block" data-id="${video.id}" data-title="${title}" title="Add to block list">🚫+</button>
             `;
         }
 
@@ -604,8 +603,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span class="shorts-channel">${channel} ${discoveryTag}</span>
                 </div>
                 <div class="shorts-actions">
-                    <button class="ws-btn ws-approve" data-id="${video.id}" data-status="approved" title="Approve" onclick="event.preventDefault(); event.stopPropagation();">✅</button>
-                    <button class="ws-btn ws-ignore" data-id="${video.id}" data-status="ignored" title="Ignore" onclick="event.preventDefault(); event.stopPropagation();">🚫</button>
+                <button class="ws-btn ws-approve" data-id="${video.id}" data-status="approved" title="Approve" onclick="event.preventDefault(); event.stopPropagation();">✅</button>
+                    <button class="ws-btn ws-dismiss-trigger" data-id="${video.id}" data-title="${title}" title="Dismiss" onclick="event.preventDefault(); event.stopPropagation();">🚫</button>
                 </div>
             </a>
         `;
@@ -613,13 +612,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ============ Workspace: Event Listeners ============
     function attachWorkspaceListeners() {
-        // Status change buttons (approve, ignore, revert, restore)
+        // Status change buttons — approve, revert, restore (NOT ignore/dismiss)
         document.querySelectorAll('.ws-btn[data-status]').forEach(btn => {
+            // Skip dismiss triggers — they have their own handler
+            if (btn.classList.contains('ws-dismiss-trigger')) return;
             btn.addEventListener('click', async (e) => {
                 e.stopPropagation();
                 const videoId = btn.dataset.id;
                 const newStatus = btn.dataset.status;
                 await updateVideoStatus(videoId, newStatus);
+            });
+        });
+
+        // Smart Dismiss popup triggers
+        document.querySelectorAll('.ws-dismiss-trigger').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                const videoId = btn.dataset.id;
+                const title = btn.dataset.title || '';
+                showDismissPopup(btn, videoId, title);
             });
         });
 
@@ -679,7 +691,190 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ============ Video Status Update ============
+    // ============ Smart Dismiss Popup ============
+    const DISMISS_STOP_WORDS = new Set([
+        'the', 'a', 'an', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had',
+        'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'must', 'shall',
+        'can', 'need', 'to', 'of', 'in', 'for', 'on', 'with', 'at', 'by', 'from', 'as', 'into',
+        'through', 'during', 'before', 'after', 'above', 'below', 'between', 'out', 'off',
+        'over', 'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where',
+        'why', 'how', 'all', 'each', 'every', 'both', 'few', 'more', 'most', 'other', 'some',
+        'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 'just',
+        'because', 'but', 'and', 'or', 'if', 'while', 'about', 'against', 'up', 'down', 'this',
+        'that', 'these', 'those', 'what', 'which', 'who', 'whom', 'its', 'his', 'her', 'their',
+        'our', 'my', 'your', 'it', 'he', 'she', 'they', 'we', 'you', 'i', 'me', 'him', 'us', 'them',
+        'video', 'watch', 'live', 'stream', 'new', 'latest', 'today', 'now', 'full', 'official',
+        'episode', 'part', 'clip', 'interview', 'show', 'breaking', 'update', 'recap',
+        'highlights', 'analysis', 'explained', 'reaction', 'review', 'morning', 'evening',
+        'night', 'daily', 'weekly',
+    ]);
+
+    function extractSmartKeywords(title) {
+        const cleaned = title
+            .replace(/[|—–\-:,.'!?#()\[\]{}"/@&]/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+        const words = cleaned.split(' ');
+        const originalWords = title.split(/\s+/);
+
+        const keywords = words
+            .map(w => w.toLowerCase())
+            .filter(w => w.length >= 3 && !DISMISS_STOP_WORDS.has(w) && !/^\d+$/.test(w))
+            .map(kw => {
+                let score = kw.length;
+                // Proper noun bonus
+                const orig = originalWords.find(w => w.toLowerCase() === kw);
+                if (orig && orig[0] === orig[0].toUpperCase() && orig[0] !== orig[0].toLowerCase()) {
+                    score += 5;
+                }
+                return { word: kw, score };
+            });
+
+        // Deduplicate and sort
+        const seen = new Set();
+        return keywords
+            .filter(k => { if (seen.has(k.word)) return false; seen.add(k.word); return true; })
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 5)
+            .map(k => k.word);
+    }
+
+    let activeDismissPopup = null;
+
+    function closeDismissPopup() {
+        if (activeDismissPopup) {
+            activeDismissPopup.remove();
+            activeDismissPopup = null;
+        }
+    }
+
+    function showDismissPopup(triggerBtn, videoId, title) {
+        // Close any existing popup
+        closeDismissPopup();
+
+        const keywords = extractSmartKeywords(title);
+        const suggestedKeyword = keywords[0] || '';
+
+        // Build suggestion chips
+        const chips = keywords.slice(0, 4).map(kw =>
+            `<button class="dismiss-chip" data-word="${kw}">${kw}</button>`
+        ).join('');
+
+        const popup = document.createElement('div');
+        popup.className = 'dismiss-popup';
+        popup.innerHTML = `
+            <div class="dismiss-popup-header">Dismiss: "${title.substring(0, 50)}${title.length > 50 ? '...' : ''}"</div>
+            <div class="dismiss-popup-actions">
+                <button class="dismiss-opt dismiss-just-ignore" data-id="${videoId}">
+                    👋 Just Ignore
+                    <span class="dismiss-opt-sub">Remove from list, no blocking</span>
+                </button>
+                <div class="dismiss-block-section">
+                    <div class="dismiss-block-label">🚫 Block a topic word:</div>
+                    <div class="dismiss-chips">${chips}</div>
+                    <div class="dismiss-custom-row">
+                        <input type="text" class="dismiss-custom-input" value="${suggestedKeyword}" placeholder="Type a word to block...">
+                        <button class="dismiss-opt dismiss-block-confirm" data-id="${videoId}">Block & Ignore</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Position near the trigger button
+        const card = triggerBtn.closest('.ws-video-card') || triggerBtn.closest('.shorts-card');
+        if (card) {
+            card.style.position = 'relative';
+            card.appendChild(popup);
+        } else {
+            document.body.appendChild(popup);
+        }
+
+        activeDismissPopup = popup;
+
+        // Chip click → fill input
+        popup.querySelectorAll('.dismiss-chip').forEach(chip => {
+            chip.addEventListener('click', (e) => {
+                e.stopPropagation();
+                popup.querySelector('.dismiss-custom-input').value = chip.dataset.word;
+                // Highlight active chip
+                popup.querySelectorAll('.dismiss-chip').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+            });
+        });
+
+        // "Just Ignore" → status change only
+        popup.querySelector('.dismiss-just-ignore').addEventListener('click', async (e) => {
+            e.stopPropagation();
+            closeDismissPopup();
+            await updateVideoStatus(videoId, 'ignored');
+        });
+
+        // "Block & Ignore" → add to block_list + ignore
+        popup.querySelector('.dismiss-block-confirm').addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const input = popup.querySelector('.dismiss-custom-input');
+            const word = input.value.trim();
+
+            if (!word) {
+                input.style.borderColor = '#ef4444';
+                input.focus();
+                return;
+            }
+
+            closeDismissPopup();
+
+            // Add to block list
+            const success = await addFilterTerm(word, 'block_list');
+            if (success) {
+                showSuccess(`🚫 Blocked "${word}" — future syncs will filter this topic`);
+            }
+
+            // Also ignore the video
+            await updateVideoStatus(videoId, 'ignored');
+        });
+
+        // Enter key on input → trigger block
+        popup.querySelector('.dismiss-custom-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                popup.querySelector('.dismiss-block-confirm').click();
+            }
+        });
+
+        // Click outside → close
+        setTimeout(() => {
+            document.addEventListener('click', function outsideClick(e) {
+                if (activeDismissPopup && !activeDismissPopup.contains(e.target)) {
+                    closeDismissPopup();
+                    document.removeEventListener('click', outsideClick);
+                }
+            });
+        }, 100);
+    }
+
+    // ============ Add Filter Term (block/allow) ============
+    async function addFilterTerm(term, listType) {
+        try {
+            const response = await fetch('/api/playlist/filters/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ term, listType })
+            });
+            const data = await response.json();
+            if (data.success) {
+                console.log(`Filter added: "${data.term}" to ${data.listType}`);
+                return true;
+            } else {
+                showError(data.error || 'Failed to add filter term');
+                return false;
+            }
+        } catch (error) {
+            console.error('Add filter error:', error);
+            showError('Failed to add filter term');
+            return false;
+        }
+    }
     async function updateVideoStatus(videoId, newStatus) {
         if (!currentDailyFile) return;
 

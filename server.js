@@ -162,6 +162,40 @@ app.post('/api/playlist/discover', async (req, res) => {
     }
 });
 
+// Add a term to block_list or allow_list in filters.json
+app.post('/api/playlist/filters/add', (req, res) => {
+    try {
+        const { term, listType } = req.body;
+        if (!term || !listType) {
+            return res.status(400).json({ error: 'Missing term or listType' });
+        }
+        if (!['block_list', 'allow_list'].includes(listType)) {
+            return res.status(400).json({ error: 'Invalid listType' });
+        }
+
+        let filters = { block_list: [], allow_list: [], category_rules: {} };
+        if (fs.existsSync(FILTERS_FILE)) {
+            filters = JSON.parse(fs.readFileSync(FILTERS_FILE, 'utf-8'));
+        }
+
+        const list = filters[listType] || [];
+        const normalized = term.toLowerCase().trim();
+
+        if (list.includes(normalized)) {
+            return res.json({ success: true, message: 'Term already exists', term: normalized });
+        }
+
+        list.push(normalized);
+        filters[listType] = list;
+        fs.writeFileSync(FILTERS_FILE, JSON.stringify(filters, null, 2));
+        console.log(`🔒 Added "${normalized}" to ${listType}`);
+        res.json({ success: true, term: normalized, listType });
+    } catch (error) {
+        console.error('Filter add error:', error);
+        res.status(500).json({ error: 'Failed to add filter term.' });
+    }
+});
+
 // Get Generated Playlists History
 app.get('/api/playlist/history', async (req, res) => {
     try {
