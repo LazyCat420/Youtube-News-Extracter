@@ -250,6 +250,96 @@ app.post('/api/summarize/:id', async (req, res) => {
     }
 });
 
+// Generate a News Report from recent summaries
+app.post('/api/news-report', async (req, res) => {
+    try {
+        console.log('[News Report] Generating daily news report...');
+        const hours = req.body?.hours || 24;
+
+        const videos = await Database.getRecentSummarizedVideos(hours);
+        console.log(`[News Report] Found ${videos.length} summarized videos from last ${hours}h`);
+
+        if (videos.length === 0) {
+            return res.status(400).json({
+                error: `No summarized videos found from the last ${hours} hours.`
+            });
+        }
+
+        const settings = loadSettings();
+        const model = settings.ollama_model;
+        if (!model) {
+            return res.status(400).json({ error: 'No Ollama model selected. Configure in Settings.' });
+        }
+
+        const endpoint = settings.ollama_endpoint || 'http://10.0.0.29:11434';
+
+        // Build the combined summaries (truncate to ~6000 chars total for context window)
+        let combinedSummaries = '';
+        for (const v of videos) {
+            const entry = `### ${v.title}\n${v.summary}\n\n`;
+            if (combinedSummaries.length + entry.length > 6000) break;
+            combinedSummaries += entry;
+        }
+
+        console.log(`[News Report] Sending ${combinedSummaries.length} chars to ${model}...`);
+
+        const ollamaResponse = await fetch(`${endpoint}/api/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                model,
+                messages: [
+                    {
+                        role: 'system',
+                        content: `You are a professional news anchor writing a daily news briefing. 
+Given a collection of video summaries from the past 24 hours, create a cohesive, well-organized daily news report.
+
+Rules:
+- Group related stories by theme (e.g., Markets, Politics, Tech, etc.)
+- Use clear section headers with emoji icons (e.g., "📈 Markets & Economy")
+- Write 2-3 sentences per story synthesizing the key points
+- Mention specific data points, names, and figures when available
+- End with a brief "Bottom Line" takeaway
+- Keep the tone professional but engaging
+- Do NOT use markdown headers (#), use plain text with emoji for sections`
+                    },
+                    {
+                        role: 'user',
+                        content: `Create a daily news briefing from these ${videos.length} video summaries:\n\n${combinedSummaries}`
+                    }
+                ],
+                stream: false,
+                options: { temperature: 0.4 }
+            })
+        });
+
+        if (!ollamaResponse.ok) {
+            const errText = await ollamaResponse.text();
+            throw new Error(`Ollama error ${ollamaResponse.status}: ${errText}`);
+        }
+
+        const result = await ollamaResponse.json();
+        const report = result.message?.content || '';
+
+        if (!report) {
+            return res.status(500).json({ error: 'LLM returned empty report' });
+        }
+
+        console.log(`[News Report] ✅ Report generated (${report.length} chars) from ${videos.length} videos`);
+
+        res.json({
+            success: true,
+            report,
+            videoCount: videos.length,
+            hours,
+            generatedAt: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('[News Report] Error:', error.message);
+        res.status(500).json({ error: `Report generation failed: ${error.message}` });
+    }
+});
+
 // Auto-Playlist Routes
 const { generateDailyPlaylist } = require('./auto-yt-playlist/generate_daily');
 const { runDiscovery } = require('./auto-yt-playlist/discover');

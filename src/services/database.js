@@ -136,6 +136,27 @@ const Database = {
         });
     },
 
+    /**
+     * Get all videos that have summaries from the last N hours
+     * Used by the News Report generator to compile recent stories
+     */
+    getRecentSummarizedVideos(hours = 24) {
+        return new Promise((resolve, reject) => {
+            db.all(
+                `SELECT id, title, summary, scraped_at 
+                 FROM videos 
+                 WHERE summary IS NOT NULL AND summary != '' 
+                 AND scraped_at >= datetime('now', '-' || ? || ' hours')
+                 ORDER BY scraped_at DESC`,
+                [hours],
+                (err, rows) => {
+                    if (err) reject(err);
+                    else resolve(rows);
+                }
+            );
+        });
+    },
+
     close() {
         db.close();
     }

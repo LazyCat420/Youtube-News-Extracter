@@ -2303,5 +2303,72 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.disabled = false;
         }, 5000);
     });
+
+    // ============ Generate News Report Button ============
+    document.getElementById('generateReportBtn').addEventListener('click', async () => {
+        console.log('[News Report] Generate button clicked');
+        const btn = document.getElementById('generateReportBtn');
+        const content = document.getElementById('reportContent');
+
+        btn.disabled = true;
+        btn.textContent = '⏳ Generating...';
+        content.innerHTML = `
+            <div class="report-loading">
+                <div class="spinner"></div>
+                <p>Generating daily news briefing...</p>
+                <p class="subtext">This may take 30-60 seconds</p>
+            </div>`;
+
+        console.log('[News Report] Sending request to /api/news-report...');
+
+        try {
+            const resp = await fetch('/api/news-report', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ hours: 24 })
+            });
+            const data = await resp.json();
+            console.log('[News Report] Response:', data.success ? 'Success' : data.error);
+
+            if (data.success) {
+                // Format the report — convert line breaks to HTML
+                const formattedReport = data.report
+                    .split('\n')
+                    .map(line => {
+                        const trimmed = line.trim();
+                        if (!trimmed) return '<br>';
+                        // Section headers (lines with emoji at start and no bullet)
+                        if (/^[^\w\s•\-]/.test(trimmed) && trimmed.length < 80 && !trimmed.startsWith('•') && !trimmed.startsWith('-')) {
+                            return `<div class="report-section-header">${escapeHtml(trimmed)}</div>`;
+                        }
+                        // Bullet points
+                        if (trimmed.startsWith('•') || trimmed.startsWith('-') || trimmed.startsWith('*')) {
+                            return `<div class="report-bullet">${escapeHtml(trimmed)}</div>`;
+                        }
+                        // Regular paragraph
+                        return `<p class="report-paragraph">${escapeHtml(trimmed)}</p>`;
+                    })
+                    .join('');
+
+                const timestamp = new Date(data.generatedAt).toLocaleString();
+                content.innerHTML = `
+                    <div class="report-meta">
+                        📰 ${data.videoCount} sources · Generated ${timestamp}
+                    </div>
+                    <div class="report-text">${formattedReport}</div>`;
+
+                console.log(`[News Report] ✅ Displayed report (${data.report.length} chars from ${data.videoCount} videos)`);
+            } else {
+                content.innerHTML = `<p class="column-empty" style="color: #fca5a5;">❌ ${escapeHtml(data.error || 'Failed to generate report')}</p>`;
+                console.error('[News Report] ❌ Error:', data.error);
+            }
+        } catch (err) {
+            content.innerHTML = `<p class="column-empty" style="color: #fca5a5;">❌ ${escapeHtml(err.message)}</p>`;
+            console.error('[News Report] ❌ Fetch error:', err.message);
+        }
+
+        btn.textContent = '⚡ Generate';
+        btn.disabled = false;
+    });
 });
 
