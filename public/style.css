@@ -438,7 +438,7 @@ button:disabled {
 }
 
 .modal-small {
-    max-width: 400px;
+    max-width: 480px;
 }
 
 .modal-header {
@@ -2355,6 +2355,7 @@ header {
 .settings-row input,
 .settings-row select {
     flex: 1;
+    min-width: 0;
     padding: 0.5rem 0.75rem;
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(255, 255, 255, 0.12);
@@ -2362,6 +2363,8 @@ header {
     color: white;
     font-size: 0.85rem;
     font-family: inherit;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .settings-row select option {
@@ -2435,4 +2438,314 @@ header {
     font-size: 0.82rem;
     line-height: 1.6;
     color: rgba(255, 255, 255, 0.85);
+}
+
+/* ============ Inline Summary on Video Cards ============ */
+.video-card-summary {
+    font-size: 0.78rem;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.8);
+    background: rgba(139, 92, 246, 0.06);
+    border-left: 3px solid rgba(139, 92, 246, 0.4);
+    padding: 0.5rem 0.75rem;
+    border-radius: 0 0.5rem 0.5rem 0;
+    max-height: 7.5rem;
+    overflow: hidden;
+    position: relative;
+}
+
+.video-card-summary::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1.5rem;
+    background: linear-gradient(transparent, var(--card-bg));
+    pointer-events: none;
+}
+
+/* ============ Two-Column Database Layout ============ */
+.db-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+    margin-top: 1rem;
+}
+
+.db-column {
+    display: flex;
+    flex-direction: column;
+    min-height: 300px;
+    max-height: calc(100vh - 260px);
+}
+
+.db-column-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem 0.75rem 0 0;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: none;
+}
+
+.db-column-header h3 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.db-column-count {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.unsummarized-header {
+    background: rgba(245, 158, 11, 0.08);
+    border-color: rgba(245, 158, 11, 0.2);
+}
+
+.unsummarized-header .db-column-count {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+}
+
+.summarized-header {
+    background: rgba(139, 92, 246, 0.08);
+    border-color: rgba(139, 92, 246, 0.2);
+}
+
+.summarized-header .db-column-count {
+    background: rgba(139, 92, 246, 0.2);
+    color: #a78bfa;
+}
+
+.db-column-list {
+    flex: 1;
+    overflow-y: auto;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-top: none;
+    border-radius: 0 0 0.75rem 0.75rem;
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    background: rgba(0, 0, 0, 0.15);
+}
+
+.column-empty {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.85rem;
+    padding: 2rem 1rem;
+    margin: 0;
+}
+
+/* ============ Video Card V2 (Vertical Stack) ============ */
+.video-card-v2 {
+    background: var(--card-bg, rgba(30, 30, 50, 0.8));
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 0.75rem;
+    padding: 0.9rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    transition: border-color 0.2s, transform 0.15s;
+}
+
+.video-card-v2:hover {
+    border-color: rgba(255, 255, 255, 0.15);
+    transform: translateY(-1px);
+}
+
+.video-card-v2.card-summarized {
+    border-left: 3px solid rgba(139, 92, 246, 0.5);
+}
+
+.card-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.card-title {
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.card-meta {
+    display: flex;
+    gap: 0.75rem;
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.card-preview {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.5);
+    line-height: 1.4;
+    max-height: 3rem;
+    overflow: hidden;
+}
+
+.card-summary {
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.75);
+    background: rgba(139, 92, 246, 0.06);
+    border-left: 2px solid rgba(139, 92, 246, 0.4);
+    padding: 0.5rem 0.6rem;
+    border-radius: 0 0.4rem 0.4rem 0;
+    max-height: 5rem;
+    overflow: hidden;
+    position: relative;
+}
+
+.card-summary::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1.5rem;
+    background: linear-gradient(transparent, rgba(30, 30, 50, 0.95));
+    pointer-events: none;
+}
+
+.card-actions {
+    display: flex;
+    gap: 0.4rem;
+    margin-top: 0.25rem;
+}
+
+.card-actions .secondary-btn,
+.card-actions .action-btn {
+    font-size: 0.72rem;
+    padding: 0.3rem 0.6rem;
+}
+
+.card-actions .icon-btn {
+    margin-left: auto;
+}
+
+/* ============ Summarize Progress Banner ============ */
+.summarize-progress-banner {
+    margin: 1rem 0;
+    padding: 1rem 1.25rem;
+    background: rgba(139, 92, 246, 0.06);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 0.75rem;
+}
+
+.sum-progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 0.5rem;
+}
+
+.sum-progress-title {
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin-bottom: 0.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sum-progress-bar-bg {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.sum-progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #8b5cf6, #6366f1, #a78bfa);
+    background-size: 200% 100%;
+    border-radius: 999px;
+    transition: width 0.3s ease;
+    animation: progressPulse 2s ease-in-out infinite;
+}
+
+.sum-progress-stats {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.78rem;
+    margin-bottom: 0.5rem;
+}
+
+.sum-results-log {
+    max-height: 120px;
+    overflow-y: auto;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    padding-top: 0.5rem;
+}
+
+.sum-results-log div {
+    font-size: 0.72rem;
+    padding: 2px 0;
+}
+
+.sum-log-success {
+    color: #6ee7b7;
+}
+
+.sum-log-fail {
+    color: #fca5a5;
+}
+
+/* ============ Modal Model Picker ============ */
+.modal-summarize-group {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.modal-model-select {
+    padding: 0.4rem 0.5rem;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 0.5rem;
+    color: white;
+    font-size: 0.8rem;
+    font-family: inherit;
+    max-width: 200px;
+    cursor: pointer;
+}
+
+.modal-model-select option {
+    background: #1e1e2e;
+    color: white;
+}
+
+/* ============ Responsive: Stack columns on narrow screens ============ */
+@media (max-width: 900px) {
+    .db-columns {
+        grid-template-columns: 1fr;
+    }
+
+    .db-column {
+        max-height: 400px;
+    }
 }

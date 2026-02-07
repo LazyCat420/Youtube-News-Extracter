@@ -194,12 +194,13 @@ app.post('/api/summarize/:id', async (req, res) => {
         }
 
         const settings = loadSettings();
-        if (!settings.ollama_model) {
+        // Allow model override from request body (for Re-Summarize with different model)
+        const model = (req.body && req.body.model) || settings.ollama_model;
+        if (!model) {
             return res.status(400).json({ error: 'No Ollama model selected. Configure in Settings.' });
         }
 
         const endpoint = settings.ollama_endpoint || 'http://10.0.0.29:11434';
-        const model = settings.ollama_model;
 
         // Truncate transcript to ~4000 chars to stay within context
         const transcript = video.transcript.substring(0, 4000);

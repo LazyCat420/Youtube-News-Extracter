@@ -24,10 +24,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const copyBtn = document.getElementById('copyBtn');
     const saveBtn = document.getElementById('saveBtn');
 
-    // Database Tab Elements
     const searchInput = document.getElementById('searchInput');
     const videoCount = document.getElementById('videoCount');
-    const videoList = document.getElementById('videoList');
+    const unsummarizedList = document.getElementById('unsummarizedList');
+    const summarizedList = document.getElementById('summarizedList');
+    const unsummarizedCount = document.getElementById('unsummarizedCount');
+    const summarizedCount = document.getElementById('summarizedCount');
     const dbLoading = document.getElementById('dbLoading');
     const emptyState = document.getElementById('emptyState');
 
@@ -179,7 +181,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============ Database Tab ============
     async function loadVideos() {
         dbLoading.classList.remove('hidden');
-        videoList.innerHTML = '';
+        unsummarizedList.innerHTML = '';
+        summarizedList.innerHTML = '';
         emptyState.classList.add('hidden');
 
         try {
@@ -190,11 +193,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 allVideos = data.videos;
                 renderVideos(allVideos);
             } else {
-                videoList.innerHTML = '<p class="error">Failed to load videos.</p>';
+                unsummarizedList.innerHTML = '<p class="error">Failed to load videos.</p>';
             }
         } catch (error) {
             console.error('Error:', error);
-            videoList.innerHTML = '<p class="error">Failed to connect to server.</p>';
+            unsummarizedList.innerHTML = '<p class="error">Failed to connect to server.</p>';
         } finally {
             dbLoading.classList.add('hidden');
         }
@@ -205,36 +208,62 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (videos.length === 0) {
             emptyState.classList.remove('hidden');
-            videoList.innerHTML = '';
+            unsummarizedList.innerHTML = '';
+            summarizedList.innerHTML = '';
+            unsummarizedCount.textContent = '0';
+            summarizedCount.textContent = '0';
             return;
         }
 
         emptyState.classList.add('hidden');
-        videoList.innerHTML = videos.map(video => {
-            const hasSummary = video.summary && video.summary.length > 0;
-            const summaryBadge = hasSummary ? '<span class="badge badge-summarized">🤖 Summarized</span>' : '';
-            return `
-            <div class="video-card" data-id="${video.id}">
-                <div class="video-card-header">
-                    <h3>${escapeHtml(video.title || 'Untitled Video')}</h3>
-                    ${summaryBadge}
-                </div>
-                <div class="video-card-meta">
+
+        const unsummarized = videos.filter(v => !v.summary || v.summary.length === 0);
+        const summarized = videos.filter(v => v.summary && v.summary.length > 0);
+
+        unsummarizedCount.textContent = unsummarized.length;
+        summarizedCount.textContent = summarized.length;
+
+        // Render unsummarized cards
+        unsummarizedList.innerHTML = unsummarized.length === 0
+            ? '<p class="column-empty">🎉 All videos are summarized!</p>'
+            : unsummarized.map(video => `
+            <div class="video-card-v2" data-id="${video.id}">
+                <h4 class="card-title">${escapeHtml(video.title || 'Untitled Video')}</h4>
+                <div class="card-meta">
                     <span>📅 ${formatDate(video.scraped_at)}</span>
                     <span>📝 ${formatNumber(video.transcript_length)} chars</span>
                 </div>
-                <div class="video-card-preview">
-                    ${escapeHtml(video.transcript_preview || '')}...
-                </div>
-                <div class="video-card-actions">
+                <div class="card-preview">${escapeHtml(video.transcript_preview || '').substring(0, 120)}...</div>
+                <div class="card-actions">
                     <button class="secondary-btn view-btn" data-id="${video.id}">👁️ View</button>
-                    ${!hasSummary ? `<button class="action-btn summarize-single-btn" data-id="${video.id}" data-title="${escapeHtml(video.title || 'Untitled')}">🤖</button>` : ''}
+                    <button class="action-btn summarize-single-btn" data-id="${video.id}" data-title="${escapeHtml(video.title || 'Untitled')}">🤖 Summarize</button>
                     <button class="icon-btn delete-btn" data-id="${video.id}" data-title="${escapeHtml(video.title || 'Untitled')}">🗑️</button>
                 </div>
             </div>
-        `}).join('');
+        `).join('');
 
-        // Attach event listeners
+        // Render summarized cards
+        summarizedList.innerHTML = summarized.length === 0
+            ? '<p class="column-empty">No videos summarized yet.</p>'
+            : summarized.map(video => `
+            <div class="video-card-v2 card-summarized" data-id="${video.id}">
+                <div class="card-header-row">
+                    <h4 class="card-title">${escapeHtml(video.title || 'Untitled Video')}</h4>
+                    <span class="badge badge-summarized">🤖</span>
+                </div>
+                <div class="card-meta">
+                    <span>📅 ${formatDate(video.scraped_at)}</span>
+                    <span>📝 ${formatNumber(video.transcript_length)} chars</span>
+                </div>
+                <div class="card-summary">${escapeHtml(video.summary).replace(/\n/g, '<br>')}</div>
+                <div class="card-actions">
+                    <button class="secondary-btn view-btn" data-id="${video.id}">👁️ View</button>
+                    <button class="icon-btn delete-btn" data-id="${video.id}" data-title="${escapeHtml(video.title || 'Untitled')}">🗑️</button>
+                </div>
+            </div>
+        `).join('');
+
+        // Attach event listeners to both columns
         document.querySelectorAll('.view-btn').forEach(btn => {
             btn.addEventListener('click', () => viewVideo(btn.dataset.id));
         });
@@ -247,7 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        // Single video summarize buttons
+        // Single video summarize buttons (only unsummarized column)
         document.querySelectorAll('.summarize-single-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
                 const id = btn.dataset.id;
@@ -258,19 +287,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     const data = await resp.json();
                     if (data.success) {
                         btn.textContent = '✅';
-                        // Update local data
                         const v = allVideos.find(v => v.id == id);
                         if (v) v.summary = data.summary;
                         setTimeout(() => loadVideos(), 1500);
                     } else {
                         btn.textContent = '❌';
                         alert(data.error || 'Summarization failed');
-                        setTimeout(() => { btn.textContent = '🤖'; btn.disabled = false; }, 2000);
+                        setTimeout(() => { btn.textContent = '🤖 Summarize'; btn.disabled = false; }, 2000);
                     }
                 } catch (err) {
                     console.error('Summarize error:', err);
                     btn.textContent = '❌';
-                    setTimeout(() => { btn.textContent = '🤖'; btn.disabled = false; }, 2000);
+                    setTimeout(() => { btn.textContent = '🤖 Summarize'; btn.disabled = false; }, 2000);
                 }
             });
         });
@@ -319,6 +347,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     summaryContent.innerHTML = '';
                     summarizeBtn.textContent = '🤖 Summarize';
                 }
+
+                // Populate modal model picker
+                const modalModelSelect = document.getElementById('modalModelSelect');
+                try {
+                    const mResp = await fetch('/api/ollama/models');
+                    const mData = await mResp.json();
+                    if (mData.success) {
+                        const settingsResp = await fetch('/api/settings');
+                        const settingsData = await settingsResp.json();
+                        const defaultModel = settingsData.settings?.ollama_model || '';
+                        modalModelSelect.innerHTML = `<option value="">— ${defaultModel || 'default model'} —</option>`;
+                        mData.models.forEach(m => {
+                            const opt = document.createElement('option');
+                            opt.value = m.name;
+                            opt.textContent = m.name;
+                            modalModelSelect.appendChild(opt);
+                        });
+                    }
+                } catch (e) { console.error('Model list error:', e); }
 
                 modal.classList.remove('hidden');
             } else {
@@ -2133,12 +2180,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const btn = document.getElementById('modalSummarizeBtn');
         const summarySection = document.getElementById('modalSummarySection');
         const summaryContent = document.getElementById('modalSummary');
+        const selectedModel = document.getElementById('modalModelSelect').value;
 
         btn.disabled = true;
         btn.textContent = '⏳ Summarizing...';
 
         try {
-            const resp = await fetch(`/api/summarize/${currentModalVideoId}`, { method: 'POST' });
+            const body = selectedModel ? { model: selectedModel } : {};
+            const resp = await fetch(`/api/summarize/${currentModalVideoId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
             const data = await resp.json();
 
             if (data.success) {
@@ -2162,44 +2215,93 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // ============ Summarize All Button ============
+    // ============ Summarize All Button (with Progress Banner) ============
     document.getElementById('summarizeAllBtn').addEventListener('click', async () => {
+        console.log('[Summarize All] Button clicked!');
+        console.log('[Summarize All] allVideos count:', allVideos.length);
+
         const unsummarized = allVideos.filter(v => !v.summary && v.transcript_length > 50);
+        console.log('[Summarize All] Unsummarized videos found:', unsummarized.length);
+
         if (unsummarized.length === 0) {
+            console.log('[Summarize All] No unsummarized videos — aborting');
             alert('All videos are already summarized!');
             return;
         }
-        if (!confirm(`Summarize ${unsummarized.length} videos? This may take a while.`)) return;
+
+        console.log('[Summarize All] Starting batch summarization...');
 
         const btn = document.getElementById('summarizeAllBtn');
         btn.disabled = true;
-        btn.textContent = '⏳ 0/' + unsummarized.length;
+
+        // Show progress banner
+        const progressDiv = document.getElementById('summarizeProgress');
+        const statusEl = document.getElementById('sumProgressStatus');
+        const countsEl = document.getElementById('sumProgressCounts');
+        const titleEl = document.getElementById('sumProgressTitle');
+        const barEl = document.getElementById('sumProgressBar');
+        const successEl = document.getElementById('sumStatSuccess');
+        const failEl = document.getElementById('sumStatFail');
+        const logEl = document.getElementById('sumResultsLog');
+
+        console.log('[Summarize All] Progress banner element:', progressDiv ? 'found' : 'MISSING!');
+
+        progressDiv.classList.remove('hidden');
+        logEl.innerHTML = '';
+        barEl.style.width = '0%';
+        statusEl.textContent = '🤖 Summarizing...';
+        countsEl.textContent = `0 / ${unsummarized.length}`;
+        titleEl.textContent = '—';
+        successEl.textContent = '✅ 0';
+        failEl.textContent = '❌ 0';
+
+        console.log('[Summarize All] Progress banner shown, starting loop...');
 
         let success = 0, fail = 0;
         for (let i = 0; i < unsummarized.length; i++) {
             const v = unsummarized[i];
+            const pct = Math.round(((i + 1) / unsummarized.length) * 100);
+            titleEl.textContent = v.title || 'Untitled';
+            countsEl.textContent = `${i + 1} / ${unsummarized.length}`;
+            barEl.style.width = `${pct}%`;
             btn.textContent = `⏳ ${i + 1}/${unsummarized.length}`;
+
+            console.log(`[Summarize All] Processing ${i + 1}/${unsummarized.length}: "${v.title}" (id: ${v.id})`);
+
             try {
                 const resp = await fetch(`/api/summarize/${v.id}`, { method: 'POST' });
                 const data = await resp.json();
                 if (data.success) {
                     success++;
                     v.summary = data.summary;
+                    console.log(`[Summarize All] ✅ Success: "${v.title}" (${data.summary?.length || 0} chars)`);
+                    logEl.innerHTML += `<div class="sum-log-success">✅ ${escapeHtml(v.title || 'Untitled')}</div>`;
+                    renderVideos(allVideos); // Live update: move card to summarized column
                 } else {
                     fail++;
+                    console.log(`[Summarize All] ❌ Failed: "${v.title}" — ${data.error || 'Unknown error'}`);
+                    logEl.innerHTML += `<div class="sum-log-fail">❌ ${escapeHtml(v.title || 'Untitled')} — ${data.error || 'Failed'}</div>`;
                 }
             } catch (e) {
                 fail++;
+                console.error(`[Summarize All] ❌ Error: "${v.title}" — ${e.message}`);
+                logEl.innerHTML += `<div class="sum-log-fail">❌ ${escapeHtml(v.title || 'Untitled')} — ${e.message}</div>`;
             }
+            successEl.textContent = `✅ ${success}`;
+            failEl.textContent = `❌ ${fail}`;
+            logEl.scrollTop = logEl.scrollHeight;
         }
 
+        // Done
+        console.log(`[Summarize All] ✅ Complete! ${success} succeeded, ${fail} failed out of ${unsummarized.length}`);
+        statusEl.textContent = '✅ Complete!';
+        barEl.style.width = '100%';
         btn.textContent = `✅ ${success}/${unsummarized.length}`;
-        showSuccess(`Summarized ${success} of ${unsummarized.length} videos!`);
-        loadVideos(); // Refresh to show badges
+        loadVideos(); // Final refresh
         setTimeout(() => {
             btn.textContent = '🤖 Summarize All';
             btn.disabled = false;
-        }, 3000);
+        }, 5000);
     });
 });
 

@@ -86,7 +86,42 @@
                     <p>Loading videos...</p>
                 </div>
 
-                <div id="videoList" class="video-list"></div>
+                <!-- Summarization Progress Banner (hidden by default) -->
+                <div id="summarizeProgress" class="summarize-progress-banner hidden">
+                    <div class="sum-progress-header">
+                        <span id="sumProgressStatus">🤖 Summarizing...</span>
+                        <span id="sumProgressCounts">0 / 0</span>
+                    </div>
+                    <div id="sumProgressTitle" class="sum-progress-title">—</div>
+                    <div class="sum-progress-bar-bg">
+                        <div class="sum-progress-bar" id="sumProgressBar"></div>
+                    </div>
+                    <div class="sum-progress-stats">
+                        <span id="sumStatSuccess">✅ 0</span>
+                        <span id="sumStatFail">❌ 0</span>
+                    </div>
+                    <div class="sum-results-log" id="sumResultsLog"></div>
+                </div>
+
+                <!-- Two-Column Layout -->
+                <div class="db-columns">
+                    <!-- Left: Unsummarized -->
+                    <div class="db-column">
+                        <div class="db-column-header unsummarized-header">
+                            <h3>📝 Unsummarized</h3>
+                            <span class="db-column-count" id="unsummarizedCount">0</span>
+                        </div>
+                        <div id="unsummarizedList" class="db-column-list"></div>
+                    </div>
+                    <!-- Right: Summarized -->
+                    <div class="db-column">
+                        <div class="db-column-header summarized-header">
+                            <h3>🤖 Summarized</h3>
+                            <span class="db-column-count" id="summarizedCount">0</span>
+                        </div>
+                        <div id="summarizedList" class="db-column-list"></div>
+                    </div>
+                </div>
 
                 <div id="emptyState" class="empty-state hidden">
                     <p>📭 No videos saved yet.</p>
@@ -290,7 +325,12 @@
                 <pre id="modalTranscript"></pre>
             </div>
             <div class="modal-footer">
-                <button id="modalSummarizeBtn" class="action-btn summarize-btn">🤖 Summarize</button>
+                <div class="modal-summarize-group">
+                    <select id="modalModelSelect" class="modal-model-select" title="Choose model for summarization">
+                        <option value="">— default model —</option>
+                    </select>
+                    <button id="modalSummarizeBtn" class="action-btn summarize-btn">🤖 Summarize</button>
+                </div>
                 <button id="modalCopyBtn" class="secondary-btn">📋 Copy to Clipboard</button>
             </div>
         </div>

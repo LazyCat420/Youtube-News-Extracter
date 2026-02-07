@@ -1,4 +1,4 @@
 {
     "ollama_endpoint": "http://10.0.0.29:11434",
-    "ollama_model": "gemma3:4b"
+    "ollama_model": "granite3.3:8b"
 }
