@@ -901,15 +901,62 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Bulk status updates
+    async function bulkUpdateStatus(videoIds, newStatus) {
+        if (!currentDailyFile || videoIds.length === 0) return;
+
+        const label = newStatus === 'approved' ? 'Approving' : 'Dismissing';
+        const total = videoIds.length;
+        let done = 0;
+        let failed = 0;
+
+        for (const videoId of videoIds) {
+            try {
+                const response = await fetch(`/api/playlist/${currentDailyFile}/video/${videoId}/status`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    const video = currentDailyVideos.find(v => v.id === videoId);
+                    if (video) video.status = newStatus;
+                    done++;
+                } else {
+                    failed++;
+                }
+            } catch (error) {
+                console.error(`Bulk update error for ${videoId}:`, error);
+                failed++;
+            }
+        }
+
+        // Re-render once after all updates
+        renderWorkspace(currentDailyVideos);
+
+        if (failed === 0) {
+            showSuccess(`${label}: ${done}/${total} videos updated`);
+        } else {
+            showError(`${label}: ${done} succeeded, ${failed} failed`);
+        }
+    }
+
     document.querySelector('.approve-all-btn')?.addEventListener('click', async () => {
         const pendingIds = currentDailyVideos
             .filter(v => (v.status || 'pending') === 'pending')
             .map(v => v.id);
 
         if (pendingIds.length === 0) return;
-        if (!confirm(`Approve all ${pendingIds.length} pending videos?`)) return;
+
+        const btn = document.querySelector('.approve-all-btn');
+        const origText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = `⏳ Approving ${pendingIds.length}...`;
 
         await bulkUpdateStatus(pendingIds, 'approved');
+
+        btn.disabled = false;
+        btn.textContent = origText;
     });
 
     document.querySelector('.dismiss-all-btn')?.addEventListener('click', async () => {
@@ -918,9 +965,16 @@ document.addEventListener('DOMContentLoaded', () => {
             .map(v => v.id);
 
         if (pendingIds.length === 0) return;
-        if (!confirm(`Dismiss all ${pendingIds.length} pending videos?`)) return;
+
+        const btn = document.querySelector('.dismiss-all-btn');
+        const origText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = `⏳ Dismissing ${pendingIds.length}...`;
 
         await bulkUpdateStatus(pendingIds, 'ignored');
+
+        btn.disabled = false;
+        btn.textContent = origText;
     });
 
     document.querySelector('.extract-all-btn')?.addEventListener('click', async () => {
