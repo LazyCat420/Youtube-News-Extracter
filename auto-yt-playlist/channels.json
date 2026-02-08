@@ -128,16 +128,19 @@
   {
     "name": "Unchained Crypto",
     "url": "https://www.youtube.com/@UnchainedCrypto",
-    "include_shorts": false
+    "include_shorts": false,
+    "channel_id": "UCWiiMnsnw5Isc2PP1to9nNw"
   },
   {
     "name": "Wall Street Journal",
     "url": "https://www.youtube.com/@wsj",
-    "include_shorts": false
+    "include_shorts": false,
+    "channel_id": "UCK7tptUDHh-RYDsdxO1-5QQ"
   },
   {
     "name": "Financial Times",
     "url": "https://www.youtube.com/@FinancialTimes",
-    "include_shorts": false
+    "include_shorts": false,
+    "channel_id": "UCoUxsWakJucWg46KW5RsvPw"
   }
 ]

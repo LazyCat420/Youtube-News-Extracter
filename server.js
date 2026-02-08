@@ -273,53 +273,111 @@ app.post('/api/news-report', async (req, res) => {
 
         const endpoint = settings.ollama_endpoint || 'http://10.0.0.29:11434';
 
-        // Build the combined summaries (truncate to ~6000 chars total for context window)
-        let combinedSummaries = '';
-        for (const v of videos) {
-            const entry = `### ${v.title}\n${v.summary}\n\n`;
-            if (combinedSummaries.length + entry.length > 6000) break;
-            combinedSummaries += entry;
+        // Today's date for the prompt (prevents hallucinated dates)
+        const todayStr = new Date().toLocaleDateString('en-US', {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+        });
+
+        // ── Pass 1: Chunk & Extract ──
+        // Build all video entries with their dates
+        const allEntries = videos.map(v => {
+            const scrapedDate = v.scraped_at
+                ? new Date(v.scraped_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                : 'Unknown date';
+            return `### ${v.title} (${scrapedDate})\n${v.summary}`;
+        });
+
+        // Split into chunks of ~4000 chars each
+        const CHUNK_SIZE = 6000;
+        const chunks = [];
+        let currentChunk = '';
+        for (const entry of allEntries) {
+            if (currentChunk.length + entry.length + 2 > CHUNK_SIZE && currentChunk.length > 0) {
+                chunks.push(currentChunk);
+                currentChunk = '';
+            }
+            currentChunk += entry + '\n\n';
+        }
+        if (currentChunk.trim()) chunks.push(currentChunk);
+
+        console.log(`[News Report] Split ${videos.length} videos into ${chunks.length} chunk(s)`);
+
+        // Helper to call Ollama
+        async function callOllama(messages) {
+            const resp = await fetch(`${endpoint}/api/chat`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model,
+                    messages,
+                    stream: false,
+                    options: { temperature: 0.3, num_ctx: 16384 }
+                })
+            });
+            if (!resp.ok) {
+                const errText = await resp.text();
+                throw new Error(`Ollama error ${resp.status}: ${errText}`);
+            }
+            const result = await resp.json();
+            return result.message?.content || '';
         }
 
-        console.log(`[News Report] Sending ${combinedSummaries.length} chars to ${model}...`);
+        let allFacts;
 
-        const ollamaResponse = await fetch(`${endpoint}/api/chat`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                model,
-                messages: [
+        if (chunks.length === 1) {
+            // Single chunk — skip extraction, go straight to synthesis
+            console.log('[News Report] Single chunk — going straight to synthesis');
+            allFacts = chunks[0];
+        } else {
+            // Multiple chunks — extract key facts from each
+            const extractedFacts = [];
+            for (let i = 0; i < chunks.length; i++) {
+                console.log(`[News Report] Extracting facts from chunk ${i + 1}/${chunks.length} (${chunks[i].length} chars)...`);
+                const facts = await callOllama([
                     {
                         role: 'system',
-                        content: `You are a professional news anchor writing a daily news briefing. 
-Given a collection of video summaries from the past 24 hours, create a cohesive, well-organized daily news report.
-
-Rules:
-- Group related stories by theme (e.g., Markets, Politics, Tech, etc.)
-- Use clear section headers with emoji icons (e.g., "📈 Markets & Economy")
-- Write 2-3 sentences per story synthesizing the key points
-- Mention specific data points, names, and figures when available
-- End with a brief "Bottom Line" takeaway
-- Keep the tone professional but engaging
-- Do NOT use markdown headers (#), use plain text with emoji for sections`
+                        content: `Today's date is ${todayStr}. You are a news analyst extracting key facts from video summaries. For EVERY video listed, output exactly one detailed bullet point capturing the most important fact, figures, names, and conclusion. Do NOT skip any video. Do NOT merge videos together. Preserve the video title and channel name. Format: "- [Video Title] (Channel): [key fact]"`
                     },
                     {
                         role: 'user',
-                        content: `Create a daily news briefing from these ${videos.length} video summaries:\n\n${combinedSummaries}`
+                        content: `Extract key facts from these video summaries:\n\n${chunks[i]}`
                     }
-                ],
-                stream: false,
-                options: { temperature: 0.4 }
-            })
-        });
-
-        if (!ollamaResponse.ok) {
-            const errText = await ollamaResponse.text();
-            throw new Error(`Ollama error ${ollamaResponse.status}: ${errText}`);
+                ]);
+                extractedFacts.push(facts);
+                console.log(`[News Report] Chunk ${i + 1} extracted (${facts.length} chars)`);
+            }
+            allFacts = extractedFacts.join('\n\n');
         }
 
-        const result = await ollamaResponse.json();
-        const report = result.message?.content || '';
+        // ── Pass 2: Synthesize final report ──
+        console.log(`[News Report] Synthesizing final report from ${allFacts.length} chars of facts...`);
+
+        const report = await callOllama([
+            {
+                role: 'system',
+                content: `You are a professional news anchor writing a daily news briefing.
+Today's date is ${todayStr}.
+
+Given extracted facts from ${videos.length} video sources, create a comprehensive daily news report.
+
+Rules:
+- Title the report with today's date: "${todayStr} — Daily Intel Briefing"
+- Group stories by theme (e.g., Markets, Politics, Tech, etc.)
+- Use clear section headers with emoji icons (e.g., "📈 Markets & Economy")
+- EVERY source video MUST get its own bullet point — there are ${videos.length} sources so there should be AT LEAST ${videos.length} bullet points
+- Each bullet should be one detailed sentence mentioning specific data points, names, and figures
+- Include the source name in parentheses at the end of each bullet, e.g. "(Channel Name)"
+- Do NOT merge or combine multiple sources into one bullet point
+- End with a brief "🔑 Bottom Line" takeaway
+- Keep the tone professional but engaging
+- Do NOT use markdown headers (#), use plain text with emoji for sections
+- Do NOT skip any source — completeness is critical`
+            },
+            {
+                role: 'user',
+                content: `Create the daily news briefing for ${todayStr} from these ${videos.length} sources. IMPORTANT: Include ALL ${videos.length} sources as individual bullet points, do not merge or skip any.\n\n${allFacts}`
+            }
+        ]);
 
         if (!report) {
             return res.status(500).json({ error: 'LLM returned empty report' });
@@ -877,6 +935,13 @@ app.patch('/api/playlist/:filename/video/:videoId/status', (req, res) => {
 
         video.status = status;
 
+        // Track when video was ignored for 24h auto-clear
+        if (status === 'ignored') {
+            video.ignored_at = new Date().toISOString();
+        } else {
+            delete video.ignored_at;
+        }
+
         // Persist or clear the blocked_term
         if (blocked_term !== undefined && blocked_term !== null) {
             video.blocked_term = blocked_term;
@@ -893,6 +958,52 @@ app.patch('/api/playlist/:filename/video/:videoId/status', (req, res) => {
         res.status(500).json({ error: 'Failed to update video status.' });
     }
 });
+
+// ============ 24-Hour Ignored Auto-Clear ============
+// Automatically resets ignored videos back to pending after 24 hours
+function clearExpiredIgnored() {
+    try {
+        if (!fs.existsSync(OUTPUT_DIR)) return;
+
+        const files = fs.readdirSync(OUTPUT_DIR).filter(f => f.endsWith('.json'));
+        const now = Date.now();
+        const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+        let totalCleared = 0;
+
+        for (const file of files) {
+            const jsonPath = path.join(OUTPUT_DIR, file);
+            let videos = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+            let changed = false;
+
+            videos.forEach(v => {
+                if (v.status === 'ignored' && v.ignored_at) {
+                    const ignoredTime = new Date(v.ignored_at).getTime();
+                    if (now - ignoredTime >= TWENTY_FOUR_HOURS) {
+                        v.status = 'pending';
+                        delete v.ignored_at;
+                        delete v.blocked_term;
+                        totalCleared++;
+                        changed = true;
+                    }
+                }
+            });
+
+            if (changed) {
+                fs.writeFileSync(jsonPath, JSON.stringify(videos, null, 2));
+            }
+        }
+
+        if (totalCleared > 0) {
+            console.log(`[Auto-Clear] Reset ${totalCleared} expired ignored videos back to pending`);
+        }
+    } catch (error) {
+        console.error('[Auto-Clear] Error clearing expired ignored videos:', error);
+    }
+}
+
+// Run on startup and then every hour
+clearExpiredIgnored();
+setInterval(clearExpiredIgnored, 60 * 60 * 1000);
 
 // Bulk update video statuses
 app.patch('/api/playlist/:filename/bulk-status', (req, res) => {
@@ -925,6 +1036,12 @@ app.patch('/api/playlist/:filename/bulk-status', (req, res) => {
         videos.forEach(v => {
             if (idsSet.has(v.id)) {
                 v.status = status;
+                // Track when video was ignored for 24h auto-clear
+                if (status === 'ignored') {
+                    v.ignored_at = new Date().toISOString();
+                } else {
+                    delete v.ignored_at;
+                }
                 updated++;
             }
         });

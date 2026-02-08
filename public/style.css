@@ -3593,6 +3593,60 @@ a.term-card-title:hover {
     text-decoration: underline;
 }
 
+/* ============ Report Display ============ */
+.report-viewer {
+    color: #3e2723;
+}
+
+.report-display {
+    background: #f5ead6;
+    border: 1px solid #c4a882;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    color: #3e2723;
+}
+
+.report-display-meta {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6d4c41;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #c4a882;
+    font-family: 'IBM Plex Mono', monospace;
+}
+
+.report-display-content {
+    color: #3e2723;
+    font-size: 0.85rem;
+    line-height: 1.7;
+}
+
+.report-section-header {
+    font-weight: 700;
+    color: #5d4037;
+    margin: 1rem 0 0.4rem;
+    font-size: 0.95rem;
+}
+
+.report-bullet {
+    color: #3e2723;
+    padding-left: 1rem;
+    margin: 0.25rem 0;
+    position: relative;
+}
+
+.report-paragraph {
+    color: #3e2723;
+    margin: 0.4rem 0;
+}
+
+.report-loading {
+    text-align: center;
+    padding: 2rem;
+    color: #6d4c41;
+}
+
 /* ============ Responsive: Pipeline Steps ============ */
 @media (max-width: 640px) {
     .source-actions {
