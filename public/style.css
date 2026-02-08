@@ -1497,6 +1497,8 @@ button:disabled {
     padding: 0.75rem 1rem;
     margin: 0.5rem 0;
     backdrop-filter: blur(8px);
+    overflow: visible;
+    height: auto;
 }
 
 .extract-progress-header {
@@ -2277,7 +2279,7 @@ header {
 .summarize-btn {
     background: linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(99, 102, 241, 0.25));
     border: 1px solid rgba(139, 92, 246, 0.4);
-    color: #c4b5fd;
+    color: #3e2723;
 }
 
 .summarize-btn:hover {
@@ -2323,7 +2325,7 @@ header {
 .summary-content {
     font-size: 0.82rem;
     line-height: 1.6;
-    color: rgba(255, 255, 255, 0.85);
+    color: #3e2723;
 }
 
 /* ============ Inline Summary on Video Cards ============ */
