@@ -288,7 +288,7 @@ app.post('/api/news-report', async (req, res) => {
         });
 
         // Split into chunks of ~4000 chars each
-        const CHUNK_SIZE = 6000;
+        const CHUNK_SIZE = 4000;
         const chunks = [];
         let currentChunk = '';
         for (const entry of allEntries) {
@@ -302,82 +302,147 @@ app.post('/api/news-report', async (req, res) => {
 
         console.log(`[News Report] Split ${videos.length} videos into ${chunks.length} chunk(s)`);
 
-        // Helper to call Ollama
+        // Helper to call Ollama with 5-minute timeout
         async function callOllama(messages) {
-            const resp = await fetch(`${endpoint}/api/chat`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    model,
-                    messages,
-                    stream: false,
-                    options: { temperature: 0.3, num_ctx: 16384 }
-                })
-            });
-            if (!resp.ok) {
-                const errText = await resp.text();
-                throw new Error(`Ollama error ${resp.status}: ${errText}`);
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5 * 60 * 1000); // 5 min timeout
+
+            try {
+                const resp = await fetch(`${endpoint}/api/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model,
+                        messages,
+                        stream: false,
+                        options: { temperature: 0.3, num_ctx: 16384 }
+                    }),
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+
+                if (!resp.ok) {
+                    const errText = await resp.text();
+                    throw new Error(`Ollama error ${resp.status}: ${errText}`);
+                }
+                const result = await resp.json();
+                return result.message?.content || '';
+            } catch (err) {
+                clearTimeout(timeoutId);
+                if (err.name === 'AbortError') {
+                    throw new Error('Ollama request timed out after 5 minutes');
+                }
+                throw err;
             }
-            const result = await resp.json();
-            return result.message?.content || '';
         }
 
-        let allFacts;
+        // ── Pass 1: Extract bullet points from each chunk ──
+        const extractedFacts = [];
+        for (let i = 0; i < chunks.length; i++) {
+            console.log(`[News Report] Extracting facts from chunk ${i + 1}/${chunks.length} (${chunks[i].length} chars)...`);
+            const facts = await callOllama([
+                {
+                    role: 'system',
+                    content: `Today's date is ${todayStr}. You are a news analyst. For EVERY video listed, output exactly one bullet point: "- [key fact with specific names/figures] (Source: Video Title)". Do NOT skip any video. Do NOT merge videos together. Be concise — one sentence per video.`
+                },
+                {
+                    role: 'user',
+                    content: `Extract one bullet point per video from these summaries:\n\n${chunks[i]}`
+                }
+            ]);
+            extractedFacts.push(facts);
+            console.log(`[News Report] Chunk ${i + 1} extracted (${facts.length} chars)`);
+        }
+        const allFacts = extractedFacts.join('\n');
 
-        if (chunks.length === 1) {
-            // Single chunk — skip extraction, go straight to synthesis
-            console.log('[News Report] Single chunk — going straight to synthesis');
-            allFacts = chunks[0];
-        } else {
-            // Multiple chunks — extract key facts from each
-            const extractedFacts = [];
-            for (let i = 0; i < chunks.length; i++) {
-                console.log(`[News Report] Extracting facts from chunk ${i + 1}/${chunks.length} (${chunks[i].length} chars)...`);
-                const facts = await callOllama([
-                    {
-                        role: 'system',
-                        content: `Today's date is ${todayStr}. You are a news analyst extracting key facts from video summaries. For EVERY video listed, output exactly one detailed bullet point capturing the most important fact, figures, names, and conclusion. Do NOT skip any video. Do NOT merge videos together. Preserve the video title and channel name. Format: "- [Video Title] (Channel): [key fact]"`
-                    },
-                    {
-                        role: 'user',
-                        content: `Extract key facts from these video summaries:\n\n${chunks[i]}`
-                    }
-                ]);
-                extractedFacts.push(facts);
-                console.log(`[News Report] Chunk ${i + 1} extracted (${facts.length} chars)`);
+        // ── Pass 2: Categorize bullets in small batches (LLM), merge in code ──
+        const factLines = allFacts.split('\n').filter(l => l.trim().startsWith('-'));
+        console.log(`[News Report] ${factLines.length} bullet points to categorize`);
+
+        // Define theme categories
+        const THEMES = [
+            '📈 Markets & Economy',
+            '🏛️ Politics & Policy',
+            '💻 Technology',
+            '🌍 World News',
+            '🏦 Banking & Finance',
+            '⚡ Energy & Commodities',
+            '🏠 Real Estate',
+            '📰 General News'
+        ];
+
+        // Tag each bullet with a theme in small batches
+        const TAG_BATCH = 10;
+        const taggedBullets = []; // { theme, bullet }
+
+        for (let i = 0; i < factLines.length; i += TAG_BATCH) {
+            const batch = factLines.slice(i, i + TAG_BATCH);
+            const batchNum = Math.floor(i / TAG_BATCH) + 1;
+            const totalBatches = Math.ceil(factLines.length / TAG_BATCH);
+            console.log(`[News Report] Tagging batch ${batchNum}/${totalBatches} (${batch.length} bullets)...`);
+
+            const numbered = batch.map((b, idx) => `${idx + 1}. ${b}`).join('\n');
+            const tagsRaw = await callOllama([
+                {
+                    role: 'system',
+                    content: `You are a news categorizer. For each numbered bullet, reply with ONLY the number and one of these exact themes:\n${THEMES.join('\n')}\n\nFormat your response as:\n1: theme\n2: theme\netc.\n\nNothing else. Just number: theme pairs, one per line.`
+                },
+                {
+                    role: 'user',
+                    content: `Categorize each bullet:\n\n${numbered}`
+                }
+            ]);
+
+            // Parse tags
+            const tagLines = tagsRaw.split('\n').filter(l => l.trim());
+            for (let j = 0; j < batch.length; j++) {
+                let theme = '📰 General News'; // fallback
+                const tagLine = tagLines.find(t => t.trim().startsWith(`${j + 1}`));
+                if (tagLine) {
+                    const matchedTheme = THEMES.find(t => tagLine.includes(t));
+                    if (matchedTheme) theme = matchedTheme;
+                }
+                taggedBullets.push({ theme, bullet: batch[j] });
             }
-            allFacts = extractedFacts.join('\n\n');
         }
 
-        // ── Pass 2: Synthesize final report ──
-        console.log(`[News Report] Synthesizing final report from ${allFacts.length} chars of facts...`);
+        // ── Merge in code — group bullets by theme ──
+        console.log(`[News Report] Grouping ${taggedBullets.length} bullets by theme (in code)...`);
+        const grouped = {};
+        for (const { theme, bullet } of taggedBullets) {
+            if (!grouped[theme]) grouped[theme] = [];
+            grouped[theme].push(bullet);
+        }
 
-        const report = await callOllama([
+        // Build the report body in code
+        let reportBody = '';
+        for (const theme of THEMES) {
+            if (grouped[theme] && grouped[theme].length > 0) {
+                reportBody += `\n${theme}\n`;
+                for (const bullet of grouped[theme]) {
+                    reportBody += `${bullet}\n`;
+                }
+            }
+        }
+
+        // ── One tiny LLM call: generate bottom-line summary ──
+        const activeThemes = THEMES.filter(t => grouped[t] && grouped[t].length > 0);
+        const bulletCount = taggedBullets.length;
+        console.log(`[News Report] Generating bottom-line summary...`);
+
+        const bottomLine = await callOllama([
             {
                 role: 'system',
-                content: `You are a professional news anchor writing a daily news briefing.
-Today's date is ${todayStr}.
-
-Given extracted facts from ${videos.length} video sources, create a comprehensive daily news report.
-
-Rules:
-- Title the report with today's date: "${todayStr} — Daily Intel Briefing"
-- Group stories by theme (e.g., Markets, Politics, Tech, etc.)
-- Use clear section headers with emoji icons (e.g., "📈 Markets & Economy")
-- EVERY source video MUST get its own bullet point — there are ${videos.length} sources so there should be AT LEAST ${videos.length} bullet points
-- Each bullet should be one detailed sentence mentioning specific data points, names, and figures
-- Include the source name in parentheses at the end of each bullet, e.g. "(Channel Name)"
-- Do NOT merge or combine multiple sources into one bullet point
-- End with a brief "🔑 Bottom Line" takeaway
-- Keep the tone professional but engaging
-- Do NOT use markdown headers (#), use plain text with emoji for sections
-- Do NOT skip any source — completeness is critical`
+                content: `Write a 2-sentence "🔑 Bottom Line" takeaway for a daily news briefing dated ${todayStr}. Be specific and professional.`
             },
             {
                 role: 'user',
-                content: `Create the daily news briefing for ${todayStr} from these ${videos.length} sources. IMPORTANT: Include ALL ${videos.length} sources as individual bullet points, do not merge or skip any.\n\n${allFacts}`
+                content: `The briefing covered ${bulletCount} stories across these themes: ${activeThemes.join(', ')}. Write the bottom-line takeaway.`
             }
         ]);
+
+        // Assemble final report
+        const report = `${todayStr} — Daily Intel Briefing\n${reportBody}\n🔑 Bottom Line\n${bottomLine}`;
 
         if (!report) {
             return res.status(500).json({ error: 'LLM returned empty report' });
