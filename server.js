@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const session = require('express-session');
+const cron = require('node-cron');
 const PuppeteerWrapper = require('./src/services/puppeteerWrapper');
 const Database = require('./src/services/database');
 const YouTubeAPIService = require('./services/youtube-api');
@@ -134,7 +135,7 @@ function loadSettings() {
             return JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf-8'));
         }
     } catch (e) { console.error('Settings load error:', e.message); }
-    return { ollama_endpoint: 'http://10.0.0.29:11434', ollama_model: '' };
+    return { ollama_endpoint: 'http://10.0.0.30:11434', ollama_model: '' };
 }
 
 function saveSettings(settings) {
@@ -168,7 +169,7 @@ app.post('/api/settings', (req, res) => {
 app.get('/api/ollama/models', async (req, res) => {
     try {
         const settings = loadSettings();
-        const endpoint = settings.ollama_endpoint || 'http://10.0.0.29:11434';
+        const endpoint = settings.ollama_endpoint || 'http://10.0.0.30:11434';
         const response = await fetch(`${endpoint}/api/tags`);
         if (!response.ok) throw new Error(`Ollama returned ${response.status}`);
         const data = await response.json();
@@ -200,7 +201,7 @@ app.post('/api/summarize/:id', async (req, res) => {
             return res.status(400).json({ error: 'No Ollama model selected. Configure in Settings.' });
         }
 
-        const endpoint = settings.ollama_endpoint || 'http://10.0.0.29:11434';
+        const endpoint = settings.ollama_endpoint || 'http://10.0.0.30:11434';
 
         // Truncate transcript to ~4000 chars to stay within context
         const transcript = video.transcript.substring(0, 4000);
@@ -271,7 +272,7 @@ app.post('/api/news-report', async (req, res) => {
             return res.status(400).json({ error: 'No Ollama model selected. Configure in Settings.' });
         }
 
-        const endpoint = settings.ollama_endpoint || 'http://10.0.0.29:11434';
+        const endpoint = settings.ollama_endpoint || 'http://10.0.0.30:11434';
 
         // Today's date for the prompt (prevents hallucinated dates)
         const todayStr = new Date().toLocaleDateString('en-US', {
@@ -1272,10 +1273,351 @@ app.post('/api/playlist/save-to-youtube', async (req, res) => {
     }
 });
 
+// ============ Auto-Sync Scheduler ============
+let scheduledTask = null;
+
+function initScheduler() {
+    const settings = loadSettings();
+    // Stop any existing task
+    if (scheduledTask) {
+        scheduledTask.stop();
+        scheduledTask = null;
+        console.log('[Scheduler] Stopped previous cron job.');
+    }
+
+    if (!settings.auto_sync_enabled) {
+        console.log('[Scheduler] Auto-sync is disabled.');
+        return;
+    }
+
+    const schedule = settings.auto_sync_schedule || '0 6,12 * * *';
+    if (!cron.validate(schedule)) {
+        console.error(`[Scheduler] Invalid cron expression: "${schedule}". Scheduler not started.`);
+        return;
+    }
+
+    scheduledTask = cron.schedule(schedule, async () => {
+        const now = new Date().toLocaleTimeString();
+        console.log(`[Scheduler] ⏰ Auto-sync triggered at ${now}`);
+        try {
+            const syncResult = await generateDailyPlaylist();
+            console.log(`[Scheduler] Sync complete: ${syncResult ? syncResult.videoCount : 0} videos`);
+        } catch (err) {
+            console.error('[Scheduler] Sync failed:', err.message);
+        }
+        try {
+            const discoverResult = await runDiscovery();
+            console.log(`[Scheduler] Discovery complete: ${discoverResult.addedToDaily || 0} new videos`);
+        } catch (err) {
+            console.error('[Scheduler] Discovery failed:', err.message);
+        }
+    });
+    console.log(`[Scheduler] ✅ Auto-sync enabled with schedule: "${schedule}"`);
+}
+
+// Scheduler API routes
+app.get('/api/scheduler', (req, res) => {
+    const settings = loadSettings();
+    res.json({
+        success: true,
+        enabled: !!settings.auto_sync_enabled,
+        schedule: settings.auto_sync_schedule || '0 6,12 * * *',
+        running: !!scheduledTask
+    });
+});
+
+app.post('/api/scheduler', (req, res) => {
+    try {
+        const { enabled, schedule } = req.body;
+        const settings = loadSettings();
+
+        if (schedule !== undefined) {
+            if (!cron.validate(schedule)) {
+                return res.status(400).json({ error: `Invalid cron expression: "${schedule}"` });
+            }
+            settings.auto_sync_schedule = schedule;
+        }
+        if (enabled !== undefined) {
+            settings.auto_sync_enabled = !!enabled;
+        }
+
+        saveSettings(settings);
+        initScheduler(); // Restart with new config
+
+        res.json({
+            success: true,
+            enabled: !!settings.auto_sync_enabled,
+            schedule: settings.auto_sync_schedule,
+            running: !!scheduledTask
+        });
+    } catch (error) {
+        console.error('[Scheduler] Update error:', error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// ============ One-Click Pipeline (Extract → Summarize → Report) ============
+app.get('/api/pipeline/run/:filename', async (req, res) => {
+    const { filename } = req.params;
+
+    if (!filename || filename.includes('..') || !filename.endsWith('.json')) {
+        return res.status(400).json({ error: 'Invalid filename' });
+    }
+
+    const jsonPath = path.join(OUTPUT_DIR, filename);
+    if (!fs.existsSync(jsonPath)) {
+        return res.status(404).json({ error: 'Playlist not found' });
+    }
+
+    // SSE headers
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders();
+
+    const sendEvent = (data) => res.write(`data: ${JSON.stringify(data)}\n\n`);
+
+    try {
+        const allVideos = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+        // Only extract pending/approved videos (not already extracted or ignored)
+        const toExtract = allVideos.filter(v => v.status === 'pending' || v.status === 'approved' || !v.status);
+
+        // ══════ PHASE 1: EXTRACT ══════
+        sendEvent({ phase: 'extract', type: 'start', total: toExtract.length });
+        let extractSuccess = 0, extractFail = 0;
+
+        for (let i = 0; i < toExtract.length; i++) {
+            const video = toExtract[i];
+            sendEvent({ phase: 'extract', type: 'progress', current: i + 1, total: toExtract.length, title: video.title });
+
+            try {
+                const url = `https://youtube.com/watch?v=${video.id}`;
+                const result = await PuppeteerWrapper.scrapeURL(url);
+
+                if (result && result.transcript) {
+                    await Database.saveVideo({
+                        title: video.title,
+                        url: url,
+                        description: result.description || '',
+                        transcript: result.transcript
+                    });
+
+                    // Mark as extracted in daily file
+                    const v = allVideos.find(x => x.id === video.id);
+                    if (v) v.status = 'extracted';
+                    fs.writeFileSync(jsonPath, JSON.stringify(allVideos, null, 2));
+
+                    extractSuccess++;
+                    sendEvent({ phase: 'extract', type: 'progress', current: i + 1, total: toExtract.length, title: video.title, status: 'success' });
+                } else {
+                    extractFail++;
+                    sendEvent({ phase: 'extract', type: 'progress', current: i + 1, total: toExtract.length, title: video.title, status: 'failed', error: 'No transcript' });
+                }
+            } catch (err) {
+                extractFail++;
+                sendEvent({ phase: 'extract', type: 'progress', current: i + 1, total: toExtract.length, title: video.title, status: 'failed', error: err.message });
+            }
+        }
+
+        sendEvent({ phase: 'extract', type: 'done', success: extractSuccess, failed: extractFail });
+
+        // ══════ PHASE 2: SUMMARIZE ══════
+        const settings = loadSettings();
+        const model = settings.ollama_model;
+        const endpoint = settings.ollama_endpoint || 'http://10.0.0.30:11434';
+
+        if (!model) {
+            sendEvent({ phase: 'summarize', type: 'skip', reason: 'No Ollama model configured' });
+        } else {
+            const dbVideos = await Database.getAllVideos();
+            const unsummarized = dbVideos.filter(v => v.transcript_length > 50 && !v.summary);
+
+            sendEvent({ phase: 'summarize', type: 'start', total: unsummarized.length });
+            let sumSuccess = 0, sumFail = 0;
+
+            for (let i = 0; i < unsummarized.length; i++) {
+                const vid = unsummarized[i];
+                sendEvent({ phase: 'summarize', type: 'progress', current: i + 1, total: unsummarized.length, title: vid.title });
+
+                try {
+                    const fullVideo = await Database.getVideoById(vid.id);
+                    const transcript = fullVideo.transcript.substring(0, 4000);
+
+                    const ollamaResp = await fetch(`${endpoint}/api/chat`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            model,
+                            messages: [
+                                { role: 'system', content: 'You are a concise news analyst. Summarize transcripts into clear bullet points. Be factual and concise. Use plain text bullet points starting with "• ".' },
+                                { role: 'user', content: `Summarize this news video transcript in 5-8 bullet points:\n\nTitle: ${fullVideo.title}\n\nTranscript:\n${transcript}` }
+                            ],
+                            stream: false,
+                            options: { temperature: 0.3 }
+                        })
+                    });
+
+                    if (!ollamaResp.ok) throw new Error(`Ollama ${ollamaResp.status}`);
+                    const result = await ollamaResp.json();
+                    const summary = result.message?.content || '';
+
+                    if (summary) {
+                        await Database.saveSummary(vid.id, summary);
+                        sumSuccess++;
+                        sendEvent({ phase: 'summarize', type: 'progress', current: i + 1, total: unsummarized.length, title: vid.title, status: 'success' });
+                    } else {
+                        sumFail++;
+                        sendEvent({ phase: 'summarize', type: 'progress', current: i + 1, total: unsummarized.length, title: vid.title, status: 'failed', error: 'Empty summary' });
+                    }
+                } catch (err) {
+                    sumFail++;
+                    sendEvent({ phase: 'summarize', type: 'progress', current: i + 1, total: unsummarized.length, title: vid.title, status: 'failed', error: err.message });
+                }
+            }
+            sendEvent({ phase: 'summarize', type: 'done', success: sumSuccess, failed: sumFail });
+        }
+
+        // ══════ PHASE 3: REPORT ══════
+        sendEvent({ phase: 'report', type: 'start' });
+
+        try {
+            const videos = await Database.getRecentSummarizedVideos(24);
+            if (videos.length === 0) {
+                sendEvent({ phase: 'report', type: 'skip', reason: 'No summarized videos found' });
+            } else if (!model) {
+                sendEvent({ phase: 'report', type: 'skip', reason: 'No Ollama model configured' });
+            } else {
+                const todayStr = new Date().toLocaleDateString('en-US', {
+                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+                });
+
+                const allEntries = videos.map(v => {
+                    const scrapedDate = v.scraped_at
+                        ? new Date(v.scraped_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                        : 'Unknown date';
+                    return `### ${v.title} (${scrapedDate})\n${v.summary}`;
+                });
+
+                const CHUNK_SIZE = 4000;
+                const chunks = [];
+                let currentChunk = '';
+                for (const entry of allEntries) {
+                    if (currentChunk.length + entry.length + 2 > CHUNK_SIZE && currentChunk.length > 0) {
+                        chunks.push(currentChunk);
+                        currentChunk = '';
+                    }
+                    currentChunk += entry + '\n\n';
+                }
+                if (currentChunk.trim()) chunks.push(currentChunk);
+
+                async function pipelineCallOllama(messages) {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 5 * 60 * 1000);
+                    try {
+                        const resp = await fetch(`${endpoint}/api/chat`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ model, messages, stream: false, options: { temperature: 0.3, num_ctx: 16384 } }),
+                            signal: controller.signal
+                        });
+                        clearTimeout(timeoutId);
+                        if (!resp.ok) throw new Error(`Ollama ${resp.status}`);
+                        const r = await resp.json();
+                        return r.message?.content || '';
+                    } catch (e) {
+                        clearTimeout(timeoutId);
+                        throw e;
+                    }
+                }
+
+                // Pass 1: Extract facts
+                const extractedFacts = [];
+                for (let i = 0; i < chunks.length; i++) {
+                    sendEvent({ phase: 'report', type: 'progress', step: 'extracting-facts', current: i + 1, total: chunks.length });
+                    const facts = await pipelineCallOllama([
+                        { role: 'system', content: `Today's date is ${todayStr}. You are a news analyst. For EVERY video listed, output exactly one bullet point: "- [key fact with specific names/figures] (Source: Video Title)". Do NOT skip any video.` },
+                        { role: 'user', content: `Extract one bullet point per video from these summaries:\n\n${chunks[i]}` }
+                    ]);
+                    extractedFacts.push(facts);
+                }
+
+                const allFacts = extractedFacts.join('\n');
+                const THEMES = [
+                    '📈 Markets & Economy', '🏛️ Politics & Policy', '💻 Technology',
+                    '🌍 World News', '🏦 Banking & Finance', '⚡ Energy & Commodities',
+                    '🏠 Real Estate', '📰 General News'
+                ];
+
+                const factLines = allFacts.split('\n').filter(l => l.trim().startsWith('-'));
+                const TAG_BATCH = 10;
+                const taggedBullets = [];
+
+                for (let i = 0; i < factLines.length; i += TAG_BATCH) {
+                    const batch = factLines.slice(i, i + TAG_BATCH);
+                    sendEvent({ phase: 'report', type: 'progress', step: 'categorizing', current: Math.floor(i / TAG_BATCH) + 1, total: Math.ceil(factLines.length / TAG_BATCH) });
+                    const numbered = batch.map((b, idx) => `${idx + 1}. ${b}`).join('\n');
+                    const tagsRaw = await pipelineCallOllama([
+                        { role: 'system', content: `You are a news categorizer. For each numbered bullet, reply with ONLY the number and one of these exact themes:\n${THEMES.join('\n')}\n\nFormat: 1: theme\n2: theme\netc.` },
+                        { role: 'user', content: `Categorize each bullet:\n\n${numbered}` }
+                    ]);
+
+                    const tagLines = tagsRaw.split('\n').filter(l => l.trim());
+                    for (let j = 0; j < batch.length; j++) {
+                        let theme = '📰 General News';
+                        const tagLine = tagLines.find(t => t.trim().startsWith(`${j + 1}`));
+                        if (tagLine) {
+                            const matchedTheme = THEMES.find(t => tagLine.includes(t));
+                            if (matchedTheme) theme = matchedTheme;
+                        }
+                        taggedBullets.push({ theme, bullet: batch[j] });
+                    }
+                }
+
+                const grouped = {};
+                for (const { theme, bullet } of taggedBullets) {
+                    if (!grouped[theme]) grouped[theme] = [];
+                    grouped[theme].push(bullet);
+                }
+
+                let reportBody = '';
+                for (const theme of THEMES) {
+                    if (grouped[theme] && grouped[theme].length > 0) {
+                        reportBody += `\n${theme}\n`;
+                        for (const bullet of grouped[theme]) reportBody += `${bullet}\n`;
+                    }
+                }
+
+                const activeThemes = THEMES.filter(t => grouped[t] && grouped[t].length > 0);
+                sendEvent({ phase: 'report', type: 'progress', step: 'bottom-line' });
+                const bottomLine = await pipelineCallOllama([
+                    { role: 'system', content: `Write a 2-sentence "🔑 Bottom Line" takeaway for a daily news briefing dated ${todayStr}. Be specific and professional.` },
+                    { role: 'user', content: `The briefing covered ${taggedBullets.length} stories across these themes: ${activeThemes.join(', ')}. Write the bottom-line takeaway.` }
+                ]);
+
+                const report = `${todayStr} — Daily Intel Briefing\n${reportBody}\n🔑 Bottom Line\n${bottomLine}`;
+                const saved = await Database.saveReport(report, videos.length);
+                sendEvent({ phase: 'report', type: 'done', reportId: saved.id, videoCount: videos.length, reportLength: report.length });
+            }
+        } catch (err) {
+            sendEvent({ phase: 'report', type: 'error', error: err.message });
+        }
+
+        // ══════ ALL DONE ══════
+        sendEvent({ type: 'pipeline-complete' });
+
+    } catch (err) {
+        sendEvent({ type: 'pipeline-error', error: err.message });
+    }
+
+    res.end();
+});
+
 // Start Server
 const server = app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
     console.log('Press Ctrl+C to stop the server.');
+    // Initialize scheduler after server starts
+    initScheduler();
 });
 
 // Force keep-alive (hack for Windows/npm issues)

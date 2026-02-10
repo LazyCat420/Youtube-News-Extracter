@@ -120,7 +120,11 @@
                         <div class="config-body">
                             <!-- Channel Management -->
                             <div class="config-section">
-                                <h4>📺 Channels</h4>
+                                <div class="channels-header">
+                                    <h4>📺 Channels</h4>
+                                    <button id="sortChannelsBtn" class="term-btn term-btn-sm"
+                                        title="Sort channels alphabetically">🔤 Sort A-Z</button>
+                                </div>
                                 <div class="add-channel-form">
                                     <input type="text" id="newChannelName" class="term-search"
                                         placeholder="Channel Name" />
@@ -184,7 +188,30 @@
                                     title="Dismiss all">🚫 DISMISS ALL</button>
                                 <button class="term-btn term-btn-green term-btn-sm extract-all-btn"
                                     title="Extract transcripts for all">📝 EXTRACT ALL</button>
+                                <button id="runPipelineBtn" class="term-btn term-btn-amber term-btn-sm"
+                                    title="Extract → Summarize → Report in one click">🚀 RUN PIPELINE</button>
                             </div>
+                        </div>
+
+                        <!-- Pipeline Progress Banner -->
+                        <div id="pipelineProgress" class="pipeline-progress hidden">
+                            <div class="pipeline-phase-header">
+                                <span class="pipeline-phase-icon" id="pipelinePhaseIcon">🚀</span>
+                                <span class="pipeline-phase-label" id="pipelinePhaseLabel">Starting pipeline...</span>
+                                <span class="pipeline-phase-counts" id="pipelinePhaseCounts"></span>
+                            </div>
+                            <div class="pipeline-current-title" id="pipelineCurrentTitle">—</div>
+                            <div class="extract-progress-bar-bg">
+                                <div class="extract-progress-bar pipeline-bar" id="pipelineProgressBar"></div>
+                            </div>
+                            <div class="pipeline-phase-steps">
+                                <span class="pipeline-step-dot" id="pipelineDotExtract">📝 Extract</span>
+                                <span class="pipeline-step-arrow">→</span>
+                                <span class="pipeline-step-dot" id="pipelineDotSummarize">🤖 Summarize</span>
+                                <span class="pipeline-step-arrow">→</span>
+                                <span class="pipeline-step-dot" id="pipelineDotReport">⚡ Report</span>
+                            </div>
+                            <div class="pipeline-results-log" id="pipelineResultsLog"></div>
                         </div>
 
                         <!-- Extraction Progress Banner -->
@@ -387,7 +414,7 @@
                 <div class="settings-group">
                     <label for="ollamaEndpoint">Ollama Endpoint</label>
                     <div class="settings-row">
-                        <input type="text" id="ollamaEndpoint" placeholder="http://10.0.0.29:11434" />
+                        <input type="text" id="ollamaEndpoint" placeholder="http://10.0.0.30:11434" />
                         <button id="testConnectionBtn" class="action-btn" title="Test connection">🔌 Test</button>
                     </div>
                     <span id="connectionStatus" class="connection-status"></span>
@@ -400,6 +427,28 @@
                         </select>
                         <button id="refreshModelsBtn" class="action-btn" title="Refresh model list">🔄</button>
                     </div>
+                </div>
+                <hr style="border-color: rgba(255,255,255,0.1); margin:1rem 0;">
+                <div class="settings-group">
+                    <label>⏰ Auto-Sync Scheduler</label>
+                    <div class="settings-row">
+                        <label class="checkbox-label" style="flex:1;">
+                            <input type="checkbox" id="autoSyncEnabled" />
+                            Automatically sync feed on a schedule
+                        </label>
+                    </div>
+                    <div style="margin-top:0.5rem;">
+                        <div style="font-size:0.72rem; color:#6d4c41; margin-bottom:0.3rem;">Sync times (daily):</div>
+                        <div id="syncTimesList" style="display:flex; flex-wrap:wrap; gap:0.3rem; margin-bottom:0.4rem;">
+                        </div>
+                        <div class="settings-row">
+                            <input type="time" id="addSyncTime" value="06:00"
+                                style="padding:0.35rem 0.5rem; border:1px solid #c4a882; border-radius:0.4rem; background:#faf4e8; color:#3e2723; font-size:0.8rem;" />
+                            <button id="addSyncTimeBtn" class="term-btn term-btn-sm term-btn-green">+ Add Time</button>
+                        </div>
+                    </div>
+                    <span id="schedulerStatus"
+                        style="font-size:0.75rem; color: #6d4c41; display:block; margin-top:0.4rem;"></span>
                 </div>
             </div>
             <div class="modal-footer">

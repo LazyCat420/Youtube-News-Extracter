@@ -1,24 +1,23 @@
 [
   {
-    "name": "TechCrunch",
-    "url": "https://www.youtube.com/@TechCrunch/videos",
+    "name": "Adam Taggart | Thoughtful Money",
+    "url": "https://www.youtube.com/@adam.taggart",
     "include_shorts": false,
     "shorts_strategy": "separate",
-    "channel_id": "UCCjyq_K1Xwfg8Lndy7lKMpA"
+    "channel_id": "UCjqe6xtZYTfvA4pHs0HgJsQ"
   },
   {
-    "name": "Y Combinator",
-    "url": "https://www.youtube.com/@ycombinator/videos",
+    "name": "Aswath Damodaranon Valuation",
+    "url": "https://www.youtube.com/@AswathDamodaranonValuation",
     "include_shorts": false,
     "shorts_strategy": "separate",
-    "channel_id": "UCcefcZRL2oaA_uBNeo5UOWg"
+    "channel_id": "UCLvnJL8htRR1T9cbSccaoVw"
   },
   {
-    "name": "Townsends",
-    "url": "https://www.youtube.com/@townsends",
+    "name": "Bankless",
+    "url": "https://www.youtube.com/@Bankless",
     "include_shorts": false,
-    "shorts_strategy": "separate",
-    "channel_id": "UCxr2d4As312LulcajAkKJYw"
+    "channel_id": "UCAl9Ld79qaZxp9JzEOwd3aA"
   },
   {
     "name": "Big A",
@@ -35,25 +34,9 @@
     "channel_id": "UCIALMKvObZNtJ6AmdCLP7Lg"
   },
   {
-    "name": "CNBC",
-    "url": "https://www.youtube.com/@CNBC",
-    "include_shorts": false,
-    "shorts_strategy": "separate",
-    "channel_id": "UCvJJ_dzjViJCoLf5uKUTwoA"
-  },
-  {
-    "name": "RealEismanPlaybook",
-    "url": "https://www.youtube.com/@RealEismanPlaybook",
-    "include_shorts": false,
-    "shorts_strategy": "separate",
-    "channel_id": "UCzQ2FFVe7m8yIgzXMZtlSjg"
-  },
-  {
-    "name": "The Compound News",
-    "url": "https://www.youtube.com/@TheCompoundNews",
-    "include_shorts": false,
-    "shorts_strategy": "separate",
-    "channel_id": "UCBRpqrzuuqE8TZcWw75JSdw"
+    "name": "BloomBerg Television",
+    "url": "https://www.youtube.com/@markets",
+    "include_shorts": false
   },
   {
     "name": "Clear Value Tax",
@@ -63,32 +46,11 @@
     "channel_id": "UCigUBIf-zt_DA6xyOQtq2WA"
   },
   {
-    "name": "Aswath Damodaranon Valuation",
-    "url": "https://www.youtube.com/@AswathDamodaranonValuation",
+    "name": "CNBC",
+    "url": "https://www.youtube.com/@CNBC",
     "include_shorts": false,
     "shorts_strategy": "separate",
-    "channel_id": "UCLvnJL8htRR1T9cbSccaoVw"
-  },
-  {
-    "name": "Yahoo Finance",
-    "url": "https://www.youtube.com/@YahooFinance",
-    "include_shorts": false,
-    "shorts_strategy": "separate",
-    "channel_id": "UCEAZeUIeJs0IjQiqTCdVSIg"
-  },
-  {
-    "name": "Adam Taggart | Thoughtful Money",
-    "url": "https://www.youtube.com/@adam.taggart",
-    "include_shorts": false,
-    "shorts_strategy": "separate",
-    "channel_id": "UCjqe6xtZYTfvA4pHs0HgJsQ"
-  },
-  {
-    "name": "CSPAN",
-    "url": "https://www.youtube.com/@CSPAN",
-    "include_shorts": false,
-    "shorts_strategy": "separate",
-    "channel_id": "UCb--64Gl51jIEVE-GLDAVTg"
+    "channel_id": "UCvJJ_dzjViJCoLf5uKUTwoA"
   },
   {
     "name": "CNBC television",
@@ -98,18 +60,18 @@
     "channel_id": "UCrp_UI8XtuYfpiqluWLD7Lw"
   },
   {
-    "name": "Funstrat",
-    "url": "https://www.youtube.com/@Fundstrat_Direct",
+    "name": "Coin Bureau",
+    "url": "https://www.youtube.com/@CoinBureau/",
     "include_shorts": false,
     "shorts_strategy": "separate",
-    "channel_id": "UCcBzKSM4A-pIHMJWSnxmi_g"
+    "channel_id": "UCqK_GSMbpiV8spgD3ZGloSw"
   },
   {
-    "name": "Defi Dads",
-    "url": "https://www.youtube.com/@DeFiDad/videos",
+    "name": "CSPAN",
+    "url": "https://www.youtube.com/@CSPAN",
     "include_shorts": false,
     "shorts_strategy": "separate",
-    "channel_id": "UCatItl6C7wJp9txFMbXbSTg"
+    "channel_id": "UCb--64Gl51jIEVE-GLDAVTg"
   },
   {
     "name": "Deadnsyde",
@@ -119,11 +81,52 @@
     "channel_id": "UCLF4C8ikMjOElQrNhTrO8yg"
   },
   {
-    "name": "Coin Bureau",
-    "url": "https://www.youtube.com/@CoinBureau/",
+    "name": "Defi Dads",
+    "url": "https://www.youtube.com/@DeFiDad/videos",
     "include_shorts": false,
     "shorts_strategy": "separate",
-    "channel_id": "UCqK_GSMbpiV8spgD3ZGloSw"
+    "channel_id": "UCatItl6C7wJp9txFMbXbSTg"
+  },
+  {
+    "name": "Financial Times",
+    "url": "https://www.youtube.com/@FinancialTimes",
+    "include_shorts": false,
+    "channel_id": "UCoUxsWakJucWg46KW5RsvPw"
+  },
+  {
+    "name": "Funstrat",
+    "url": "https://www.youtube.com/@Fundstrat_Direct",
+    "include_shorts": false,
+    "shorts_strategy": "separate",
+    "channel_id": "UCcBzKSM4A-pIHMJWSnxmi_g"
+  },
+  {
+    "name": "RealEismanPlaybook",
+    "url": "https://www.youtube.com/@RealEismanPlaybook",
+    "include_shorts": false,
+    "shorts_strategy": "separate",
+    "channel_id": "UCzQ2FFVe7m8yIgzXMZtlSjg"
+  },
+  {
+    "name": "TechCrunch",
+    "url": "https://www.youtube.com/@TechCrunch/videos",
+    "include_shorts": true,
+    "shorts_strategy": "separate",
+    "channel_id": "UCCjyq_K1Xwfg8Lndy7lKMpA"
+  },
+  {
+    "name": "The Compound News",
+    "url": "https://www.youtube.com/@TheCompoundNews",
+    "include_shorts": false,
+    "shorts_strategy": "separate",
+    "channel_id": "UCBRpqrzuuqE8TZcWw75JSdw"
+  },
+  {
+    "name": "Townsends",
+    "url": "https://www.youtube.com/@townsends",
+    "include_shorts": false,
+    "shorts_strategy": "separate",
+    "channel_id": "UCxr2d4As312LulcajAkKJYw"
   },
   {
     "name": "Unchained Crypto",
@@ -138,9 +141,22 @@
     "channel_id": "UCK7tptUDHh-RYDsdxO1-5QQ"
   },
   {
-    "name": "Financial Times",
-    "url": "https://www.youtube.com/@FinancialTimes",
+    "name": "Y Combinator",
+    "url": "https://www.youtube.com/@ycombinator/videos",
     "include_shorts": false,
-    "channel_id": "UCoUxsWakJucWg46KW5RsvPw"
+    "shorts_strategy": "separate",
+    "channel_id": "UCcefcZRL2oaA_uBNeo5UOWg"
+  },
+  {
+    "name": "Yahoo Finance",
+    "url": "https://www.youtube.com/@YahooFinance",
+    "include_shorts": false,
+    "shorts_strategy": "separate",
+    "channel_id": "UCEAZeUIeJs0IjQiqTCdVSIg"
+  },
+  {
+    "name": "AAA Test Channel",
+    "url": "https://youtube.com/@aaa",
+    "include_shorts": true
   }
 ]

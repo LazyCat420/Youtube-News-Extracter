@@ -3720,3 +3720,248 @@ a.term-card-title:hover {
     margin-top: 0.25rem;
     min-height: 1rem;
 }
+
+/* ============ Pipeline Progress Banner ============ */
+.pipeline-progress {
+    background: #faf4e8;
+    border: 2px solid #d4a574;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.75rem;
+    animation: fadeIn 0.3s ease;
+}
+
+.pipeline-phase-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.4rem;
+}
+
+.pipeline-phase-icon {
+    font-size: 1.1rem;
+}
+
+.pipeline-phase-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #5d4037;
+    flex: 1;
+}
+
+.pipeline-phase-counts {
+    font-size: 0.7rem;
+    color: #8d6e63;
+    font-family: 'IBM Plex Mono', monospace;
+}
+
+.pipeline-current-title {
+    font-size: 0.72rem;
+    color: #6d4c41;
+    margin-bottom: 0.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pipeline-bar {
+    background: linear-gradient(90deg, #d4a574, #8d5e2a) !important;
+    transition: width 0.4s ease;
+}
+
+.pipeline-phase-steps {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #e8dcc8;
+}
+
+.pipeline-step-dot {
+    font-size: 0.65rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 1rem;
+    background: #ede0d4;
+    color: #8d6e63;
+    border: 1px solid #c4a882;
+    transition: all 0.3s ease;
+}
+
+.pipeline-step-dot.active {
+    background: #f5e1c8;
+    color: #8d5e2a;
+    border-color: #d4a574;
+    font-weight: 600;
+    box-shadow: 0 0 6px rgba(212, 165, 116, 0.3);
+}
+
+.pipeline-step-dot.done {
+    background: #e8f0d8;
+    color: #4a6b2a;
+    border-color: #8fad6e;
+}
+
+.pipeline-step-dot.skipped {
+    background: #f5e0e0;
+    color: #8b3a3a;
+    border-color: #d4a0a0;
+}
+
+.pipeline-step-arrow {
+    font-size: 0.65rem;
+    color: #c4a882;
+}
+
+.pipeline-results-log {
+    max-height: 100px;
+    overflow-y: auto;
+    font-size: 0.62rem;
+    color: #6d4c41;
+    margin-top: 0.4rem;
+    font-family: 'IBM Plex Mono', monospace;
+}
+
+/* ============ Sync Time Pills ============ */
+.sync-time-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.5rem;
+    background: #e8dcc8;
+    border: 1px solid #c4a882;
+    border-radius: 1rem;
+    font-size: 0.72rem;
+    color: #5d4037;
+    font-weight: 500;
+}
+
+.sync-time-remove {
+    cursor: pointer;
+    color: #8b3a3a;
+    font-size: 0.85rem;
+    line-height: 1;
+    font-weight: bold;
+    transition: color 0.2s;
+}
+
+.sync-time-remove:hover {
+    color: #c62828;
+}
+
+/* ============ Channel Management ============ */
+.channels-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.4rem;
+}
+
+.channels-header h4 {
+    margin: 0;
+}
+
+.channels-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.channel-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.5rem 0.65rem;
+    background: #faf4e8;
+    border: 1px solid #c4a882;
+    border-radius: 0.4rem;
+    transition: border-color 0.2s;
+}
+
+.channel-item:hover {
+    border-color: #8d6e63;
+}
+
+.channel-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.channel-name {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #3e2723;
+    font-family: 'IBM Plex Mono', monospace;
+}
+
+.channel-url {
+    font-size: 0.68rem;
+    color: #8d6e63;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.channel-tags {
+    display: flex;
+    gap: 0.3rem;
+    margin-top: 0.2rem;
+}
+
+.channel-tag {
+    font-size: 0.6rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 0.3rem;
+    background: #ede0d4;
+    color: #6d4c41;
+    border: 1px solid #c4a882;
+    font-family: 'IBM Plex Mono', monospace;
+}
+
+.channel-tag.cached {
+    background: #e8f0d8;
+    color: #4a6b2a;
+    border-color: #8fad6e;
+}
+
+.channel-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-shrink: 0;
+}
+
+.channel-shorts-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.7rem;
+    color: #6d4c41;
+    cursor: pointer;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.3rem;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+    font-family: 'IBM Plex Mono', monospace;
+    user-select: none;
+}
+
+.channel-shorts-toggle:hover {
+    background: #ede0d4;
+    border-color: #c4a882;
+}
+
+.channel-shorts-toggle input[type="checkbox"] {
+    accent-color: #8d6e63;
+    cursor: pointer;
+}
+
+.channels-empty {
+    font-size: 0.75rem;
+    color: #8d6e63;
+    text-align: center;
+    padding: 1rem;
+    font-style: italic;
+}

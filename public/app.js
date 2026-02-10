@@ -1604,15 +1604,28 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="channel-name">${escapeHtml(ch.name)}</div>
                     <div class="channel-url">${escapeHtml(ch.url)}</div>
                     <div class="channel-tags">
-                        ${ch.include_shorts ? '<span class="channel-tag">Shorts</span>' : ''}
                         ${ch.channel_id ? '<span class="channel-tag cached">⚡ Cached</span>' : '<span class="channel-tag">New</span>'}
                     </div>
                 </div>
                 <div class="channel-actions">
+                    <label class="channel-shorts-toggle" title="Include Shorts from this channel">
+                        <input type="checkbox" class="toggle-shorts-cb" data-index="${index}" ${ch.include_shorts ? 'checked' : ''} />
+                        Shorts
+                    </label>
                     <button class="delete-btn delete-channel-btn" data-index="${index}" title="Delete channel">🗑️</button>
                 </div>
             </div>
         `).join('');
+
+        // Attach shorts toggle listeners
+        document.querySelectorAll('.toggle-shorts-cb').forEach(cb => {
+            cb.addEventListener('change', async () => {
+                const index = parseInt(cb.dataset.index);
+                channelsData[index].include_shorts = cb.checked;
+                await saveChannels();
+                showSuccess(`${channelsData[index].name}: Shorts ${cb.checked ? 'enabled' : 'disabled'}`);
+            });
+        });
 
         // Attach delete listeners
         document.querySelectorAll('.delete-channel-btn').forEach(btn => {
@@ -2016,6 +2029,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Sort Channels A-Z
+    document.getElementById('sortChannelsBtn')?.addEventListener('click', async () => {
+        channelsData.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+        await saveChannels();
+        renderChannels();
+        showSuccess('Channels sorted A-Z');
+    });
+
     // ============ Initial Load ============
     loadChannels();
     checkAuthStatus();
@@ -2115,12 +2136,85 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) {
             console.error('Settings load error:', e);
         }
+        // Load scheduler state
+        try {
+            const sResp = await fetch('/api/scheduler');
+            const sData = await sResp.json();
+            if (sData.success) {
+                document.getElementById('autoSyncEnabled').checked = sData.enabled;
+                schedulerSyncTimes = cronToTimes(sData.schedule || '0 6,12 * * *');
+                renderSyncTimes();
+                document.getElementById('schedulerStatus').textContent = sData.running ? '✅ Scheduler is running' : '⏸️ Scheduler is off';
+            }
+        } catch (e) {
+            console.error('Scheduler load error:', e);
+        }
     });
 
     // Close settings
     closeSettingsBtn.addEventListener('click', () => settingsModal.classList.add('hidden'));
     settingsModal.addEventListener('click', (e) => {
         if (e.target === settingsModal) settingsModal.classList.add('hidden');
+    });
+
+    // ============ Scheduler Time Helpers ============
+    let schedulerSyncTimes = ['06:00', '12:00']; // Default times
+
+    function cronToTimes(cron) {
+        // Parse "0 6,12 * * *" → ['06:00', '12:00']
+        try {
+            const parts = cron.split(' ');
+            const minute = parts[0] || '0';
+            const hours = (parts[1] || '6').split(',');
+            return hours.map(h => {
+                const hh = h.padStart(2, '0');
+                const mm = minute.padStart(2, '0');
+                return `${hh}:${mm}`;
+            }).sort();
+        } catch {
+            return ['06:00', '12:00'];
+        }
+    }
+
+    function timesToCron(times) {
+        // ['06:00', '12:00'] → "0 6,12 * * *"
+        if (!times.length) return '0 6 * * *';
+        const hours = times.map(t => parseInt(t.split(':')[0], 10));
+        const minutes = times.map(t => parseInt(t.split(':')[1], 10));
+        // Use the first time's minute (they should normally be the same)
+        const minute = minutes[0] || 0;
+        return `${minute} ${hours.join(',')} * * *`;
+    }
+
+    function formatTime12h(time24) {
+        const [h, m] = time24.split(':').map(Number);
+        const suffix = h >= 12 ? 'PM' : 'AM';
+        const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+        return `${h12}:${String(m).padStart(2, '0')} ${suffix}`;
+    }
+
+    function renderSyncTimes() {
+        const container = document.getElementById('syncTimesList');
+        container.innerHTML = schedulerSyncTimes.length === 0
+            ? '<span style="font-size:0.7rem;color:#8d6e63;">No times set — add at least one</span>'
+            : schedulerSyncTimes.map(t => `<span class="sync-time-pill">${formatTime12h(t)} <span class="sync-time-remove" data-time="${t}">×</span></span>`).join('');
+
+        // Attach remove listeners
+        container.querySelectorAll('.sync-time-remove').forEach(btn => {
+            btn.addEventListener('click', () => {
+                schedulerSyncTimes = schedulerSyncTimes.filter(t => t !== btn.dataset.time);
+                renderSyncTimes();
+            });
+        });
+    }
+
+    document.getElementById('addSyncTimeBtn').addEventListener('click', () => {
+        const input = document.getElementById('addSyncTime');
+        const time = input.value;
+        if (!time || schedulerSyncTimes.includes(time)) return;
+        schedulerSyncTimes.push(time);
+        schedulerSyncTimes.sort();
+        renderSyncTimes();
     });
 
     // Test connection
@@ -2232,6 +2326,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 })
             });
             const data = await resp.json();
+
+            // Save scheduler settings too
+            try {
+                const cronSchedule = timesToCron(schedulerSyncTimes);
+                const schedResp = await fetch('/api/scheduler', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        enabled: document.getElementById('autoSyncEnabled').checked,
+                        schedule: cronSchedule
+                    })
+                });
+                const schedData = await schedResp.json();
+                if (schedData.success) {
+                    const timeStr = schedulerSyncTimes.map(formatTime12h).join(', ');
+                    document.getElementById('schedulerStatus').textContent = schedData.running ? `✅ Running — syncs at ${timeStr}` : '⏸️ Scheduler is off';
+                } else {
+                    document.getElementById('schedulerStatus').textContent = '❌ ' + (schedData.error || 'Failed');
+                }
+            } catch (schedErr) {
+                console.error('Scheduler save error:', schedErr);
+            }
+
             if (data.success) {
                 saveSettingsBtn.textContent = '✅ Saved!';
                 setTimeout(() => {
@@ -2247,6 +2364,160 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 2000);
         }
     });
+
+    // ============ 🚀 Pipeline Button (Extract → Summarize → Report) ============
+    const pipelineBtn = document.getElementById('runPipelineBtn');
+    if (pipelineBtn) {
+        pipelineBtn.addEventListener('click', () => {
+            if (!currentDailyFile) {
+                alert('No daily file loaded. Press Sync Daily Feed first.');
+                return;
+            }
+
+            if (!confirm('🚀 Run full pipeline?\n\nThis will:\n1. Extract transcripts\n2. Summarize all\n3. Generate report\n\nThis may take several minutes.')) return;
+
+            pipelineBtn.disabled = true;
+            pipelineBtn.textContent = '⏳ Running...';
+
+            const progressEl = document.getElementById('pipelineProgress');
+            const phaseIcon = document.getElementById('pipelinePhaseIcon');
+            const phaseLabel = document.getElementById('pipelinePhaseLabel');
+            const phaseCounts = document.getElementById('pipelinePhaseCounts');
+            const currentTitle = document.getElementById('pipelineCurrentTitle');
+            const progressBar = document.getElementById('pipelineProgressBar');
+            const dotExtract = document.getElementById('pipelineDotExtract');
+            const dotSummarize = document.getElementById('pipelineDotSummarize');
+            const dotReport = document.getElementById('pipelineDotReport');
+            const resultsLog = document.getElementById('pipelineResultsLog');
+
+            // Reset UI
+            progressEl.classList.remove('hidden');
+            resultsLog.innerHTML = '';
+            progressBar.style.width = '0%';
+            dotExtract.className = 'pipeline-step-dot';
+            dotSummarize.className = 'pipeline-step-dot';
+            dotReport.className = 'pipeline-step-dot';
+            phaseIcon.textContent = '🚀';
+            phaseLabel.textContent = 'Starting pipeline...';
+            phaseCounts.textContent = '';
+            currentTitle.textContent = '—';
+
+            const evtSource = new EventSource(`/api/pipeline/run/${currentDailyFile}`);
+
+            evtSource.onmessage = (event) => {
+                const d = JSON.parse(event.data);
+
+                if (d.phase === 'extract') {
+                    dotExtract.className = 'pipeline-step-dot active';
+                    if (d.type === 'start') {
+                        phaseIcon.textContent = '📝';
+                        phaseLabel.textContent = `Extracting transcripts...`;
+                        phaseCounts.textContent = `0 / ${d.total}`;
+                    } else if (d.type === 'progress') {
+                        phaseCounts.textContent = `${d.current} / ${d.total}`;
+                        currentTitle.textContent = d.title || '';
+                        progressBar.style.width = `${Math.round((d.current / d.total) * 33)}%`;
+                        if (d.status) {
+                            const icon = d.status === 'success' ? '✅' : '❌';
+                            resultsLog.innerHTML += `<div>${icon} ${escapeHtml(d.title || '')}</div>`;
+                            resultsLog.scrollTop = resultsLog.scrollHeight;
+                        }
+                    } else if (d.type === 'done') {
+                        dotExtract.className = 'pipeline-step-dot done';
+                        dotExtract.textContent = `📝 ${d.success}✓ ${d.failed}✗`;
+                        resultsLog.innerHTML += `<div><strong>Extract: ${d.success} ok, ${d.failed} failed</strong></div>`;
+                    }
+                }
+                else if (d.phase === 'summarize') {
+                    dotSummarize.className = 'pipeline-step-dot active';
+                    if (d.type === 'start') {
+                        phaseIcon.textContent = '🤖';
+                        phaseLabel.textContent = `Summarizing videos...`;
+                        phaseCounts.textContent = `0 / ${d.total}`;
+                        currentTitle.textContent = '—';
+                    } else if (d.type === 'progress') {
+                        phaseCounts.textContent = `${d.current} / ${d.total}`;
+                        currentTitle.textContent = d.title || '';
+                        progressBar.style.width = `${33 + Math.round((d.current / d.total) * 33)}%`;
+                        if (d.status) {
+                            const icon = d.status === 'success' ? '✅' : '❌';
+                            resultsLog.innerHTML += `<div>${icon} ${escapeHtml(d.title || '')}</div>`;
+                            resultsLog.scrollTop = resultsLog.scrollHeight;
+                        }
+                    } else if (d.type === 'done') {
+                        dotSummarize.className = 'pipeline-step-dot done';
+                        dotSummarize.textContent = `🤖 ${d.success}✓ ${d.failed}✗`;
+                        resultsLog.innerHTML += `<div><strong>Summarize: ${d.success} ok, ${d.failed} failed</strong></div>`;
+                    } else if (d.type === 'skip') {
+                        dotSummarize.className = 'pipeline-step-dot skipped';
+                        dotSummarize.textContent = `🤖 Skipped`;
+                        resultsLog.innerHTML += `<div>⏭️ Summarize skipped: ${d.reason}</div>`;
+                    }
+                }
+                else if (d.phase === 'report') {
+                    dotReport.className = 'pipeline-step-dot active';
+                    if (d.type === 'start') {
+                        phaseIcon.textContent = '⚡';
+                        phaseLabel.textContent = 'Generating report...';
+                        currentTitle.textContent = '—';
+                        phaseCounts.textContent = '';
+                    } else if (d.type === 'progress') {
+                        currentTitle.textContent = d.step === 'extracting-facts' ? `Extracting facts (${d.current}/${d.total})...`
+                            : d.step === 'categorizing' ? `Categorizing (${d.current}/${d.total})...`
+                                : d.step === 'bottom-line' ? 'Writing bottom line...'
+                                    : d.step;
+                        progressBar.style.width = `${66 + Math.round(33 * 0.8)}%`;
+                    } else if (d.type === 'done') {
+                        dotReport.className = 'pipeline-step-dot done';
+                        dotReport.textContent = `⚡ Done`;
+                        resultsLog.innerHTML += `<div><strong>Report generated! (${d.videoCount} sources)</strong></div>`;
+                    } else if (d.type === 'skip') {
+                        dotReport.className = 'pipeline-step-dot skipped';
+                        dotReport.textContent = `⚡ Skipped`;
+                        resultsLog.innerHTML += `<div>⏭️ Report skipped: ${d.reason}</div>`;
+                    } else if (d.type === 'error') {
+                        dotReport.className = 'pipeline-step-dot skipped';
+                        resultsLog.innerHTML += `<div>❌ Report error: ${d.error}</div>`;
+                    }
+                }
+                else if (d.type === 'pipeline-complete') {
+                    phaseIcon.textContent = '✅';
+                    phaseLabel.textContent = 'Pipeline complete!';
+                    progressBar.style.width = '100%';
+                    currentTitle.textContent = 'All phases finished.';
+                    pipelineBtn.textContent = '✅ Done!';
+                    evtSource.close();
+                    // Refresh workspace and reports
+                    loadDailyWorkspace();
+                    loadVideos();
+                    loadReports();
+                    setTimeout(() => {
+                        pipelineBtn.textContent = '🚀 RUN PIPELINE';
+                        pipelineBtn.disabled = false;
+                    }, 5000);
+                }
+                else if (d.type === 'pipeline-error') {
+                    phaseIcon.textContent = '❌';
+                    phaseLabel.textContent = 'Pipeline error!';
+                    currentTitle.textContent = d.error;
+                    pipelineBtn.textContent = '❌ Error';
+                    evtSource.close();
+                    setTimeout(() => {
+                        pipelineBtn.textContent = '🚀 RUN PIPELINE';
+                        pipelineBtn.disabled = false;
+                    }, 5000);
+                }
+            };
+
+            evtSource.onerror = () => {
+                evtSource.close();
+                phaseIcon.textContent = '❌';
+                phaseLabel.textContent = 'Connection lost';
+                pipelineBtn.textContent = '🚀 RUN PIPELINE';
+                pipelineBtn.disabled = false;
+            };
+        });
+    }
 
     // ============ Modal Summarize Button ============
     document.getElementById('modalSummarizeBtn').addEventListener('click', async () => {
