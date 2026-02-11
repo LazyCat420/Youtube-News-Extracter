@@ -753,7 +753,7 @@
     "duration": 3530,
     "thumbnail": "https://i.ytimg.com/vi/sLT3dOmDRro/mqdefault.jpg",
     "category": "tech",
-    "status": "ignored",
+    "status": "pending",
     "auto_extract": false,
     "filter_score": 0,
     "filter_reason": "neutral",
@@ -761,8 +761,7 @@
     "is_short": false,
     "context_tier": "A",
     "source": "subscription",
-    "tag": null,
-    "ignored_at": "2026-02-10T01:14:39.017Z"
+    "tag": null
   },
   {
     "id": "Vl4zmap_uKg",
@@ -773,7 +772,7 @@
     "duration": 118,
     "thumbnail": "https://i.ytimg.com/vi/Vl4zmap_uKg/mqdefault.jpg",
     "category": "other",
-    "status": "ignored",
+    "status": "pending",
     "auto_extract": false,
     "filter_score": 0,
     "filter_reason": "neutral",
@@ -781,8 +780,7 @@
     "is_short": false,
     "context_tier": "B",
     "source": "subscription",
-    "tag": null,
-    "ignored_at": "2026-02-10T01:15:00.462Z"
+    "tag": null
   },
   {
     "id": "OL23mE0GzE4",
@@ -812,7 +810,7 @@
     "duration": 591,
     "thumbnail": "https://i.ytimg.com/vi/xYM4T3tDBAM/mqdefault.jpg",
     "category": "tech",
-    "status": "ignored",
+    "status": "pending",
     "auto_extract": false,
     "filter_score": 0,
     "filter_reason": "neutral",
@@ -820,8 +818,7 @@
     "is_short": false,
     "context_tier": "A",
     "source": "subscription",
-    "tag": null,
-    "ignored_at": "2026-02-10T01:15:06.089Z"
+    "tag": null
   },
   {
     "id": "Mj9vRq-Heb8",
@@ -832,7 +829,7 @@
     "duration": 100,
     "thumbnail": "https://i.ytimg.com/vi/Mj9vRq-Heb8/mqdefault.jpg",
     "category": "other",
-    "status": "ignored",
+    "status": "pending",
     "auto_extract": false,
     "filter_score": 0,
     "filter_reason": "neutral",
@@ -840,8 +837,7 @@
     "is_short": false,
     "context_tier": "B",
     "source": "subscription",
-    "tag": null,
-    "ignored_at": "2026-02-10T01:15:09.161Z"
+    "tag": null
   },
   {
     "id": "oYRQTc2UJGA",
@@ -852,7 +848,7 @@
     "duration": 393,
     "thumbnail": "https://i.ytimg.com/vi/oYRQTc2UJGA/mqdefault.jpg",
     "category": "other",
-    "status": "ignored",
+    "status": "pending",
     "auto_extract": false,
     "filter_score": 0,
     "filter_reason": "neutral",
@@ -860,8 +856,7 @@
     "is_short": false,
     "context_tier": "A",
     "source": "subscription",
-    "tag": null,
-    "ignored_at": "2026-02-10T01:15:12.147Z"
+    "tag": null
   },
   {
     "id": "5FT3FCOcRjE",
@@ -892,7 +887,7 @@
     "duration": 180,
     "thumbnail": "https://i.ytimg.com/vi/gOoAtfcMFjI/mqdefault.jpg",
     "category": "tech",
-    "status": "ignored",
+    "status": "pending",
     "auto_extract": false,
     "filter_score": 0,
     "filter_reason": "neutral",
@@ -900,8 +895,7 @@
     "is_short": false,
     "context_tier": "B",
     "source": "subscription",
-    "tag": null,
-    "ignored_at": "2026-02-10T01:15:14.341Z"
+    "tag": null
   },
   {
     "id": "Rmv0IjzpC_s",
@@ -912,7 +906,7 @@
     "duration": 91,
     "thumbnail": "https://i.ytimg.com/vi/Rmv0IjzpC_s/mqdefault.jpg",
     "category": "other",
-    "status": "ignored",
+    "status": "pending",
     "auto_extract": false,
     "filter_score": 0,
     "filter_reason": "neutral",
@@ -920,8 +914,7 @@
     "is_short": false,
     "context_tier": "B",
     "source": "subscription",
-    "tag": null,
-    "ignored_at": "2026-02-10T01:15:18.273Z"
+    "tag": null
   },
   {
     "id": "PtEzY-PNfC4",
@@ -951,7 +944,7 @@
     "duration": 38,
     "thumbnail": "https://i.ytimg.com/vi/iAtLySLWfr4/mqdefault.jpg",
     "category": "tech",
-    "status": "ignored",
+    "status": "pending",
     "auto_extract": false,
     "filter_score": 0,
     "filter_reason": "neutral",
@@ -959,8 +952,7 @@
     "is_short": true,
     "context_tier": "C",
     "source": "subscription",
-    "tag": null,
-    "ignored_at": "2026-02-10T01:15:24.962Z"
+    "tag": null
   },
   {
     "id": "QVdD66_ej8g",
@@ -1334,7 +1326,7 @@
     "duration": 66,
     "thumbnail": "https://i.ytimg.com/vi/-buvc4n9jNQ/mqdefault.jpg",
     "category": "other",
-    "status": "ignored",
+    "status": "pending",
     "auto_extract": false,
     "filter_score": 0,
     "filter_reason": "neutral",
@@ -1342,8 +1334,7 @@
     "is_short": false,
     "context_tier": "B",
     "source": "subscription",
-    "tag": null,
-    "ignored_at": "2026-02-10T01:15:43.028Z"
+    "tag": null
   },
   {
     "id": "YKci6y43-eA",
@@ -1354,7 +1345,7 @@
     "duration": 818,
     "thumbnail": "https://i.ytimg.com/vi/YKci6y43-eA/mqdefault.jpg",
     "category": "tech",
-    "status": "ignored",
+    "status": "pending",
     "auto_extract": false,
     "filter_score": 0,
     "filter_reason": "neutral",
@@ -1362,8 +1353,7 @@
     "is_short": false,
     "context_tier": "A",
     "source": "subscription",
-    "tag": null,
-    "ignored_at": "2026-02-10T01:15:40.410Z"
+    "tag": null
   },
   {
     "id": "J3pYEt9AakA",
@@ -1488,7 +1478,7 @@
     "duration": 892,
     "thumbnail": "https://i.ytimg.com/vi/JcGZp-udPmo/mqdefault.jpg",
     "category": "other",
-    "status": "ignored",
+    "status": "pending",
     "auto_extract": false,
     "filter_score": 0,
     "filter_reason": "neutral",
@@ -1496,8 +1486,7 @@
     "is_short": false,
     "context_tier": "A",
     "source": "subscription",
-    "tag": null,
-    "ignored_at": "2026-02-10T01:15:50.311Z"
+    "tag": null
   },
   {
     "id": "bJQNpiWQtxk",
@@ -1508,7 +1497,7 @@
     "duration": 22,
     "thumbnail": "https://i.ytimg.com/vi/bJQNpiWQtxk/mqdefault.jpg",
     "category": "other",
-    "status": "ignored",
+    "status": "pending",
     "auto_extract": false,
     "filter_score": 0,
     "filter_reason": "neutral",
@@ -1516,8 +1505,7 @@
     "is_short": true,
     "context_tier": "C",
     "source": "subscription",
-    "tag": null,
-    "ignored_at": "2026-02-10T01:15:53.097Z"
+    "tag": null
   },
   {
     "id": "eY5uu4ofGic",

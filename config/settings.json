@@ -1,6 +1,6 @@
 {
     "ollama_endpoint": "http://10.0.0.30:11434",
-    "ollama_model": "granite3.2:8b",
+    "ollama_model": "granite-jetson:latest",
     "auto_sync_enabled": true,
     "auto_sync_schedule": "0 6,12 * * *"
 }

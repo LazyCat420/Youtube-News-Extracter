@@ -3965,3 +3965,45 @@ a.term-card-title:hover {
     padding: 1rem;
     font-style: italic;
 }
+
+/* Report source links */
+.report-source-link {
+    display: inline;
+    margin-left: 0.4rem;
+    padding: 0.1rem 0.45rem;
+    font-size: 0.7rem;
+    background: rgba(255, 152, 0, 0.12);
+    border: 1px solid rgba(255, 152, 0, 0.3);
+    border-radius: 0.75rem;
+    color: #ffb74d;
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+    vertical-align: middle;
+}
+
+.report-source-link:hover {
+    background: rgba(255, 152, 0, 0.25);
+    color: #ffe0b2;
+}
+
+/* Save report button */
+.report-save-btn {
+    display: inline-block;
+    margin-left: 0.75rem;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.7rem;
+    font-family: 'JetBrains Mono', monospace;
+    background: rgba(139, 110, 99, 0.15);
+    border: 1px solid rgba(139, 110, 99, 0.4);
+    border-radius: 0.4rem;
+    color: #a1887f;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    vertical-align: middle;
+}
+
+.report-save-btn:hover {
+    background: rgba(139, 110, 99, 0.3);
+    color: #d7ccc8;
+    border-color: rgba(139, 110, 99, 0.6);
+}

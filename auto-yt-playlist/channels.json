@@ -36,7 +36,8 @@
   {
     "name": "BloomBerg Television",
     "url": "https://www.youtube.com/@markets",
-    "include_shorts": false
+    "include_shorts": false,
+    "channel_id": "UCIALMKvObZNtJ6AmdCLP7Lg"
   },
   {
     "name": "Clear Value Tax",

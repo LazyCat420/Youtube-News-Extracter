@@ -340,7 +340,7 @@
     "duration": 892,
     "thumbnail": "https://i.ytimg.com/vi/JcGZp-udPmo/mqdefault.jpg",
     "category": "other",
-    "status": "ignored",
+    "status": "pending",
     "auto_extract": false,
     "filter_score": 0,
     "filter_reason": "neutral",
@@ -348,8 +348,7 @@
     "is_short": false,
     "context_tier": "A",
     "source": "subscription",
-    "tag": null,
-    "ignored_at": "2026-02-10T01:09:48.890Z"
+    "tag": null
   },
   {
     "id": "bJQNpiWQtxk",
@@ -360,7 +359,7 @@
     "duration": 22,
     "thumbnail": "https://i.ytimg.com/vi/bJQNpiWQtxk/mqdefault.jpg",
     "category": "other",
-    "status": "ignored",
+    "status": "pending",
     "auto_extract": false,
     "filter_score": 0,
     "filter_reason": "neutral",
@@ -368,8 +367,7 @@
     "is_short": true,
     "context_tier": "C",
     "source": "subscription",
-    "tag": null,
-    "ignored_at": "2026-02-10T01:09:48.890Z"
+    "tag": null
   },
   {
     "id": "sOosow0V2Ok",
@@ -380,7 +378,7 @@
     "duration": 631,
     "thumbnail": "https://i.ytimg.com/vi/sOosow0V2Ok/mqdefault.jpg",
     "category": "finance",
-    "status": "ignored",
+    "status": "pending",
     "auto_extract": false,
     "filter_score": 0,
     "filter_reason": "neutral",
@@ -388,8 +386,7 @@
     "is_short": false,
     "context_tier": "A",
     "source": "subscription",
-    "tag": null,
-    "ignored_at": "2026-02-10T01:09:48.890Z"
+    "tag": null
   },
   {
     "id": "szdYuYSQ9L0",
@@ -400,7 +397,7 @@
     "duration": 468,
     "thumbnail": "https://i.ytimg.com/vi/szdYuYSQ9L0/mqdefault.jpg",
     "category": "sports",
-    "status": "ignored",
+    "status": "pending",
     "auto_extract": false,
     "filter_score": 0,
     "filter_reason": "neutral",
@@ -408,8 +405,7 @@
     "is_short": false,
     "context_tier": "A",
     "source": "subscription",
-    "tag": null,
-    "ignored_at": "2026-02-10T01:09:48.890Z"
+    "tag": null
   },
   {
     "id": "eY5uu4ofGic",
@@ -420,7 +416,7 @@
     "duration": 422,
     "thumbnail": "https://i.ytimg.com/vi/eY5uu4ofGic/mqdefault.jpg",
     "category": "finance",
-    "status": "ignored",
+    "status": "pending",
     "auto_extract": false,
     "filter_score": 0,
     "filter_reason": "neutral",
@@ -428,8 +424,7 @@
     "is_short": false,
     "context_tier": "A",
     "source": "subscription",
-    "tag": null,
-    "ignored_at": "2026-02-10T01:09:48.890Z"
+    "tag": null
   },
   {
     "id": "IK6WXuWQqiQ",
@@ -440,7 +435,7 @@
     "duration": 361,
     "thumbnail": "https://i.ytimg.com/vi/IK6WXuWQqiQ/mqdefault.jpg",
     "category": "sports",
-    "status": "ignored",
+    "status": "pending",
     "auto_extract": false,
     "filter_score": 0,
     "filter_reason": "neutral",
@@ -448,8 +443,7 @@
     "is_short": false,
     "context_tier": "A",
     "source": "subscription",
-    "tag": null,
-    "ignored_at": "2026-02-10T01:09:48.890Z"
+    "tag": null
   },
   {
     "id": "F02Yevi0TCA",
@@ -460,7 +454,7 @@
     "duration": 4731,
     "thumbnail": "https://i.ytimg.com/vi/F02Yevi0TCA/mqdefault.jpg",
     "category": "other",
-    "status": "ignored",
+    "status": "pending",
     "auto_extract": false,
     "filter_score": 0,
     "filter_reason": "neutral",
@@ -468,8 +462,7 @@
     "is_short": false,
     "context_tier": "A",
     "source": "subscription",
-    "tag": null,
-    "ignored_at": "2026-02-10T01:09:48.890Z"
+    "tag": null
   },
   {
     "id": "lPsYYJVbCBs",
@@ -480,7 +473,7 @@
     "duration": 69,
     "thumbnail": "https://i.ytimg.com/vi/lPsYYJVbCBs/mqdefault.jpg",
     "category": "other",
-    "status": "ignored",
+    "status": "pending",
     "auto_extract": false,
     "filter_score": 0,
     "filter_reason": "neutral",
@@ -488,8 +481,7 @@
     "is_short": false,
     "context_tier": "B",
     "source": "subscription",
-    "tag": null,
-    "ignored_at": "2026-02-10T01:09:48.890Z"
+    "tag": null
   },
   {
     "id": "fb2OuURNqto",
@@ -500,7 +492,7 @@
     "duration": 29,
     "thumbnail": "https://i.ytimg.com/vi/fb2OuURNqto/mqdefault.jpg",
     "category": "news",
-    "status": "ignored",
+    "status": "pending",
     "auto_extract": false,
     "filter_score": 0,
     "filter_reason": "neutral",
@@ -508,8 +500,7 @@
     "is_short": true,
     "context_tier": "C",
     "source": "subscription",
-    "tag": null,
-    "ignored_at": "2026-02-10T01:09:48.890Z"
+    "tag": null
   },
   {
     "id": "lr_yKE6j08Q",
@@ -520,7 +511,7 @@
     "duration": 15,
     "thumbnail": "https://i.ytimg.com/vi/lr_yKE6j08Q/mqdefault.jpg",
     "category": "other",
-    "status": "ignored",
+    "status": "pending",
     "auto_extract": false,
     "filter_score": 1,
     "filter_reason": "kept: allow[ipo] > block[] (score: 1.0)",
@@ -528,8 +519,7 @@
     "is_short": true,
     "context_tier": "C",
     "source": "subscription",
-    "tag": null,
-    "ignored_at": "2026-02-10T01:09:48.890Z"
+    "tag": null
   },
   {
     "id": "AwOnqo-ZyFk",
@@ -540,7 +530,7 @@
     "duration": 26,
     "thumbnail": "https://i.ytimg.com/vi/AwOnqo-ZyFk/mqdefault.jpg",
     "category": "other",
-    "status": "ignored",
+    "status": "pending",
     "auto_extract": false,
     "filter_score": 0,
     "filter_reason": "neutral",
@@ -548,8 +538,7 @@
     "is_short": true,
     "context_tier": "C",
     "source": "subscription",
-    "tag": null,
-    "ignored_at": "2026-02-10T01:09:48.890Z"
+    "tag": null
   },
   {
     "id": "asalbJSHS8g",
@@ -560,7 +549,7 @@
     "duration": 55,
     "thumbnail": "https://i.ytimg.com/vi/asalbJSHS8g/mqdefault.jpg",
     "category": "other",
-    "status": "ignored",
+    "status": "pending",
     "auto_extract": false,
     "filter_score": 0,
     "filter_reason": "neutral",
@@ -568,8 +557,7 @@
     "is_short": true,
     "context_tier": "C",
     "source": "subscription",
-    "tag": null,
-    "ignored_at": "2026-02-10T01:09:48.890Z"
+    "tag": null
   },
   {
     "id": "0i6Znp7KIqE",
@@ -580,7 +568,7 @@
     "duration": 3980,
     "thumbnail": "https://i.ytimg.com/vi/0i6Znp7KIqE/mqdefault.jpg",
     "category": "other",
-    "status": "ignored",
+    "status": "pending",
     "auto_extract": false,
     "filter_score": 0,
     "filter_reason": "neutral",
@@ -588,8 +576,7 @@
     "is_short": false,
     "context_tier": "A",
     "source": "subscription",
-    "tag": null,
-    "ignored_at": "2026-02-10T01:09:48.890Z"
+    "tag": null
   },
   {
     "id": "0KHJbhGKjIY",
@@ -600,7 +587,7 @@
     "duration": 68,
     "thumbnail": "https://i.ytimg.com/vi/0KHJbhGKjIY/mqdefault.jpg",
     "category": "finance",
-    "status": "ignored",
+    "status": "pending",
     "auto_extract": false,
     "filter_score": 0,
     "filter_reason": "neutral",
@@ -608,8 +595,7 @@
     "is_short": true,
     "context_tier": "C",
     "source": "subscription",
-    "tag": null,
-    "ignored_at": "2026-02-10T01:09:48.890Z"
+    "tag": null
   },
   {
     "id": "t22Z17aPT8Q",
@@ -620,7 +606,7 @@
     "duration": 126,
     "thumbnail": "https://i.ytimg.com/vi/t22Z17aPT8Q/mqdefault.jpg",
     "category": "other",
-    "status": "ignored",
+    "status": "pending",
     "auto_extract": false,
     "filter_score": 0,
     "filter_reason": "neutral",
@@ -628,8 +614,7 @@
     "is_short": false,
     "context_tier": "B",
     "source": "subscription",
-    "tag": null,
-    "ignored_at": "2026-02-10T01:09:48.890Z"
+    "tag": null
   },
   {
     "id": "Dq9PxPrOfzk",
@@ -640,7 +625,7 @@
     "duration": 180,
     "thumbnail": "https://i.ytimg.com/vi/Dq9PxPrOfzk/mqdefault.jpg",
     "category": "tech",
-    "status": "ignored",
+    "status": "pending",
     "auto_extract": false,
     "filter_score": 0,
     "filter_reason": "neutral",
@@ -648,8 +633,7 @@
     "is_short": false,
     "context_tier": "B",
     "source": "subscription",
-    "tag": null,
-    "ignored_at": "2026-02-10T01:09:48.890Z"
+    "tag": null
   },
   {
     "id": "moEKhBFnc5I",
@@ -660,7 +644,7 @@
     "duration": 26,
     "thumbnail": "https://i.ytimg.com/vi/moEKhBFnc5I/mqdefault.jpg",
     "category": "other",
-    "status": "ignored",
+    "status": "pending",
     "auto_extract": false,
     "filter_score": 0,
     "filter_reason": "neutral",
@@ -668,8 +652,7 @@
     "is_short": true,
     "context_tier": "C",
     "source": "subscription",
-    "tag": null,
-    "ignored_at": "2026-02-10T01:09:48.890Z"
+    "tag": null
   },
   {
     "id": "voMmSiVsSbU",
@@ -680,7 +663,7 @@
     "duration": 25,
     "thumbnail": "https://i.ytimg.com/vi/voMmSiVsSbU/mqdefault.jpg",
     "category": "finance",
-    "status": "ignored",
+    "status": "pending",
     "auto_extract": false,
     "filter_score": 3,
     "filter_reason": "kept: allow[bitcoin] > block[] (score: 3.0)",
@@ -688,8 +671,7 @@
     "is_short": true,
     "context_tier": "C",
     "source": "subscription",
-    "tag": null,
-    "ignored_at": "2026-02-10T01:09:48.890Z"
+    "tag": null
   },
   {
     "id": "t_omSH39mcs",
@@ -700,7 +682,7 @@
     "duration": 129,
     "thumbnail": "https://i.ytimg.com/vi/t_omSH39mcs/mqdefault.jpg",
     "category": "other",
-    "status": "ignored",
+    "status": "pending",
     "auto_extract": false,
     "filter_score": 0,
     "filter_reason": "neutral",
@@ -708,8 +690,7 @@
     "is_short": true,
     "context_tier": "C",
     "source": "subscription",
-    "tag": null,
-    "ignored_at": "2026-02-10T01:09:46.624Z"
+    "tag": null
   },
   {
     "id": "JD8KNwtx61c",
@@ -719,15 +700,14 @@
     "duration": 647,
     "thumbnail": "https://i.ytimg.com/vi/JD8KNwtx61c/hq720.jpg?sqp=-oaymwEcCOgCEMoBSFXyq4qpAw4IARUAAIhCGAFwAcABBg==&rs=AOn4CLBs5d5h62cCUcrOkubSNat2QOaIUw",
     "category": "finance",
-    "status": "ignored",
+    "status": "pending",
     "auto_extract": false,
     "filter_score": 3,
     "filter_reason": "kept: allow[market] > block[] (score: 3.0)",
     "added_at": "2026-02-08T18:02:23.512Z",
     "source": "discovery",
     "tag": "Discovery",
-    "discovery_query": "commodities",
-    "ignored_at": "2026-02-10T01:09:48.890Z"
+    "discovery_query": "commodities"
   },
   {
     "id": "dcC133uhQU4",
@@ -737,15 +717,14 @@
     "duration": 6080,
     "thumbnail": "https://i.ytimg.com/vi/dcC133uhQU4/hq720.jpg?sqp=-oaymwEcCOgCEMoBSFXyq4qpAw4IARUAAIhCGAFwAcABBg==&rs=AOn4CLDRO_P4yrllvrbH3MOXf8A7N4uL_A",
     "category": "other",
-    "status": "ignored",
+    "status": "pending",
     "auto_extract": false,
     "filter_score": 1,
     "filter_reason": "kept: allow[ipo] > block[] (score: 1.0)",
     "added_at": "2026-02-08T18:02:23.512Z",
     "source": "discovery",
     "tag": "Discovery",
-    "discovery_query": "consumers",
-    "ignored_at": "2026-02-10T01:09:44.013Z"
+    "discovery_query": "consumers"
   },
   {
     "id": "F-KQMMJ73s4",
@@ -756,7 +735,7 @@
     "duration": 59,
     "thumbnail": "https://i.ytimg.com/vi/F-KQMMJ73s4/mqdefault.jpg",
     "category": "other",
-    "status": "ignored",
+    "status": "pending",
     "auto_extract": false,
     "filter_score": 0,
     "filter_reason": "neutral",
@@ -764,8 +743,7 @@
     "is_short": true,
     "context_tier": "C",
     "source": "subscription",
-    "tag": null,
-    "ignored_at": "2026-02-10T01:09:48.890Z"
+    "tag": null
   },
   {
     "id": "c81Ddx3-Q-E",
@@ -776,7 +754,7 @@
     "duration": 3175,
     "thumbnail": "https://i.ytimg.com/vi/c81Ddx3-Q-E/mqdefault.jpg",
     "category": "other",
-    "status": "ignored",
+    "status": "pending",
     "auto_extract": false,
     "filter_score": 0,
     "filter_reason": "neutral",
@@ -784,8 +762,7 @@
     "is_short": false,
     "context_tier": "A",
     "source": "subscription",
-    "tag": null,
-    "ignored_at": "2026-02-10T01:09:48.890Z"
+    "tag": null
   },
   {
     "id": "9MiQ00aukhA",
@@ -796,7 +773,7 @@
     "duration": 86,
     "thumbnail": "https://i.ytimg.com/vi/9MiQ00aukhA/mqdefault.jpg",
     "category": "finance",
-    "status": "ignored",
+    "status": "pending",
     "auto_extract": false,
     "filter_score": 6,
     "filter_reason": "kept: allow[market,bitcoin] > block[] (score: 6.0)",
@@ -804,8 +781,7 @@
     "is_short": false,
     "context_tier": "B",
     "source": "subscription",
-    "tag": null,
-    "ignored_at": "2026-02-10T01:09:48.890Z"
+    "tag": null
   },
   {
     "id": "ltjwSDtQe_4",
@@ -816,7 +792,7 @@
     "duration": 3879,
     "thumbnail": "https://i.ytimg.com/vi/ltjwSDtQe_4/mqdefault.jpg",
     "category": "finance",
-    "status": "ignored",
+    "status": "pending",
     "auto_extract": false,
     "filter_score": 3,
     "filter_reason": "kept: allow[crypto] > block[] (score: 3.0)",
@@ -824,7 +800,6 @@
     "is_short": false,
     "context_tier": "A",
     "source": "subscription",
-    "tag": null,
-    "ignored_at": "2026-02-10T01:09:48.890Z"
+    "tag": null
   }
 ]
